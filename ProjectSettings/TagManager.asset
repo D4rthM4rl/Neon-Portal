@@ -39,6 +39,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Platforms
+    uniqueID: 2599153155
+    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Indicators
+    uniqueID: 918885751
     locked: 0

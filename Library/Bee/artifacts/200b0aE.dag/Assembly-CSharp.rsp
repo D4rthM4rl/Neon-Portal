@@ -389,7 +389,7 @@
 "Assets/Scripts/CameraController.cs"
 "Assets/Scripts/PauseMenuController.cs"
 "Assets/Scripts/Player.cs"
-"Assets/Scripts/Portal.cs"
+"Assets/Scripts/PortalController.cs"
 "Assets/Scripts/PortalGun.cs"
 -langversion:9.0
 

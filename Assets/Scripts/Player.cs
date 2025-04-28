@@ -48,6 +48,7 @@ public class Player : MonoBehaviour
             transform.position = new Vector3(0, 0, 0);
             rb.velocity = Vector2.zero; // Reset velocity
         }
+        Debug.Log("Velocity: " + rb.velocity);
     }
 
     void FixedUpdate() 

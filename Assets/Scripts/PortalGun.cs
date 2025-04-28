@@ -18,21 +18,37 @@ public class PortalGun : MonoBehaviour
     public LayerMask blockLayers = ~0;
 
     [Header("Visuals")]
-    public GameObject validIndicatorPrefab;
-    public GameObject invalidIndicatorPrefab;
-    public LineRenderer lineRenderer;
+    [SerializeField]
+    private GameObject validIndicatorPrefab;
+    private GameObject validIndicator;
+    [SerializeField]
+    private GameObject invalidIndicatorPrefab;
+    private GameObject invalidIndicator;
+    protected LineRenderer lineRenderer;
 
     private GameObject currentIndicator;
 
-    public Portal currentPortalToSpawn;
-    public Portal portalPrefab;
-    public Portal[] portals = new Portal[2];
-    public int currentPortalIndex = 0;
+    protected PortalDescription currentPortalToSpawn;
+    public GameObject portalPrefab;
+    public List<PortalDescription> portals = new List<PortalDescription>();
+
+    public static PortalController[] portalsInScene;
+    private int portalIndex = 0;
 
     void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.positionCount = 2;
+    }
+
+    void Start()
+    {
+        if (validIndicator == null) validIndicator = Instantiate(validIndicatorPrefab);
+        validIndicator.SetActive(false);
+        if (invalidIndicator == null) invalidIndicator = Instantiate(invalidIndicatorPrefab);
+        invalidIndicator.SetActive(false);
+        currentPortalToSpawn = portals[portalIndex];
+        portalsInScene = new PortalController[portals.Count];
     }
 
     void Update()
@@ -54,55 +70,91 @@ public class PortalGun : MonoBehaviour
         lineRenderer.colorGradient.colorKeys[1].color = currentPortalToSpawn.color;
 
         // 3) Handle indicator
+        RemoveIndicator();
         if (hit)
         {
-            TryPlaceIndicator(hit);
+            Vector2 normal = Vector2.zero;
+            if (TryPlaceIndicator(hit, out normal) && Input.GetButtonDown("Fire1"))
+            {
+                // Spawn the portal
+                PortalController portalController = portalsInScene[portalIndex];
+                if (portalController != null)
+                {
+                    portalController.MovePortal(hit.point, normal);
+                }
+                else
+                {
+                    GameObject newPortal = Instantiate(portalPrefab, hit.point + .1f * hit.normal, Quaternion.identity);
+                    portalController = newPortal.GetComponent<PortalController>();
+                    portalsInScene[portalIndex] = portalController;
+                    portalController.SetupPortal(currentPortalToSpawn,
+                        portalIndex, normal);
+                }
+
+                portalController.transform.up = hit.normal;
+                portalIndex = (portalIndex + 1) % portals.Count;
+                currentPortalToSpawn = portals[portalIndex];
+            }
         }
-        else
+    }
+
+    /// <summary>
+    /// Places a visual indicator at the hit point of whether a portal can be placed
+    /// </summary>
+    /// <param name="hit">Place to check for portal placement</param>
+    /// <returns>Whether a portal can be placed there</returns>
+    private bool TryPlaceIndicator(RaycastHit2D hit, out Vector2 normal)
+    {
+        Vector2 hitPoint = hit.point;
+        normal = hit.normal;
+        Vector2 right = new Vector2(-normal.y, normal.x); // Perpendicular to the normal
+        float portalWidth = portalCheckSize.x;
+        int steps = Mathf.CeilToInt(portalWidth / 0.5f);
+        float stepDistance = portalWidth / steps;
+
+        bool canPlace = true;
+
+        for (int i = -steps/2; i <= steps/2; i++)
         {
-            DestroyIndicator();
+            Vector2 offset = right.normalized * stepDistance * i;
+            Vector2 testPoint = hitPoint + offset + normal * 0.075f; // slightly behind surface
+
+            // 1. Check side clearance (shoot outward, perpendicular to normal)
+            RaycastHit2D sideHit = Physics2D.Raycast(testPoint, offset.normalized, 0.5f, blockLayers);
+            if (sideHit)
+            {
+                canPlace = false;
+                break;
+            }
+
+            // 2. Check back toward the platform (shoot opposite of normal)
+            RaycastHit2D backHit = Physics2D.Raycast(testPoint, -normal, 0.1f, aimLayers);
+            if (!backHit)
+            {
+                canPlace = false;
+                break;
+            }
         }
+
+        // Show the correct indicator
+        GameObject indicator = canPlace ? validIndicator : invalidIndicator;
+        indicator.SetActive(true);
+        indicator.transform.position = hit.point;
+
+        return canPlace;
     }
 
-    void TryPlaceIndicator(RaycastHit2D hit)
+    /// <summary>
+    /// Turns off the indicator of whether a portal can be placed
+    /// </summary>
+    private void RemoveIndicator()
     {
-        // Calculate box center slightly off the surface
-        Vector2 normal   = hit.normal;
-        Vector2 boxCenter = hit.point + normal * portalCheckOffset;
-
-        // Rotate the box so its "width" runs along the surface
-        float angleDeg = Mathf.Atan2(normal.y, normal.x) * Mathf.Rad2Deg - 90f;
-
-        // Check for any blockers in that 2×2 area
-        Collider2D[] blockers = Physics2D.OverlapBoxAll(
-            boxCenter,
-            portalCheckSize,
-            angleDeg,
-            blockLayers
-        );
-
-        bool isFree = blockers.Length == 0;
-
-        // Choose prefab
-        GameObject prefab = isFree 
-            ? validIndicatorPrefab 
-            : invalidIndicatorPrefab;
-
-        // Update indicator
-        if (currentIndicator != null)
-            Destroy(currentIndicator);
-
-        currentIndicator = Instantiate(prefab, hit.point, Quaternion.Euler(0,0,angleDeg));
-    }
-
-    void DestroyIndicator()
-    {
-        if (currentIndicator != null)
-            Destroy(currentIndicator);
+        validIndicator.SetActive(false);
+        invalidIndicator.SetActive(false);
     }
 
     // Gizmos to visualize the OverlapBox in the editor
-    void OnDrawGizmosSelected()
+    void OnDrawGizmos()
     {
         if (!Application.isPlaying) return;
 
@@ -111,12 +163,37 @@ public class PortalGun : MonoBehaviour
         var hit = Physics2D.Raycast(transform.position, dir, maxDistance, aimLayers);
         if (!hit) return;
 
+        Vector2 hitPoint = hit.point;
         Vector2 normal = hit.normal;
-        Vector2 center = hit.point + normal * portalCheckOffset;
-        float angle = Mathf.Atan2(normal.y, normal.x) * Mathf.Rad2Deg - 90f;
+        Vector2 right = new Vector2(-normal.y, normal.x); // perpendicular to normal
+        float portalWidth = portalCheckSize.x;
+        int steps = Mathf.CeilToInt(portalWidth / 0.5f);
+        float stepDistance = portalWidth / steps;
 
-        Gizmos.color = Color.yellow;
-        Gizmos.matrix = Matrix4x4.TRS(center, Quaternion.Euler(0,0,angle), Vector3.one);
-        Gizmos.DrawWireCube(Vector3.zero, portalCheckSize);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawSphere(hitPoint, 0.05f);
+
+        for (int i = -steps/2; i <= steps/2; i++)
+        {
+            Vector2 offset = right.normalized * stepDistance * i;
+            Vector2 testPoint = hitPoint + offset + normal * .1f;
+
+            // Draw back check ray (toward surface
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(testPoint, testPoint - normal * 0.1f);
+
+            // Draw test point
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(testPoint, 0.05f);
+
+            // Draw side check ray (outward)
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(testPoint, testPoint + offset.normalized * 0.5f);
+
+            // Draw back check ray (toward surface)
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(testPoint, testPoint - normal * 0.1f);
+        }
     }
+
 }
