@@ -7,7 +7,7 @@ public class PortalGun : MonoBehaviour
 {
     [Header("Aim & Raycast")]
     public float maxDistance = 30f;
-    public LayerMask aimLayers = ~0;            // which layers the ray can hit
+    public LayerMask aimLayers = ~0; // which layers the ray can hit
 
     [Header("Portal Size Check")]
     public Vector2 portalCheckSize = new Vector2(2f, 2f);
@@ -66,8 +66,8 @@ public class PortalGun : MonoBehaviour
         // 2) Draw the line
         lineRenderer.SetPosition(0, transform.position);
         lineRenderer.SetPosition(1, endPoint);
-        lineRenderer.colorGradient.colorKeys[0].color = currentPortalToSpawn.color;
-        lineRenderer.colorGradient.colorKeys[1].color = currentPortalToSpawn.color;
+        lineRenderer.startColor = currentPortalToSpawn.color;
+        lineRenderer.endColor = currentPortalToSpawn.color;
 
         // 3) Handle indicator
         RemoveIndicator();
@@ -84,7 +84,7 @@ public class PortalGun : MonoBehaviour
                 }
                 else
                 {
-                    GameObject newPortal = Instantiate(portalPrefab, hit.point + .1f * hit.normal, Quaternion.identity);
+                    GameObject newPortal = Instantiate(portalPrefab, hit.point + 0.05f * hit.normal, Quaternion.identity);
                     portalController = newPortal.GetComponent<PortalController>();
                     portalsInScene[portalIndex] = portalController;
                     portalController.SetupPortal(currentPortalToSpawn,

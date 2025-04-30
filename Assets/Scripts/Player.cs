@@ -2,10 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
-public class Player : MonoBehaviour
+public class Player : Teleportable
 {
-    private Rigidbody2D rb;
     private bool isGrounded = true;
 
     public float  initialJumpForce = 4f;    // impulse on button down
@@ -16,15 +14,16 @@ public class Player : MonoBehaviour
     private bool      isJumping;           // are we in the “hold” phase?
     private float     jumpTimeCounter;     // how much “hold time” left
     public float groundCheckDistance = .58f;
-    // Start is called before the first frame update
-    void Start()
+
+    protected override void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
+        base.Start();
     }
 
     // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
+        base.Update();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
         {
@@ -48,7 +47,6 @@ public class Player : MonoBehaviour
             transform.position = new Vector3(0, 0, 0);
             rb.velocity = Vector2.zero; // Reset velocity
         }
-        Debug.Log("Velocity: " + rb.velocity);
     }
 
     void FixedUpdate() 

@@ -43,15 +43,15 @@ public class PortalController : MonoBehaviour
     }
     
     private void OnTriggerEnter2D(Collider2D other) {
-        Rigidbody2D rb = other.GetComponent<Rigidbody2D>();
-        if (other.gameObject != null && rb != null)
+        if (other.gameObject != null && other.GetComponent<Teleportable>())
         {
-            if (PortalGun.portalsInScene[(index + 1) % PortalGun.portalsInScene.Length] != null)
+            PortalController receivingPortal = PortalGun.portalsInScene[(index + 1) % PortalGun.portalsInScene.Length];
+            Teleportable tpObj = other.GetComponent<Teleportable>();
+            if (receivingPortal != null)
             {
-                Vector2 incomingVelocity = rb.velocity;
+                Vector2 incomingVelocity = GetVelocity(tpObj);
                 Debug.Log("Incoming Velocity: " + incomingVelocity);
 
-                // Correct SignedAngle usage
                 float angleDifference = Vector3.SignedAngle(transform.up, receivingPortal.transform.up, Vector3.forward);
 
                 // Rotate the incoming velocity by that angle
@@ -59,10 +59,23 @@ public class PortalController : MonoBehaviour
 
                 // Teleport and set new velocity
                 other.transform.position = receivingPortal.transform.position + (Vector3)receivingPortal.direction * 1f;
-                rb.velocity = -rotatedVelocity;
-                Debug.Log("New Velocity: " + rb.velocity);
+                tpObj.rb.velocity = -rotatedVelocity;
+                // Debug.Log("New Velocity: " + rb.velocity);
             }
         }
+    }
+
+    private Vector2 GetVelocity(Teleportable teleportableObject)
+    {
+        // foreach (Vector2 v in teleportableObject.previousVelocities)
+        // {
+        //     if (v != Vector2.zero)
+        //     {
+        //         return v;
+        //     }
+        // }
+        return teleportableObject.previousVelocities[1];
+        // return Vector2.zero;
     }
 
     public void MovePortal(Vector2 newPos, Vector2 newDirection)
