@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : Teleportable
 {
-    private bool isGrounded = true;
+    public bool isGrounded = true;
 
     public float  initialJumpForce = 4f;    // impulse on button down
     public float  extraJumpForce   = 7f;    // continuous “hold” force
@@ -66,7 +66,7 @@ public class Player : Teleportable
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
             rb.AddForce(initialJumpForce * Vector2.up, ForceMode2D.Impulse);
-            Debug.Log("JUMP START");
+            // Debug.Log("JUMP START");
         }
         else
         {
@@ -87,12 +87,10 @@ public class Player : Teleportable
         }
     }
 
-    
-
   // You need to flip this on when you land:
     void OnCollisionEnter2D(Collision2D col)
     {
-        if (col.gameObject.CompareTag("Ground"))
+        if (col.gameObject.CompareTag("Ground") && col.contacts[0].normal.y > 0.5f)
         {
             isGrounded = true;
             Debug.Log("Landed");

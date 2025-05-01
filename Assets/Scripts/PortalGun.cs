@@ -192,7 +192,7 @@ public class PortalGun : MonoBehaviour
 
             // Draw back check ray (toward surface)
             Gizmos.color = Color.green;
-            Gizmos.DrawLine(testPoint, testPoint - normal * 0.1f);
+            Gizmos.DrawLine((testPoint + offset.normalized * 0.5f), (testPoint + offset.normalized * 0.5f) - normal * 0.1f);
         }
     }
 
