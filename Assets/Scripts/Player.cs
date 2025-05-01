@@ -83,7 +83,7 @@ public class Player : Teleportable
                 
                 jumpTimeCounter -= Time.fixedDeltaTime;
                 jumpBoostsGiven++;
-                Debug.Log("Jump Boosts Given: " + jumpBoostsGiven);
+                // Debug.Log("Jump Boosts Given: " + jumpBoostsGiven);
             }
             else
             {
@@ -106,7 +106,7 @@ public class Player : Teleportable
             {
                 groundContactCount++;
                 isGrounded = true;
-                Debug.Log("Landed");
+                // Debug.Log("Landed");
                 break;
             }
         }
@@ -139,8 +139,8 @@ public class Player : Teleportable
 
         isGrounded = groundContactCount > 0;
 
-        if (!isGrounded)
-            Debug.Log("Left Ground");
+        // if (!isGrounded)
+        //     Debug.Log("Left Ground");
     }
 
 }
