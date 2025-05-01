@@ -2,12 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
-public class Teleportable : MonoBehaviour
+public class Teleportable : GravityAffected
 {
     public Vector2[] previousVelocities = new Vector2[3];
-
-    public Rigidbody2D rb;
 
     protected virtual void Start()
     {

@@ -54,14 +54,14 @@ public class PortalGun : MonoBehaviour
     void Update()
     {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 direction  = (mousePos - transform.position).normalized;
+        Vector2 direction = (mousePos - transform.position).normalized;
 
         // 1) Raycast toward mouse
         RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, aimLayers);
 
         Vector3 endPoint = hit 
             ? (Vector3)hit.point 
-            : (Vector3)((Vector2)transform.position + direction * maxDistance);
+            : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
 
         // 2) Draw the line
         lineRenderer.SetPosition(0, transform.position);

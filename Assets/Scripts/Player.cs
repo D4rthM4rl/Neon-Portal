@@ -4,16 +4,20 @@ using UnityEngine;
 
 public class Player : Teleportable
 {
+    private int groundContactCount = 0;
     public bool isGrounded = true;
 
-    public float  initialJumpForce = 4f;    // impulse on button down
-    public float  extraJumpForce   = 7f;    // continuous “hold” force
-    public float  maxJumpDuration  = 0.3f;  // how long you can hold
-    public float  moveSpeed        = 20f;   // your horizontal speed
+    public float initialJumpForce = 4f;    // impulse on button down
+    public float extraJumpForce = 7f;    // continuous “hold” force
+    public float jumpFalloffRate = 0.5f;
+    public float maxJumpDuration = 0.3f;  // how long you can hold
+    public float moveSpeed = 20f;   // your horizontal speed
     
     private bool      isJumping;           // are we in the “hold” phase?
     private float     jumpTimeCounter;     // how much “hold time” left
     public float groundCheckDistance = .58f;
+
+    private int jumpBoostsGiven = 0;
 
     protected override void Start()
     {
@@ -49,14 +53,15 @@ public class Player : Teleportable
         }
     }
 
-    void FixedUpdate() 
+    protected override void FixedUpdate() 
     {
         // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
-        
-        // 4) Horizontal movement 
+        base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
         Vector2 hVel = Vector2.right * h * Time.deltaTime;
-        rb.AddForce(hVel * 100, ForceMode2D.Impulse);
+        if (isGrounded) hVel *= 10000;
+        else hVel *= 4000;
+        rb.AddForce(hVel, ForceMode2D.Force);
     }
 
     void Jump()
@@ -66,16 +71,19 @@ public class Player : Teleportable
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
             rb.AddForce(initialJumpForce * Vector2.up, ForceMode2D.Impulse);
-            // Debug.Log("JUMP START");
+            jumpBoostsGiven = 0;
         }
         else
         {
             if (jumpTimeCounter > 0f && isJumping)
             {
                 // apply small extra lift each frame
-                rb.AddForce(extraJumpForce * Vector2.up * Time.fixedDeltaTime, ForceMode2D.Impulse);
+                rb.AddForce(Mathf.Max(extraJumpForce - jumpFalloffRate * jumpTimeCounter, 0f) *
+                    Vector2.up * Time.fixedDeltaTime, ForceMode2D.Impulse);
                 
                 jumpTimeCounter -= Time.fixedDeltaTime;
+                jumpBoostsGiven++;
+                Debug.Log("Jump Boosts Given: " + jumpBoostsGiven);
             }
             else
             {
@@ -87,22 +95,52 @@ public class Player : Teleportable
         }
     }
 
-  // You need to flip this on when you land:
+    /// <summary>
+    /// Check if we hit a walkable surface (mostly flat)
+    /// </summary>
     void OnCollisionEnter2D(Collision2D col)
     {
-        if (col.gameObject.CompareTag("Ground") && col.contacts[0].normal.y > 0.5f)
+        foreach (ContactPoint2D contact in col.contacts)
         {
-            isGrounded = true;
-            Debug.Log("Landed");
+            if (col.gameObject.CompareTag("Ground") && contact.normal.y > 0.5f)
+            {
+                groundContactCount++;
+                isGrounded = true;
+                Debug.Log("Landed");
+                break;
+            }
         }
     }
 
-    void OnCollisionExit2D(Collision2D col) {
-        if (col.gameObject.CompareTag("Ground"))
+    /// <summary>
+    /// Check if we lost contact with a ground surface
+    /// </summary>
+    void OnCollisionExit2D(Collision2D col)
+    {
+        // Do a conservative re-check of all remaining collisions
+        // because Unity doesn't tell us which contact ended.
+        Invoke(nameof(RecheckGroundedState), 0f);
+    }
+
+    private void RecheckGroundedState()
+    {
+        // Reset count and check all contacts again
+        groundContactCount = 0;
+
+        ContactPoint2D[] contacts = new ContactPoint2D[10];
+        int count = rb.GetContacts(contacts);
+        for (int i = 0; i < count; i++)
         {
-            isGrounded = false;
-            Debug.Log("Left Ground");
+            if (contacts[i].collider.CompareTag("Ground") && contacts[i].normal.y > 0.5f)
+            {
+                groundContactCount++;
+            }
         }
+
+        isGrounded = groundContactCount > 0;
+
+        if (!isGrounded)
+            Debug.Log("Left Ground");
     }
 
 }

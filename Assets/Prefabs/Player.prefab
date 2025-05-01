@@ -53,7 +53,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 3
   m_AngularDrag: 0.05
-  m_GravityScale: 12
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -174,6 +174,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d62441661684841c5868fa7adf9a193b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  previousVelocities:
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  - {x: 0, y: 0}
+  rb: {fileID: 0}
+  isGrounded: 1
   initialJumpForce: 25
   extraJumpForce: 12
   maxJumpDuration: 3
@@ -306,13 +312,12 @@ MonoBehaviour:
     m_Bits: 8
   validIndicatorPrefab: {fileID: 499829371135105686, guid: 2e71bc7ebaf494f0990c06027898f1bc, type: 3}
   invalidIndicatorPrefab: {fileID: 9171598603272245552, guid: 4c4d31506865a490ba3b1fc6cde2bb76, type: 3}
-  lineRenderer: {fileID: 0}
-  currentPortalToSpawn: {fileID: 0}
   portalPrefab: {fileID: 0}
   portals:
-  - {fileID: 0}
-  - {fileID: 0}
-  currentPortalIndex: 0
+  - color: {r: 0, g: 0, b: 0, a: 0}
+    type: 0
+  - color: {r: 0, g: 0, b: 0, a: 0}
+    type: 0
 --- !u!114 &715085797898206507
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -693,6 +693,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6352695398266477558, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: m_GravityScale
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 715085797898206507, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: pauseMenuUI
       value: 
@@ -732,6 +736,26 @@ PrefabInstance:
     - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: portals.Array.data[1].color.r
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634640206186001729, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: extraJumpForce
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634640206186001729, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: maxJumpDuration
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634640206186001729, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: initialJumpForce
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634640206186001729, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: terminalVelocity
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634640206186001729, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: gravityAcceleration
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 4013627392041201243, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: m_LocalPosition.x
