@@ -48,9 +48,14 @@ public class Player : Teleportable
         if (transform.position.y < -10f)
         {
             // Reset the player position if they fall off the screen
-            transform.position = new Vector3(0, 0, 0);
-            rb.velocity = Vector2.zero; // Reset velocity
+            Reset();
         }
+    }
+
+    public void Reset()
+    {
+        transform.position = Vector3.up;
+        rb.velocity = Vector2.zero;
     }
 
     protected override void FixedUpdate() 
@@ -59,7 +64,7 @@ public class Player : Teleportable
         base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
         Vector2 hVel = Vector2.right * h * Time.deltaTime;
-        if (isGrounded) hVel *= 10000;
+        if (isGrounded) hVel *= 5000;
         else hVel *= 4000;
         rb.AddForce(hVel, ForceMode2D.Force);
     }

@@ -25,7 +25,7 @@ public class ExitDoor : MonoBehaviour
             // Unload the current scene
             // UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("W" + currWorld + "L" + currLevel);
             // Load the next scene
-            player.transform.position = Vector3.zero;
+            player.Reset();
             UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
             // Debug.Log(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(levelIndex));
 

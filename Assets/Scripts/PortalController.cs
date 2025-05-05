@@ -50,7 +50,7 @@ public class PortalController : MonoBehaviour
             if (receivingPortal != null)
             {
                 Vector2 incomingVelocity = GetVelocity(tpObj);
-                Debug.Log("Incoming Velocity: " + incomingVelocity);
+                // Debug.Log("Incoming Velocity: " + incomingVelocity);
 
                 float angleDifference = Vector3.SignedAngle(transform.up, receivingPortal.transform.up, Vector3.forward);
 
@@ -67,6 +67,7 @@ public class PortalController : MonoBehaviour
 
     private Vector2 GetVelocity(Teleportable teleportableObject)
     {
+        return teleportableObject.previousVelocities[1];
         // foreach (Vector2 v in teleportableObject.previousVelocities)
         // {
         //     if (v != Vector2.zero)
@@ -74,7 +75,6 @@ public class PortalController : MonoBehaviour
         //         return v;
         //     }
         // }
-        return teleportableObject.previousVelocities[1];
         // return Vector2.zero;
     }
 
