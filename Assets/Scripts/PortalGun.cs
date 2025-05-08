@@ -86,7 +86,7 @@ public class PortalGun : MonoBehaviour
                 }
                 else
                 {
-                    GameObject newPortal = Instantiate(portalPrefab, hit.point + 0.05f * hit.normal, Quaternion.identity);
+                    GameObject newPortal = Instantiate(portalPrefab, hit.point, Quaternion.identity);
                     portalController = newPortal.GetComponent<PortalController>();
                     portalsInScene[portalIndex] = portalController;
                     portalController.SetupPortal(currentPortalToSpawn,
@@ -100,6 +100,22 @@ public class PortalGun : MonoBehaviour
         }
     }
 
+    public void ResetPortals()
+    {
+        foreach (PortalController portal in portalsInScene)
+        {
+            if (portal != null)
+            {
+                Destroy(portal.gameObject);
+            }
+        }
+        portalsInScene = new PortalController[portals.Count];
+        portalIndex = 0;
+        currentPortalToSpawn = portals[portalIndex];
+        validIndicator.SetActive(false);
+        invalidIndicator.SetActive(false);
+    }
+
     /// <summary>
     /// Places a visual indicator at the hit point of whether a portal can be placed
     /// </summary>
@@ -108,7 +124,18 @@ public class PortalGun : MonoBehaviour
     private bool TryPlaceIndicator(RaycastHit2D hit, out Vector2 normal)
     {
         Vector2 hitPoint = hit.point;
+        GameObject indicator;
         normal = hit.normal;
+        // Check if we hit a valid surface
+        if (hit.transform.CompareTag("Unportalable"))
+        {
+            // Show the invalid indicator
+            indicator = invalidIndicator;
+            indicator.SetActive(true);
+            indicator.transform.position = hit.point;
+
+            return false;
+        }
         Vector2 right = new Vector2(-normal.y, normal.x); // Perpendicular to the normal
         float portalWidth = portalCheckSize.x;
         int steps = Mathf.CeilToInt(portalWidth / 0.5f);
@@ -139,7 +166,7 @@ public class PortalGun : MonoBehaviour
         }
 
         // Show the correct indicator
-        GameObject indicator = canPlace ? validIndicator : invalidIndicator;
+        indicator = canPlace ? validIndicator : invalidIndicator;
         indicator.SetActive(true);
         indicator.transform.position = hit.point;
 
@@ -197,5 +224,4 @@ public class PortalGun : MonoBehaviour
             Gizmos.DrawLine((testPoint + offset.normalized * 0.5f), (testPoint + offset.normalized * 0.5f) - normal * 0.1f);
         }
     }
-
 }

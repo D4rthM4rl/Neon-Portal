@@ -1,25 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public static CameraController instance;
-    [SerializeField]
-    private GameObject player;
-
-    void Awake()
+    void Start()
     {
-        DontDestroyOnLoad(gameObject);
-        if (instance == null)
-        {
-            instance = this;
-        }
-    }
-    
-    // Update is called once per frame
-    void Update()
-    {
-        transform.position = new Vector3(player.transform.position.x, player.transform.position.y + 3, transform.position.z);
+        GetComponent<CinemachineVirtualCamera>().Follow = GameObject.FindGameObjectWithTag("Player").transform;
     }
 }

@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 715085797898206507}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -174,14 +174,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d62441661684841c5868fa7adf9a193b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  gravityAcceleration: 9.8
+  terminalVelocity: 20
+  gravityDirection: {x: 0, y: -1}
   previousVelocities:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
   - {x: 0, y: 0}
-  rb: {fileID: 0}
   isGrounded: 1
   initialJumpForce: 25
   extraJumpForce: 12
+  jumpFalloffRate: 0.5
   maxJumpDuration: 3
   moveSpeed: 20
   groundCheckDistance: 0.6
@@ -304,12 +308,12 @@ MonoBehaviour:
   maxDistance: 30
   aimLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 136
   portalCheckSize: {x: 2, y: 2}
   portalCheckOffset: 0.1
   blockLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 136
   validIndicatorPrefab: {fileID: 499829371135105686, guid: 2e71bc7ebaf494f0990c06027898f1bc, type: 3}
   invalidIndicatorPrefab: {fileID: 9171598603272245552, guid: 4c4d31506865a490ba3b1fc6cde2bb76, type: 3}
   portalPrefab: {fileID: 0}

@@ -11,7 +11,6 @@ public class PauseMenuController : MonoBehaviour
     private void Awake()
     {
         instance = this;
-        DontDestroyOnLoad(gameObject);
 
         // Ensure the menu is hidden at startup
         if (pauseMenuUI != null)

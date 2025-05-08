@@ -4,24 +4,47 @@ using UnityEngine;
 
 public class Player : Teleportable
 {
+    private static Player instance;
     private int groundContactCount = 0;
     public bool isGrounded = true;
 
-    public float initialJumpForce = 4f;    // impulse on button down
-    public float extraJumpForce = 7f;    // continuous “hold” force
+    private PortalGun portalGun;
+
+    public float initialJumpForce = 4f; // impulse on button down
+    public float extraJumpForce = 7f; // continuous “hold” force
     public float jumpFalloffRate = 0.5f;
-    public float maxJumpDuration = 0.3f;  // how long you can hold
-    public float moveSpeed = 20f;   // your horizontal speed
+    public float maxJumpDuration = 0.3f; // how long you can hold
+    public float moveSpeed = 20f; // your horizontal speed
     
-    private bool      isJumping;           // are we in the “hold” phase?
-    private float     jumpTimeCounter;     // how much “hold time” left
+    private bool isJumping; // are we in the “hold” phase?
+    private float jumpTimeCounter; // how much “hold time” left
     public float groundCheckDistance = .58f;
 
     private int jumpBoostsGiven = 0;
 
+    private float timeHoldingR = 0;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     protected override void Start()
     {
         base.Start();
+        portalGun = GetComponent<PortalGun>();
+        if (portalGun == null)
+        {
+            Debug.LogError("Player does not have a PortalGun component.");
+        }
     }
 
     // Update is called once per frame
@@ -32,6 +55,28 @@ public class Player : Teleportable
         if (Input.GetButtonDown("Pause"))
         {
             PauseMenuController.instance.ToggleMenu();
+        }
+
+        if (Input.GetButton("Reset"))
+        {
+            timeHoldingR += Time.deltaTime;
+            if (timeHoldingR > 1.0)
+            {
+                ResetPlayer();
+            }
+        }
+        else
+        {
+            if (timeHoldingR > 1.0f)
+            {
+                ResetPlayer();
+                ResetPortals();
+            }
+            else if (timeHoldingR > 0)
+            {
+                ResetPortals();
+            }
+            timeHoldingR = 0;
         }
         
         // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
@@ -48,14 +93,22 @@ public class Player : Teleportable
         if (transform.position.y < -10f)
         {
             // Reset the player position if they fall off the screen
-            Reset();
+            ResetPlayer();
+            ResetPortals();
         }
     }
 
-    public void Reset()
+    /// <summary>Sends player back to start</summary>
+    public void ResetPlayer()
     {
         transform.position = Vector3.up;
         rb.velocity = Vector2.zero;
+    }
+
+    /// <summary>Resets the portals in the scene</summary>
+    public void ResetPortals()
+    {
+        portalGun.ResetPortals();
     }
 
     protected override void FixedUpdate() 
