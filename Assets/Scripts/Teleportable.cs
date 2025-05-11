@@ -12,8 +12,9 @@ public class Teleportable : GravityAffected
     }
 
     // Update is called once per frame
-    protected virtual void Update()
+    protected override void Update()
     {
+        base.Update();
         // Store the current velocity in the array
         for (int i = previousVelocities.Length - 1; i > 0; i--)
         {

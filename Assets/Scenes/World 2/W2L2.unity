@@ -655,7 +655,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.5
+  m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
   m_ApplyToSortingLayers: 0000000003eeeb9a7715c536
@@ -1520,7 +1520,7 @@ PrefabInstance:
     - target: {fileID: 4796376765333311409, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: bddc09ceed79f46358af1b41774da24a, type: 3}
+      objectReference: {fileID: 21300000, guid: 66f29eb504c95497c96c8077dfdee13e, type: 3}
     - target: {fileID: 4987578293663527461, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_Name
       value: Camera

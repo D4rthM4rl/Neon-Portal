@@ -1744,7 +1744,7 @@ PrefabInstance:
     - target: {fileID: 4796376765333311409, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2074ff2029c4c4d199e79540d3f67d6d, type: 3}
+      objectReference: {fileID: 21300000, guid: bddc09ceed79f46358af1b41774da24a, type: 3}
     - target: {fileID: 4987578293663527461, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_Name
       value: Camera

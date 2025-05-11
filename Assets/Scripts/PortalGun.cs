@@ -94,6 +94,7 @@ public class PortalGun : MonoBehaviour
                 }
 
                 portalController.transform.up = hit.normal;
+                portalController.transform.parent = hit.transform;
                 portalIndex = (portalIndex + 1) % portals.Count;
                 currentPortalToSpawn = portals[portalIndex];
             }

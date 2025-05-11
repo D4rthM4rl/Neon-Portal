@@ -53,9 +53,11 @@ public class GravityAffected : MonoBehaviour
         // TryStepUp(vSideways); // TODO: Reimplement and uncomment
     }
 
-    private void Update()
-    {
-
+    protected virtual void Update() {
+        if (transform.position.y < -10 && autoRespawning)
+        {
+            Reset();
+        }
     }
 
     public void Reset()
