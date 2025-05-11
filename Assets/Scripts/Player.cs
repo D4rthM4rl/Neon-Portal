@@ -69,6 +69,7 @@ public class Player : Teleportable
         {
             if (timeHoldingR > 1.0f)
             {
+                ResetWorld();
                 ResetPlayer();
                 ResetPortals();
             }
@@ -95,6 +96,23 @@ public class Player : Teleportable
             // Reset the player position if they fall off the screen
             ResetPlayer();
             ResetPortals();
+            ResetWorld();
+        }
+    }
+
+    public void ResetWorld()
+    {
+        // Reset the world state
+        // This can be used to reset any other game objects or states as needed
+        // reset enemies, collectibles, etc.
+
+        foreach (GravityAffected obj in FindObjectsOfType<GravityAffected>())
+        {
+            if (obj != null && obj.GetComponent<Player>() == null)
+            {
+                obj.transform.position = obj.respawnPosition;
+                obj.rb.velocity = Vector2.zero;
+            }
         }
     }
 

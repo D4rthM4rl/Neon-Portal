@@ -40,6 +40,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Sky
+    uniqueID: 1580890797
+    locked: 0
+  - name: In front of Sky
+    uniqueID: 2276964471
+    locked: 0
   - name: Platforms
     uniqueID: 2599153155
     locked: 0

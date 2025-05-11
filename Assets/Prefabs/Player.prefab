@@ -175,9 +175,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
+  autoRespawning: 0
+  respawnPosition: {x: 0, y: 0}
   gravityAcceleration: 9.8
   terminalVelocity: 20
   gravityDirection: {x: 0, y: -1}
+  stepHeight: 0.2
+  stepCheckDistance: 0.1
+  height: 1
+  stepLayerMask:
+    serializedVersion: 2
+    m_Bits: 8
   previousVelocities:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
@@ -187,7 +195,7 @@ MonoBehaviour:
   extraJumpForce: 12
   jumpFalloffRate: 0.5
   maxJumpDuration: 3
-  moveSpeed: 20
+  moveSpeed: 15
   groundCheckDistance: 0.6
 --- !u!120 &831864058123744942
 LineRenderer:

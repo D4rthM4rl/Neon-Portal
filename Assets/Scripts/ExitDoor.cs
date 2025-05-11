@@ -7,17 +7,6 @@ public class ExitDoor : MonoBehaviour
     public int currWorld;
     public int currLevel;
 
-    // public int levelIndex = 1;
-
-    // Start is called before the first frame update
-    void Awake()
-    {
-        // if (currWorld == 0 || currLevel == 0)
-        // {
-        //     Debug.LogError("Current world or level not set for Exit Door.");
-        // }
-    }
-
     private void OnTriggerStay2D(Collider2D other) {
         Player player = other.GetComponent<Player>();
         if (player && player.isGrounded)
