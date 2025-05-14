@@ -30,6 +30,9 @@ EditorBuildSettings:
     path: Assets/Scenes/World 2/W2L3.unity
     guid: b93b8d9b570034647b70005c7206dfc9
   - enabled: 1
+    path: Assets/Scenes/World 2/W2L4.unity
+    guid: 8a218e41892b242d9a74a7d6ba959ddf
+  - enabled: 1
     path: Assets/Scenes/World 3/W3L1.unity
-    guid: 8493132a099984d0b8a1ab608dc24bb1
+    guid: 45dbdfa5c89c042f0b584c0301752b14
   m_configObjects: {}

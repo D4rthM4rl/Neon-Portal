@@ -146,7 +146,7 @@ public class Player : Teleportable
         {
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
-            rb.AddForce(initialJumpForce * Vector2.up, ForceMode2D.Impulse);
+            rb.AddForce(initialJumpForce * -gravityDirection, ForceMode2D.Impulse);
             jumpBoostsGiven = 0;
         }
         else
@@ -155,7 +155,7 @@ public class Player : Teleportable
             {
                 // apply small extra lift each frame
                 rb.AddForce(Mathf.Max(extraJumpForce - jumpFalloffRate * jumpTimeCounter, 0f) *
-                    Vector2.up * Time.fixedDeltaTime, ForceMode2D.Impulse);
+                    -gravityDirection * Time.fixedDeltaTime, ForceMode2D.Impulse);
                 
                 jumpTimeCounter -= Time.fixedDeltaTime;
                 jumpBoostsGiven++;
@@ -178,11 +178,10 @@ public class Player : Teleportable
     {
         foreach (ContactPoint2D contact in col.contacts)
         {
-            if (col.gameObject.CompareTag("Ground") && contact.normal.y > 0.5f)
+            if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection) < -0.5f)
             {
                 groundContactCount++;
                 isGrounded = true;
-                // Debug.Log("Landed");
                 break;
             }
         }
@@ -207,7 +206,7 @@ public class Player : Teleportable
         int count = rb.GetContacts(contacts);
         for (int i = 0; i < count; i++)
         {
-            if (contacts[i].collider.CompareTag("Ground") && contacts[i].normal.y > 0.5f)
+            if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection) < -0.5f)
             {
                 groundContactCount++;
             }

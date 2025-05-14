@@ -305,6 +305,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
+      propertyPath: currLevel
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
+      propertyPath: currWorld
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -863,6 +871,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2294080417124482339, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.8789732
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294080417124482339, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0972
+      objectReference: {fileID: 0}
     - target: {fileID: 4796376765333311409, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_Sprite
       value: 

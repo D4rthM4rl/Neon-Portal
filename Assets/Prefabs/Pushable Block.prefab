@@ -177,6 +177,7 @@ MonoBehaviour:
   gravityAcceleration: 20
   terminalVelocity: 20
   gravityDirection: {x: 0, y: -1}
+  defaultGravityDirection: {x: 0, y: -1}
   stepHeight: 0.2
   stepCheckDistance: 0.1
   height: 1

@@ -177,9 +177,10 @@ MonoBehaviour:
   rb: {fileID: 0}
   autoRespawning: 0
   respawnPosition: {x: 0, y: 0}
-  gravityAcceleration: 9.8
-  terminalVelocity: 20
+  gravityAcceleration: 80
+  terminalVelocity: 50
   gravityDirection: {x: 0, y: -1}
+  defaultGravityDirection: {x: 0, y: -1}
   stepHeight: 0.2
   stepCheckDistance: 0.1
   height: 1
@@ -191,11 +192,11 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
   isGrounded: 1
-  initialJumpForce: 25
-  extraJumpForce: 12
+  initialJumpForce: 15
+  extraJumpForce: 10
   jumpFalloffRate: 0.5
-  maxJumpDuration: 3
-  moveSpeed: 15
+  maxJumpDuration: 2
+  moveSpeed: 12
   groundCheckDistance: 0.6
 --- !u!120 &831864058123744942
 LineRenderer:
@@ -313,7 +314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf2f68b3274d44539ffaf7f81e0fea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxDistance: 30
+  maxDistance: 50
   aimLayers:
     serializedVersion: 2
     m_Bits: 136
@@ -324,11 +325,11 @@ MonoBehaviour:
     m_Bits: 136
   validIndicatorPrefab: {fileID: 499829371135105686, guid: 2e71bc7ebaf494f0990c06027898f1bc, type: 3}
   invalidIndicatorPrefab: {fileID: 9171598603272245552, guid: 4c4d31506865a490ba3b1fc6cde2bb76, type: 3}
-  portalPrefab: {fileID: 0}
+  portalPrefab: {fileID: 9213767316539425225, guid: 597e077362fdd48a29164948f9ddb6d8, type: 3}
   portals:
-  - color: {r: 0, g: 0, b: 0, a: 0}
+  - color: {r: 0.22330008, g: 0.11743506, b: 0.8584906, a: 1}
     type: 0
-  - color: {r: 0, g: 0, b: 0, a: 0}
+  - color: {r: 1, g: 0, b: 0.107281685, a: 1}
     type: 0
 --- !u!114 &715085797898206507
 MonoBehaviour:

@@ -33,13 +33,23 @@ public class PortalController : MonoBehaviour
 
     private int index;
 
+    /// <summary>
+    /// Initializes the portal from its description
+    /// </summary>
+    /// <param name="description">PortalDescription to create from</param>
+    /// <param name="index">What its index is, to see what it connects to</param>
+    /// <param name="direction">What direction its facing</param>
     public void SetupPortal (PortalDescription description, int index, Vector2 direction)
     {
         this.description = description;
-        gameObject.GetComponent<SpriteRenderer>().color = description.color;
         this.index = index;
         this.direction = direction;
         GetComponent<Light2D>().color = description.color;
+        Debug.Assert(GetComponentInChildren<SpriteRenderer>() != null, "No sprite renderer found in children of portal");
+        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sr.color = description.color;
+        }
     }
     
     private void OnTriggerEnter2D(Collider2D other) {

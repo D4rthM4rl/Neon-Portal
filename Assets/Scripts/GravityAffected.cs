@@ -13,7 +13,9 @@ public class GravityAffected : MonoBehaviour
     
     public float gravityAcceleration = 9.8f;
     public float terminalVelocity = 20f; // max falling speed
+    [HideInInspector]
     public Vector2 gravityDirection = Vector2.down;
+    public Vector2 defaultGravityDirection = Vector2.down;
 
     // Start is called before the first frame update
     void Awake()
@@ -21,6 +23,7 @@ public class GravityAffected : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
         respawnPosition = transform.position;
+        gravityDirection = defaultGravityDirection.normalized;
     }
 
     protected virtual void FixedUpdate()
@@ -62,6 +65,7 @@ public class GravityAffected : MonoBehaviour
 
     public void Reset()
     {
+        gravityDirection = defaultGravityDirection;
         transform.position = respawnPosition;
         rb.velocity = Vector2.zero;
     }

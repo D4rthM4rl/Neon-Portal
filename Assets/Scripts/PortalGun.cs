@@ -6,7 +6,7 @@ using UnityEngine;
 public class PortalGun : MonoBehaviour
 {
     [Header("Aim & Raycast")]
-    public float maxDistance = 30f;
+    public float maxDistance = 50f;
     public LayerMask aimLayers = ~0; // which layers the ray can hit
 
     [Header("Portal Size Check")]
@@ -83,6 +83,7 @@ public class PortalGun : MonoBehaviour
                 if (portalController != null)
                 {
                     portalController.MovePortal(hit.point, normal);
+                    // portalController.transform.localScale = new Vector3(2, .1f, 1);
                 }
                 else
                 {
@@ -92,11 +93,13 @@ public class PortalGun : MonoBehaviour
                     portalController.SetupPortal(currentPortalToSpawn,
                         portalIndex, normal);
                 }
-
+                GameObject placeholder = new GameObject("PortalPlaceholder");
+                placeholder.transform.parent = hit.transform;
+                portalController.transform.parent = placeholder.transform;
                 portalController.transform.up = hit.normal;
-                portalController.transform.parent = hit.transform;
                 portalIndex = (portalIndex + 1) % portals.Count;
                 currentPortalToSpawn = portals[portalIndex];
+                // TODO: Add an array for placeholders
             }
         }
     }
