@@ -70,6 +70,10 @@ public class PortalController : MonoBehaviour
                 // Teleport and set new velocity
                 other.transform.position = receivingPortal.transform.position + (Vector3)receivingPortal.direction * 1f;
                 tpObj.rb.velocity = -rotatedVelocity;
+                if (receivingPortal.description.type == PortalType.GravitySwitching)
+                {
+                    tpObj.gravityDirection = -receivingPortal.direction;
+                }
                 // Debug.Log("New Velocity: " + rb.velocity);
             }
         }

@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine.UI;
 
 public class PauseMenuController : MonoBehaviour
 {
@@ -34,6 +37,10 @@ public class PauseMenuController : MonoBehaviour
     {
         Time.timeScale = originalTimeScale;
         pauseMenuUI.SetActive(false);
+        foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
+        {
+            text.gameObject.SetActive(true);
+        }
     }
 
     public void Pause()
@@ -41,6 +48,10 @@ public class PauseMenuController : MonoBehaviour
         originalTimeScale = Time.timeScale;
         Time.timeScale = 0f;
         pauseMenuUI.SetActive(true);
+        foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
+        {
+            text.gameObject.SetActive(false);
+        }
     }
 
     // Call this from the Quit button

@@ -91,13 +91,27 @@ public class Player : Teleportable
             jumpTimeCounter = maxJumpDuration;
         }
 
-        if (transform.position.y < -10f)
+        if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 50f || transform.position.y > 50)
         {
             // Reset the player position if they fall off the screen
             ResetPlayer();
             ResetPortals();
             ResetWorld();
         }
+        RotateWithGravity();
+    }
+
+    public void RotateWithGravity()
+    {
+        Vector2 gravDir = gravityDirection.normalized;
+        float targetAngle = Mathf.Atan2(gravDir.y, gravDir.x) * Mathf.Rad2Deg + 90f;
+
+        Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRotation,
+            720f * Time.deltaTime // Rotation speed in degrees/sec
+        );
     }
 
     public void ResetWorld()
@@ -112,6 +126,7 @@ public class Player : Teleportable
             {
                 obj.transform.position = obj.respawnPosition;
                 obj.rb.velocity = Vector2.zero;
+                obj.gravityDirection = obj.defaultGravityDirection;
             }
         }
     }
@@ -121,6 +136,7 @@ public class Player : Teleportable
     {
         transform.position = Vector3.up;
         rb.velocity = Vector2.zero;
+        gravityDirection = defaultGravityDirection;
     }
 
     /// <summary>Resets the portals in the scene</summary>
@@ -131,10 +147,11 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
-        // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
         base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
-        Vector2 hVel = Vector2.right * h * Time.deltaTime;
+        Vector2 gravDir = gravityDirection.normalized;
+        Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
+        Vector2 hVel = moveAxis * h * Time.deltaTime;
         if (isGrounded) hVel *= 5000;
         else hVel *= 4000;
         rb.AddForce(hVel, ForceMode2D.Force);
@@ -146,7 +163,7 @@ public class Player : Teleportable
         {
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
-            rb.AddForce(initialJumpForce * -gravityDirection, ForceMode2D.Impulse);
+            rb.AddForce(initialJumpForce * -gravityDirection.normalized, ForceMode2D.Impulse);
             jumpBoostsGiven = 0;
         }
         else
@@ -178,7 +195,7 @@ public class Player : Teleportable
     {
         foreach (ContactPoint2D contact in col.contacts)
         {
-            if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection) < -0.5f)
+            if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
                 isGrounded = true;
@@ -206,7 +223,7 @@ public class Player : Teleportable
         int count = rb.GetContacts(contacts);
         for (int i = 0; i < count; i++)
         {
-            if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection) < -0.5f)
+            if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
             }

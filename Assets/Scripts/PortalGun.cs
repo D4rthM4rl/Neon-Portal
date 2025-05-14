@@ -125,7 +125,7 @@ public class PortalGun : MonoBehaviour
     /// </summary>
     /// <param name="hit">Place to check for portal placement</param>
     /// <returns>Whether a portal can be placed there</returns>
-    private bool TryPlaceIndicator(RaycastHit2D hit, out Vector2 normal)
+    protected bool TryPlaceIndicator(RaycastHit2D hit, out Vector2 normal)
     {
         Vector2 hitPoint = hit.point;
         GameObject indicator;

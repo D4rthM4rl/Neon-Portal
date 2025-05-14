@@ -8,6 +8,7 @@ public class CameraController : MonoBehaviour
     public Sprite backgroundSprite;
     [SerializeField]
     private Material unlitMat;
+    private GameObject player;
 
     void Start()
     {
@@ -44,7 +45,7 @@ public class CameraController : MonoBehaviour
 
     private IEnumerator GetCamera(CinemachineBrain brain)
     {
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        player = GameObject.FindGameObjectWithTag("Player");
         if (player == null)
         {
             Debug.LogError("Player GameObject with tag 'Player' not found.");
@@ -59,4 +60,25 @@ public class CameraController : MonoBehaviour
 
         brain.ActiveVirtualCamera.Follow = player.transform;
     }
+
+    // public float cameraRotateSpeed = 360f; // Degrees per second
+
+    // void Update()
+    // {
+    //     if (player != null)
+    //     {
+    //         // Compute the angle between gravity down and world down
+    //         float targetAngle = Vector2.SignedAngle(Vector2.down, player.GetComponent<Player>().gravityDirection);
+
+    //         // Desired rotation (Z-axis rotation)
+    //         Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
+
+    //         // Smoothly rotate the camera toward the target rotation
+    //         transform.rotation = Quaternion.RotateTowards(
+    //             transform.rotation,
+    //             targetRotation,
+    //             cameraRotateSpeed * Time.deltaTime
+    //         );
+    //     }
+    // }
 }
