@@ -5,10 +5,11 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public Sprite backgroundSprite;
+    public bool rotateWithGravity = true;
     [SerializeField]
     private Material unlitMat;
     private GameObject player;
+    private ICinemachineCamera virtualCamera;
 
     void Start()
     {
@@ -32,13 +33,6 @@ public class CameraController : MonoBehaviour
             bg.transform.localPosition = Vector3.forward;
             bg.transform.localScale = new Vector3(1.85f, 1.85f, 1);
             bgSR = bg.AddComponent<SpriteRenderer>();
-            if (backgroundSprite == null || unlitMat == null)
-            {
-                Debug.LogError("Skybox material or unlitMat not assigned.");
-                return;
-            }
-            bgSR.sprite = backgroundSprite;
-            bgSR.material = unlitMat;
         }
         bgSR.sortingLayerName = "Sky";
     }
@@ -58,27 +52,28 @@ public class CameraController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        brain.ActiveVirtualCamera.Follow = player.transform;
+        virtualCamera = brain.ActiveVirtualCamera;
+        virtualCamera.Follow = player.transform;
     }
 
-    // public float cameraRotateSpeed = 360f; // Degrees per second
+    public float cameraRotateSpeed = 360f; // Degrees per second
 
-    // void Update()
-    // {
-    //     if (player != null)
-    //     {
-    //         // Compute the angle between gravity down and world down
-    //         float targetAngle = Vector2.SignedAngle(Vector2.down, player.GetComponent<Player>().gravityDirection);
+    void Update()
+    {
+        if (player != null && virtualCamera != null && rotateWithGravity)
+        {
+            Transform virtualCameraTransform = virtualCamera.VirtualCameraGameObject.transform;
+            Vector2 grav = player.GetComponent<Player>().gravityDirection.normalized;
+            float targetAngle = Vector2.SignedAngle(Vector2.down, grav);
 
-    //         // Desired rotation (Z-axis rotation)
-    //         Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
 
-    //         // Smoothly rotate the camera toward the target rotation
-    //         transform.rotation = Quaternion.RotateTowards(
-    //             transform.rotation,
-    //             targetRotation,
-    //             cameraRotateSpeed * Time.deltaTime
-    //         );
-    //     }
-    // }
+            virtualCameraTransform.rotation = Quaternion.RotateTowards(
+                virtualCameraTransform.rotation,
+                targetRotation,
+                cameraRotateSpeed * Time.deltaTime
+            );
+        }
+    }
+
 }
