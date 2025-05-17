@@ -20,7 +20,7 @@ public class GravityZone : MonoBehaviour
         GravityAffected gravity = other.GetComponent<GravityAffected>();
         if (gravity != null)
         {
-            gravity.gravityDirection = gravity.defaultGravityDirection; // Optional: return to default gravity
+            gravity.gravityDirection = gravity.defaultGravityDirection;
         }
     }
 }

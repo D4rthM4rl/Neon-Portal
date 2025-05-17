@@ -33,13 +33,16 @@ EditorBuildSettings:
     path: Assets/Scenes/World 2/W2L4.unity
     guid: 8a218e41892b242d9a74a7d6ba959ddf
   - enabled: 1
+    path: Assets/Scenes/World 2/W2L5.unity
+    guid: 187cffc4eb4894a87af0e4bc649c1d09
+  - enabled: 1
     path: Assets/Scenes/World 5/W3L1.unity
     guid: 91573b56521414520b589fdbed9c4c53
   - enabled: 1
     path: Assets/Scenes/World 5/W3L2.unity
     guid: acabd6f71f7a24c23b8d5b7fd4050e29
   - enabled: 1
-    path: Assets/Scenes/World 5/W3L3.unity
+    path: Assets/Scenes/World 5/W3L4.unity
     guid: 6aaa2e7b9b3664325be7a71673beedfe
   - enabled: 1
     path: Assets/Scenes/World 6/W4L1.unity

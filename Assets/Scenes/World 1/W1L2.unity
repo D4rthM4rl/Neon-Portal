@@ -270,8 +270,32 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6787844056644173503, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 181633155}
   m_SourcePrefab: {fileID: 100100000, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+--- !u!1 &181633154 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6787844056644173503, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+  m_PrefabInstance: {fileID: 181633153}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &181633155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181633154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 399691e69b68c4cf6adb9c65ada2eda7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minimumTransparency: 0.35
+  decreasePerUnit: 0.15
+  radius: 2
+  targetPositions: []
 --- !u!1001 &255703152
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -944,8 +968,34 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6787844056644173503, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 810204859}
   m_SourcePrefab: {fileID: 100100000, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+--- !u!1 &810204858 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6787844056644173503, guid: b964badb433e74a5ca0e68782b3a56da, type: 3}
+  m_PrefabInstance: {fileID: 810204857}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &810204859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 810204858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 399691e69b68c4cf6adb9c65ada2eda7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minimumTransparency: 0.35
+  decreasePerUnit: 0.1
+  radius: 3
+  targetPositions:
+  - {x: -1.43, y: 1.11}
+  - {x: 1.62, y: 10.92}
 --- !u!1001 &1007781966
 PrefabInstance:
   m_ObjectHideFlags: 0

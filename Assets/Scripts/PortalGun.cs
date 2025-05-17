@@ -147,13 +147,14 @@ public class PortalGun : MonoBehaviour
 
         bool canPlace = true;
 
-        for (int i = -steps/2; i <= steps/2; i++)
+        int i = 0;
+        for (i = 0; i < steps/2; i++)
         {
             Vector2 offset = right.normalized * stepDistance * i;
-            Vector2 testPoint = hitPoint + offset + normal * 0.075f; // slightly behind surface
+            Vector2 startPoint = hitPoint + offset + normal * 0.075f; // slightly behind surface
 
             // 1. Check side clearance (shoot outward, perpendicular to normal)
-            RaycastHit2D sideHit = Physics2D.Raycast(testPoint, offset.normalized, 0.5f, blockLayers);
+            RaycastHit2D sideHit = Physics2D.Raycast(startPoint, offset.normalized, 0.5f, blockLayers);
             if (sideHit)
             {
                 canPlace = false;
@@ -161,8 +162,30 @@ public class PortalGun : MonoBehaviour
             }
 
             // 2. Check back toward the platform (shoot opposite of normal)
-            RaycastHit2D backHit = Physics2D.Raycast(testPoint, -normal, 0.1f, aimLayers);
-            if (!backHit)
+            RaycastHit2D backHit = Physics2D.Raycast(startPoint + right.normalized * 0.5f, -normal, 0.1f, aimLayers);
+            if (!backHit || backHit.transform.CompareTag("Unportalable"))
+            {
+                canPlace = false;
+                break;
+            }
+        }
+
+        for (i = 0; i > -steps/2; i--)
+        {
+            Vector2 offset = right.normalized * stepDistance * i;
+            Vector2 startPoint = hitPoint + offset + normal * 0.075f; // slightly behind surface
+
+            // 1. Check side clearance (shoot outward, perpendicular to normal)
+            RaycastHit2D sideHit = Physics2D.Raycast(startPoint, right.normalized, 0.5f, blockLayers);
+            if (sideHit)
+            {
+                canPlace = false;
+                break;
+            }
+
+            // 2. Check back toward the platform (shoot opposite of normal)
+            RaycastHit2D backHit = Physics2D.Raycast(startPoint - right.normalized * 0.5f, -normal, 0.1f, aimLayers);
+            if (!backHit || backHit.transform.CompareTag("Unportalable"))
             {
                 canPlace = false;
                 break;
@@ -205,27 +228,41 @@ public class PortalGun : MonoBehaviour
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(hitPoint, 0.05f);
-
-        for (int i = -steps/2; i <= steps/2; i++)
+        int i = 0;
+        for (i = 0; i < steps/2; i++)
         {
             Vector2 offset = right.normalized * stepDistance * i;
-            Vector2 testPoint = hitPoint + offset + normal * .1f;
-
-            // Draw back check ray (toward surface
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(testPoint, testPoint - normal * 0.1f);
+            Vector2 startPoint = hitPoint + offset + normal * .1f;
 
             // Draw test point
             Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(testPoint, 0.05f);
+            Gizmos.DrawSphere(startPoint, 0.05f);
 
             // Draw side check ray (outward)
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(testPoint, testPoint + offset.normalized * 0.5f);
+            Gizmos.DrawLine(startPoint, startPoint + right.normalized * 0.5f);
 
             // Draw back check ray (toward surface)
             Gizmos.color = Color.green;
-            Gizmos.DrawLine((testPoint + offset.normalized * 0.5f), (testPoint + offset.normalized * 0.5f) - normal * 0.1f);
+            Gizmos.DrawLine((startPoint + right.normalized * 0.5f), (startPoint + right.normalized * 0.5f) - normal * 0.1f);
+        }
+
+        for (i = 0; i > -steps/2; i--)
+        {
+            Vector2 offset = right.normalized * stepDistance * i;
+            Vector2 startPoint = hitPoint + offset + normal * .1f;
+
+            // Draw test point
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(startPoint, 0.05f);
+
+            // Draw side check ray (outward)
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(startPoint, startPoint - right.normalized * 0.5f);
+
+            // Draw back check ray (toward surface)
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine((startPoint - right.normalized * 0.5f), (startPoint - right.normalized * 0.5f) - normal * 0.1f);
         }
     }
 }

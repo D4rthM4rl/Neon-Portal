@@ -33,6 +33,8 @@ public class Player : Teleportable
         }
         else
         {
+            instance.GetComponent<PortalGun>().portals = GetComponent<PortalGun>().portals;
+            instance.GetComponent<PortalGun>().ResetPortals();
             Destroy(gameObject);
         }
     }
@@ -134,8 +136,10 @@ public class Player : Teleportable
     /// <summary>Sends player back to start</summary>
     public void ResetPlayer()
     {
-        transform.position = Vector3.up;
         rb.velocity = Vector2.zero;
+        transform.position = Vector3.up;
+        rb.angularVelocity = 0;
+        transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
     }
 
