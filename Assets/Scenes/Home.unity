@@ -3016,7 +3016,7 @@ GameObject:
   - component: {fileID: 618325392}
   - component: {fileID: 618325393}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Menus Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3288,7 +3288,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &712037989
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5925,7 +5925,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1522730819
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8517,6 +8517,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2904963785585954273, guid: 8dd4a72d8686f49d2996dc06c1178ea3, type: 3}
       propertyPath: m_ScreenMatchMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904963785585954273, guid: 8dd4a72d8686f49d2996dc06c1178ea3, type: 3}
+      propertyPath: m_MatchWidthOrHeight
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7023796745611281521, guid: 8dd4a72d8686f49d2996dc06c1178ea3, type: 3}

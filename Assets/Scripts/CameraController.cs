@@ -53,7 +53,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (player != null && virtualCamera != null && rotateWithGravity)
+        if (player != null && virtualCamera != null && Settings.instance.rotateCameraWithGravity)
         {
             Transform virtualCameraTransform = virtualCamera.VirtualCameraGameObject.transform;
             Vector2 grav = player.GetComponent<Player>().gravityDirection.normalized;

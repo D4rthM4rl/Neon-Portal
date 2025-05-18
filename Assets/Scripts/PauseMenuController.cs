@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections.Generic;
+using System.Collections;
 using TMPro;
 
 public class PauseMenuController : MonoBehaviour
@@ -91,6 +91,7 @@ public class PauseMenuController : MonoBehaviour
             Destroy(player);
         }
         UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+        StartCoroutine(WaitForLevelSelect());
     }
 
     // Call this from the Options button
@@ -98,5 +99,17 @@ public class PauseMenuController : MonoBehaviour
     {
         // Implement options menu functionality
         Debug.Log("Options menu requested");
+    }
+
+    private IEnumerator WaitForLevelSelect()
+    {
+        GameObject mainMenu = GameObject.Find("Menus Canvas");
+        // yield return new WaitForSeconds(0.05f);
+        while (!mainMenu)
+        {
+            mainMenu = GameObject.Find("Menus Canvas");
+            yield return new WaitForSeconds(0.005f);
+        }
+        mainMenu.GetComponent<MainMenu>().OpenLevelSelect();
     }
 }
