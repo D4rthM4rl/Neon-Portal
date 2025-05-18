@@ -55,51 +55,54 @@ public class PortalGun : MonoBehaviour
 
     void Update()
     {
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 direction = (mousePos - transform.position).normalized;
-
-        // 1) Raycast toward mouse
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, aimLayers);
-
-        Vector3 endPoint = hit 
-            ? (Vector3)hit.point 
-            : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
-
-        // 2) Draw the line
-        lineRenderer.SetPosition(0, transform.position);
-        lineRenderer.SetPosition(1, endPoint);
-        lineRenderer.startColor = currentPortalToSpawn.color;
-        lineRenderer.endColor = currentPortalToSpawn.color;
-
-        // 3) Handle indicator
-        RemoveIndicator();
-        if (hit)
+        if (!PauseMenuController.instance.isPaused)
         {
-            Vector2 normal = Vector2.zero;
-            if (TryPlaceIndicator(hit, out normal) && Input.GetButtonDown("Fire1"))
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 direction = (mousePos - transform.position).normalized;
+
+            // 1) Raycast toward mouse
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, aimLayers);
+
+            Vector3 endPoint = hit 
+                ? (Vector3)hit.point 
+                : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
+
+            // 2) Draw the line
+            lineRenderer.SetPosition(0, transform.position);
+            lineRenderer.SetPosition(1, endPoint);
+            lineRenderer.startColor = currentPortalToSpawn.color;
+            lineRenderer.endColor = currentPortalToSpawn.color;
+
+            // 3) Handle indicator
+            RemoveIndicator();
+            if (hit)
             {
-                // Spawn the portal
-                PortalController portalController = portalsInScene[portalIndex];
-                if (portalController != null)
+                Vector2 normal = Vector2.zero;
+                if (TryPlaceIndicator(hit, out normal) && Input.GetButtonDown("Fire1"))
                 {
-                    portalController.MovePortal(hit.point, normal);
-                    // portalController.transform.localScale = new Vector3(2, .1f, 1);
+                    // Spawn the portal
+                    PortalController portalController = portalsInScene[portalIndex];
+                    if (portalController != null)
+                    {
+                        portalController.MovePortal(hit.point, normal);
+                        // portalController.transform.localScale = new Vector3(2, .1f, 1);
+                    }
+                    else
+                    {
+                        GameObject newPortal = Instantiate(portalPrefab, hit.point, Quaternion.identity);
+                        portalController = newPortal.GetComponent<PortalController>();
+                        portalsInScene[portalIndex] = portalController;
+                        portalController.SetupPortal(currentPortalToSpawn,
+                            portalIndex, normal);
+                    }
+                    GameObject placeholder = new GameObject("PortalPlaceholder");
+                    placeholder.transform.parent = hit.transform;
+                    portalController.transform.parent = placeholder.transform;
+                    portalController.transform.up = hit.normal;
+                    portalIndex = (portalIndex + 1) % portals.Count;
+                    currentPortalToSpawn = portals[portalIndex];
+                    // TODO: Add an array for placeholders
                 }
-                else
-                {
-                    GameObject newPortal = Instantiate(portalPrefab, hit.point, Quaternion.identity);
-                    portalController = newPortal.GetComponent<PortalController>();
-                    portalsInScene[portalIndex] = portalController;
-                    portalController.SetupPortal(currentPortalToSpawn,
-                        portalIndex, normal);
-                }
-                GameObject placeholder = new GameObject("PortalPlaceholder");
-                placeholder.transform.parent = hit.transform;
-                portalController.transform.parent = placeholder.transform;
-                portalController.transform.up = hit.normal;
-                portalIndex = (portalIndex + 1) % portals.Count;
-                currentPortalToSpawn = portals[portalIndex];
-                // TODO: Add an array for placeholders
             }
         }
     }

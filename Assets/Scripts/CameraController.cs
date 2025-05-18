@@ -7,9 +7,10 @@ public class CameraController : MonoBehaviour
 {
     public bool rotateWithGravity = true;
     [SerializeField]
-    private Material unlitMat;
     private GameObject player;
     private ICinemachineCamera virtualCamera;
+
+    private GameObject bg;
 
     void Start()
     {
@@ -19,22 +20,14 @@ public class CameraController : MonoBehaviour
             Debug.LogError("CinemachineBrain component not found on the camera.");
             return;
         }
+
         StartCoroutine(GetCamera(brain));
-        GameObject bg;
-        SpriteRenderer bgSR = GetComponentInChildren<SpriteRenderer>();
-        if (bgSR != null)
+        bg = GetComponentInChildren<SpriteRenderer>().gameObject;
+        if (bg == null)
         {
-            bg = GetComponentInChildren<SpriteRenderer>().gameObject;
+            Debug.LogError("Background GameObject not found.");
+            return;
         }
-        else
-        {
-            bg = new GameObject("Background");
-            bg.transform.SetParent(transform);
-            bg.transform.localPosition = Vector3.forward;
-            bg.transform.localScale = new Vector3(1.85f, 1.85f, 1);
-            bgSR = bg.AddComponent<SpriteRenderer>();
-        }
-        bgSR.sortingLayerName = "Sky";
     }
 
     private IEnumerator GetCamera(CinemachineBrain brain)
@@ -73,6 +66,8 @@ public class CameraController : MonoBehaviour
                 targetRotation,
                 cameraRotateSpeed * Time.deltaTime
             );
+            // Quaternion backgroundRotation = Quaternion.Euler(0f, 0f, -targetAngle);
+            // bg.transform.rotation = backgroundRotation;
         }
     }
 

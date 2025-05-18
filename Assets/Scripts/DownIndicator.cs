@@ -4,11 +4,23 @@ using UnityEngine;
 
 public class DownIndicator : MonoBehaviour
 {
-    private RectTransform arrowRect;
+    private RectTransform rect;
+    private Transform regTransform;
+
+    public float angleOffset = 0f; // Angle offset in degrees
 
     void Awake()
     {
-        arrowRect = GetComponent<RectTransform>();
+        rect = GetComponent<RectTransform>();
+        if (rect == null)
+        {
+            regTransform = GetComponent<Transform>();
+            if (regTransform == null)
+            {
+                Debug.LogError("No RectTransform or Transform component found on this GameObject.");
+                return;
+            }
+        }
     }
 
     void LateUpdate()
@@ -21,9 +33,10 @@ public class DownIndicator : MonoBehaviour
         Vector3 screenOffset = Camera.main.WorldToScreenPoint(worldDown) - screenCenter;
 
         // Get angle in screen space
-        float angle = Mathf.Atan2(screenOffset.y, screenOffset.x) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan2(screenOffset.y, screenOffset.x) * Mathf.Rad2Deg + angleOffset;
 
         // Apply to UI rotation
-        arrowRect.rotation = Quaternion.Euler(0, 0, angle);
+        if (rect) rect.rotation = Quaternion.Euler(0, 0, angle);
+        else regTransform.rotation = Quaternion.Euler(0, 0, -angle);
     }
 }

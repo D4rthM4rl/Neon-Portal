@@ -10,10 +10,23 @@ public class PauseMenuController : MonoBehaviour
 
     private float originalTimeScale;
     public static PauseMenuController instance;
+    public bool isPaused = false;
     
     private void Awake()
     {
-        instance = this;
+        if (instance == null)
+        {
+            instance = this;
+            if (pauseMenuUI == null)
+                Debug.Log("Pause won't work in this scene");
+            else
+                DontDestroyOnLoad(pauseMenuUI.transform.parent.gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        
 
         // Ensure the menu is hidden at startup
         if (pauseMenuUI != null)
@@ -41,6 +54,7 @@ public class PauseMenuController : MonoBehaviour
         {
             text.gameObject.SetActive(true);
         }
+        isPaused = false;
     }
 
     public void Pause()
@@ -52,6 +66,7 @@ public class PauseMenuController : MonoBehaviour
         {
             text.gameObject.SetActive(false);
         }
+        isPaused = true;
     }
 
     // Call this from the Quit button
