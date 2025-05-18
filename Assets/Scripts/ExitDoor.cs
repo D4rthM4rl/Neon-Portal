@@ -11,14 +11,29 @@ public class ExitDoor : MonoBehaviour
         Player player = other.GetComponent<Player>();
         if (player && player.isGrounded)
         {
-            // Unload the current scene
-            // UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("W" + currWorld + "L" + currLevel);
+            BeatLevel(player);
             // Load the next scene
             player.ResetPlayer();
             player.ResetPortals();
             UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
-            // Debug.Log(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(levelIndex));
+        }
+    }
 
+    private void BeatLevel(Player player)
+    {
+        Level level = new Level(currWorld, currLevel);
+        if (player.timer < PlayerPrefs.GetFloat("W" + currWorld + "L" + currLevel, float.PositiveInfinity))
+        {
+            PlayerPrefs.SetFloat("W" + currWorld + "L" + currLevel, player.timer);
+            if (LevelSelect.instance == null)
+            {
+                Debug.Log("LevelSelect instance is null");
+            }
+            else
+            {
+                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].bestTime = player.timer;
+                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].beaten = true;
+            }
         }
     }
 

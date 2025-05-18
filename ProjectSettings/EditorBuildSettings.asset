@@ -6,19 +6,19 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/World 1/W1L0.unity
+    path: Assets/Scenes/World 1/W1L1.unity
     guid: c8297eae0012440ea9e84e12c487197a
   - enabled: 1
-    path: Assets/Scenes/World 1/W1L1.unity
+    path: Assets/Scenes/World 1/W1L2.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
-    path: Assets/Scenes/World 1/W1L2.unity
+    path: Assets/Scenes/World 1/W1L3.unity
     guid: bf8bd9786c91d41b6a9763f96964700d
   - enabled: 1
-    path: Assets/Scenes/World 1/W1L3.unity
+    path: Assets/Scenes/World 1/W1L4.unity
     guid: e0ed6339c3cb24153b244b9a2b3801b2
   - enabled: 1
-    path: Assets/Scenes/World 1/W1L4.unity
+    path: Assets/Scenes/World 1/W1L5.unity
     guid: 57cdc56fd11354d58b656d0d80eacd0d
   - enabled: 1
     path: Assets/Scenes/World 2/W2L1.unity
@@ -41,6 +41,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/World 5/W3L2.unity
     guid: acabd6f71f7a24c23b8d5b7fd4050e29
+  - enabled: 1
+    path: Assets/Scenes/World 5/W3L3.unity
+    guid: e0ae3920d7b86471b8e538e2fa279fd3
   - enabled: 1
     path: Assets/Scenes/World 5/W3L4.unity
     guid: 6aaa2e7b9b3664325be7a71673beedfe

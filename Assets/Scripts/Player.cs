@@ -24,6 +24,8 @@ public class Player : Teleportable
 
     private float timeHoldingR = 0;
 
+    public float timer;
+
     private void Awake()
     {
         if (instance == null)
@@ -64,18 +66,14 @@ public class Player : Teleportable
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > 1.0)
             {
-                ResetPlayer();
-            }
-        }
-        else
-        {
-            if (timeHoldingR > 1.0f)
-            {
                 ResetWorld();
                 ResetPlayer();
                 ResetPortals();
             }
-            else if (timeHoldingR > 0)
+        }
+        else
+        {
+            if (timeHoldingR > 0)
             {
                 ResetPortals();
             }
@@ -101,7 +99,21 @@ public class Player : Teleportable
             ResetWorld();
         }
         RotateWithGravity();
+        UpdateTimer();
     }
+
+    public void UpdateTimer(){
+		//set timer UI
+		timer += Time.deltaTime;
+		// timerText.text = hourCount +"h:"+ minuteCount +"m:"+(int)secondsCount + "s";
+		// if(secondsCount >= 60){
+		// 	minuteCount++;
+		// 	secondsCount = 0;
+		// }else if(minuteCount >= 60){
+		// 	hourCount++;
+		// 	minuteCount = 0;
+		// }	
+	}
 
     public void RotateWithGravity()
     {
@@ -141,6 +153,7 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
+        timer = 0;
     }
 
     /// <summary>Resets the portals in the scene</summary>
