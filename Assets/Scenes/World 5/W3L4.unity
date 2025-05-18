@@ -237,6 +237,26 @@ PrefabInstance:
       propertyPath: portals.Array.data[1].type
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[0].color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[0].color.g
+      value: 0.52156866
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.g
+      value: 0.49411765
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.r
+      value: 0.79607844
+      objectReference: {fileID: 0}
     - target: {fileID: 4013627392041201243, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

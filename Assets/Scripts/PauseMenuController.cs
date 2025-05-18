@@ -79,6 +79,20 @@ public class PauseMenuController : MonoBehaviour
         #endif
     }
 
+    public void GoHome()
+    {
+        pauseMenuUI.SetActive(false);
+        isPaused = false;
+        Time.timeScale = 1f;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if  (player != null)
+        {
+            player.GetComponent<Player>().portalGun.DestroyIndicators();
+            Destroy(player);
+        }
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    }
+
     // Call this from the Options button
     public void OpenOptions()
     {

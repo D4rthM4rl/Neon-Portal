@@ -90,10 +90,23 @@ public class LevelSelect : MonoBehaviour
     public void LoadLevel(Level level)
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("W" + level.world + "L" + level.level);
+        StartCoroutine(WaitForRemovePlayer());
     }
 
     public void LoadLevel(string level)
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene(level);
+        StartCoroutine(WaitForRemovePlayer());
+    }
+
+    public IEnumerator WaitForRemovePlayer()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        while (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player");
+            yield return new WaitForSeconds(0.1f);
+        }
+        Destroy(player);
     }
 }

@@ -263,7 +263,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
       propertyPath: currLevel
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
       propertyPath: currWorld
@@ -289,6 +289,26 @@ PrefabInstance:
     - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: portals.Array.data[1].type
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[0].color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[0].color.g
+      value: 0.5223286
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.g
+      value: 0.49411762
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011932401368694460, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
+      propertyPath: portals.Array.data[1].color.r
+      value: 0.79661334
       objectReference: {fileID: 0}
     - target: {fileID: 4013627392041201243, guid: 4faaf97503bf740e5b48834ee6d435b1, type: 3}
       propertyPath: m_LocalPosition.x

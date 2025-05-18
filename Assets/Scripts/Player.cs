@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 public class Player : Teleportable
 {
@@ -8,7 +9,7 @@ public class Player : Teleportable
     private int groundContactCount = 0;
     public bool isGrounded = true;
 
-    private PortalGun portalGun;
+    public PortalGun portalGun;
 
     public float initialJumpForce = 4f; // impulse on button down
     public float extraJumpForce = 7f; // continuous “hold” force
@@ -22,9 +23,13 @@ public class Player : Teleportable
 
     private int jumpBoostsGiven = 0;
 
+    private bool jumpQueued = false;
+
     private float timeHoldingR = 0;
 
     public float timer;
+
+    private bool amHome = false;
 
     private void Awake()
     {
@@ -54,6 +59,10 @@ public class Player : Teleportable
     // Update is called once per frame
     protected override void Update()
     {
+        if (amHome)
+        {
+            return;
+        }
         base.Update();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
@@ -69,6 +78,11 @@ public class Player : Teleportable
                 ResetWorld();
                 ResetPlayer();
                 ResetPortals();
+                Analytics.CustomEvent("player_reset", new Dictionary<string, object>
+                {
+                    { "position", transform.position },
+                    { "time", timer }
+                });
             }
         }
         else
@@ -83,7 +97,7 @@ public class Player : Teleportable
         // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
         if (Input.GetButton("Jump"))
         {
-            Jump();
+            jumpQueued = true;
         }
         else
         {
@@ -93,10 +107,16 @@ public class Player : Teleportable
 
         if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 60f || transform.position.y > 50)
         {
+            Analytics.CustomEvent("player_death", new Dictionary<string, object>
+            {
+                { "position", transform.position },
+                { "time", timer }
+            });
             // Reset the player position if they fall off the screen
             ResetPlayer();
             ResetPortals();
             ResetWorld();
+
         }
         RotateWithGravity();
         UpdateTimer();
@@ -164,6 +184,16 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
+        if (amHome)
+        {
+            return;
+        }
+        if (jumpQueued)
+        {
+            Jump();
+            jumpQueued = false;
+
+        }
         base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
         Vector2 gravDir = gravityDirection.normalized;
@@ -189,7 +219,7 @@ public class Player : Teleportable
             {
                 // apply small extra lift each frame
                 rb.AddForce(Mathf.Max(extraJumpForce - jumpFalloffRate * jumpTimeCounter, 0f) *
-                    -gravityDirection * Time.fixedDeltaTime, ForceMode2D.Impulse);
+                    -gravityDirection * Time.fixedDeltaTime, ForceMode2D.Force);
                 
                 jumpTimeCounter -= Time.fixedDeltaTime;
                 jumpBoostsGiven++;
@@ -252,4 +282,30 @@ public class Player : Teleportable
         //     Debug.Log("Left Ground");
     }
 
+    public void GoHome()
+    {
+        portalGun.DestroyIndicators();
+        // gameObject.SetActive(false);
+        GetComponent<PortalGun>().enabled = false;
+        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sr.enabled = false;
+        }
+        GetComponent<LineRenderer>().enabled = false;
+        amHome = true;
+    }
+
+    public void GetReady()
+    {
+        GetComponent<PortalGun>().enabled = true;
+        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sr.enabled = true;
+        }
+        GetComponent<LineRenderer>().enabled = true;
+        amHome = false;
+        ResetPlayer();
+        ResetPortals();
+        ResetWorld();
+    }
 }

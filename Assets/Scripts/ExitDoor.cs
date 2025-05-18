@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 public class ExitDoor : MonoBehaviour
 {
@@ -16,6 +17,10 @@ public class ExitDoor : MonoBehaviour
             player.ResetPlayer();
             player.ResetPortals();
             UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
+            if (GetNextLevel() == "Home")
+            {
+                player.GoHome();
+            }
         }
     }
 
@@ -25,6 +30,13 @@ public class ExitDoor : MonoBehaviour
         if (player.timer < PlayerPrefs.GetFloat("W" + currWorld + "L" + currLevel, float.PositiveInfinity))
         {
             PlayerPrefs.SetFloat("W" + currWorld + "L" + currLevel, player.timer);
+            PlayerPrefs.Save();
+            // Send a custom event to Unity Analytics when the player completes a level
+            Analytics.CustomEvent("level_complete", new Dictionary<string, object>
+            {
+                { "level", currWorld + "L" + currLevel },
+                { "time", player.timer }
+            });
             if (LevelSelect.instance == null)
             {
                 Debug.Log("LevelSelect instance is null");
@@ -53,9 +65,10 @@ public class ExitDoor : MonoBehaviour
         }
         else
         {
-            Debug.LogError("No next level found for " + "W" + currWorld + "L" + (currLevel + 1)
-             + " or W" + (currWorld + 1) + "L1");
-            return null;
+            // Debug.LogError("No next level found for " + "W" + currWorld + "L" + (currLevel + 1)
+            //  + " or W" + (currWorld + 1) + "L1");
+            
+            return "Home";
         }
     }
 }

@@ -211,6 +211,20 @@ public class PortalGun : MonoBehaviour
         validIndicator.SetActive(false);
         invalidIndicator.SetActive(false);
     }
+    
+    public void DestroyIndicators()
+    {
+        if (validIndicator != null)
+        {
+            Destroy(validIndicator);
+            validIndicator = null;
+        }
+        if (invalidIndicator != null)
+        {
+            Destroy(invalidIndicator);
+            invalidIndicator = null;
+        }
+    }
 
     // Gizmos to visualize the OverlapBox in the editor
     void OnDrawGizmos()
