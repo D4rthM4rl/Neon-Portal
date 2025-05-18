@@ -91,7 +91,7 @@ public class Player : Teleportable
             jumpTimeCounter = maxJumpDuration;
         }
 
-        if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 50f || transform.position.y > 50)
+        if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 60f || transform.position.y > 50)
         {
             // Reset the player position if they fall off the screen
             ResetPlayer();
