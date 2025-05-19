@@ -965,7 +965,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1164, y: 55}
+  m_AnchoredPosition: {x: 1100, y: 55}
   m_SizeDelta: {x: 1000, y: 1200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &197229784
@@ -988,18 +988,18 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Thank you for playing our game! We use Unity Analytics to help improve
-    our game and provide a better experience. Unity Analytics collects data about
-    how you interact with the game, such as gameplay patterns and performance metrics.
+  m_text: 'Thank you for playing my game! I use Unity Analytics to help improve our
+    game and provide a better experience. Unity Analytics collects data about how
+    you interact with the game, such as gameplay patterns and performance metrics.
     This data is anonymous and used solely for the purpose of improving the game.
 
 
     By
-    consenting to this, you help us make our game better! If you prefer not to share
+    consenting to this, you help us make mu game better! If you prefer not to share
     this data, you can opt out at any time.
 
 
-    Would you like to allow us to collect
+    Would you like to allow me to collect
     this data for Unity Analytics?'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2123,7 +2123,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1200, y: 0}
+  m_AnchoredPosition: {x: -1097, y: 0}
   m_SizeDelta: {x: 600, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &423334839
@@ -3288,7 +3288,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &712037989
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4928,7 +4928,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1229667670
 RectTransform:
   m_ObjectHideFlags: 0
