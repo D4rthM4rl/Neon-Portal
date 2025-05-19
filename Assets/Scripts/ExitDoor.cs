@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Analytics;
+using Unity.Services.Analytics;
 
 public class ExitDoor : MonoBehaviour
 {
@@ -13,6 +13,8 @@ public class ExitDoor : MonoBehaviour
         if (player && player.isGrounded)
         {
             BeatLevel(player);
+            player.numDeaths = 0;
+            player.numResets = 0;
             // Load the next scene
             player.ResetPlayer();
             player.ResetPortals();
@@ -31,12 +33,17 @@ public class ExitDoor : MonoBehaviour
         {
             PlayerPrefs.SetFloat("W" + currWorld + "L" + currLevel, player.timer);
             PlayerPrefs.Save();
-            // Send a custom event to Unity Analytics when the player completes a level
-            Analytics.CustomEvent("level_complete", new Dictionary<string, object>
+            
+            // Send an event to Unity Analytics when the player completes a level
+            level_complete levelCompleteEvent = new level_complete
             {
-                { "level", currWorld + "L" + currLevel },
-                { "time", player.timer }
-            });
+                level = "W" + currWorld + "L" + currLevel,
+                num_deaths = player.numDeaths,
+                num_resets = player.numResets,
+                timer = player.timer
+            };
+            AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
+            
             if (LevelSelect.instance == null)
             {
                 Debug.Log("LevelSelect instance is null");

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Analytics;
+using Unity.Services.Analytics;
 
 public class Player : Teleportable
 {
@@ -28,6 +28,8 @@ public class Player : Teleportable
     private float timeHoldingR = 0;
 
     public float timer;
+    public int numResets = 0;
+    public int numDeaths = 0;
 
     private bool amHome = false;
 
@@ -75,14 +77,19 @@ public class Player : Teleportable
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > 1.0)
             {
+                player_reset resetEvent = new player_reset
+                {
+                    level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                    x_pos = transform.position.x,
+                    y_pos = transform.position.y,
+                    timer = timer
+                };
+                AnalyticsService.Instance.RecordEvent(resetEvent);
+
+                numResets++;
                 ResetWorld();
                 ResetPlayer();
                 ResetPortals();
-                Analytics.CustomEvent("player_reset", new Dictionary<string, object>
-                {
-                    { "position", transform.position },
-                    { "time", timer }
-                });
             }
         }
         else
@@ -107,11 +114,15 @@ public class Player : Teleportable
 
         if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 60f || transform.position.y > 50)
         {
-            Analytics.CustomEvent("player_death", new Dictionary<string, object>
+            numDeaths++;
+            player_death deathEvent = new player_death
             {
-                { "position", transform.position },
-                { "time", timer }
-            });
+                level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                x_pos = transform.position.x,
+                y_pos = transform.position.y,
+                timer = timer
+            };
+            AnalyticsService.Instance.RecordEvent(deathEvent);
             // Reset the player position if they fall off the screen
             ResetPlayer();
             ResetPortals();
