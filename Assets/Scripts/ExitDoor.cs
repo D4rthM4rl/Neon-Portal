@@ -29,20 +29,20 @@ public class ExitDoor : MonoBehaviour
     private void BeatLevel(Player player)
     {
         Level level = new Level(currWorld, currLevel);
+        // Send an event to Unity Analytics when the player completes a level
+        level_complete levelCompleteEvent = new level_complete
+        {
+            level = "W" + currWorld + "L" + currLevel,
+            num_deaths = player.numDeaths,
+            num_resets = player.numResets,
+            timer = player.timer
+        };
+        AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
         if (player.timer < PlayerPrefs.GetFloat("W" + currWorld + "L" + currLevel, float.PositiveInfinity))
         {
             PlayerPrefs.SetFloat("W" + currWorld + "L" + currLevel, player.timer);
             PlayerPrefs.Save();
-            
-            // Send an event to Unity Analytics when the player completes a level
-            level_complete levelCompleteEvent = new level_complete
-            {
-                level = "W" + currWorld + "L" + currLevel,
-                num_deaths = player.numDeaths,
-                num_resets = player.numResets,
-                timer = player.timer
-            };
-            AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
+
             
             if (LevelSelect.instance == null)
             {

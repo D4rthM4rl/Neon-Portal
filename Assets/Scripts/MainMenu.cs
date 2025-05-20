@@ -23,15 +23,27 @@ public class MainMenu : MonoBehaviour
     async void Start()
     {
         await UnityServices.InitializeAsync();
+        if (PlayerPrefs.GetInt("AnalyticsOpt", 0) == 1)
+        {
+            AnalyticsService.Instance.StartDataCollection();
+        }
+        else
+        {
+            AnalyticsService.Instance.StopDataCollection();
+        }
     }
 
     public void OptOut()
     {
+        PlayerPrefs.SetInt("AnalyticsOpt", 0);
+        PlayerPrefs.Save();
         AnalyticsService.Instance.StopDataCollection();
     }
 
     public void OptIn()
     {
+        PlayerPrefs.SetInt("AnalyticsOpt", 1);
+        PlayerPrefs.Save();
         AnalyticsService.Instance.StartDataCollection();
     }
 

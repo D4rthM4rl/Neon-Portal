@@ -77,6 +77,7 @@ public class Player : Teleportable
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > 1.0)
             {
+                timeHoldingR = 0;
                 player_reset resetEvent = new player_reset
                 {
                     level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
