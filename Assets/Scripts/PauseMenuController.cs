@@ -48,6 +48,14 @@ public class PauseMenuController : MonoBehaviour
     public void Resume()
     {
         Time.timeScale = originalTimeScale;
+        if (Settings.instance.showTimer == true)
+        {
+            Timer.instance.timerText.enabled = true;
+        }
+        else
+        {
+            Timer.instance.timerText.enabled = false;
+        }
         pauseMenuUI.SetActive(false);
         foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
         {
@@ -60,6 +68,7 @@ public class PauseMenuController : MonoBehaviour
     {
         originalTimeScale = Time.timeScale;
         Time.timeScale = 0f;
+        Timer.instance.timerText.enabled = false;
         pauseMenuUI.SetActive(true);
         foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
         {
@@ -82,6 +91,7 @@ public class PauseMenuController : MonoBehaviour
     public void GoHome()
     {
         pauseMenuUI.SetActive(false);
+        MainMenu.instance.gameObject.SetActive(true);
         isPaused = false;
         Time.timeScale = 1f;
         GameObject player = GameObject.FindGameObjectWithTag("Player");

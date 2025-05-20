@@ -5,7 +5,7 @@ using Unity.Services.Analytics;
 
 public class Player : Teleportable
 {
-    private static Player instance;
+    // private static Player instance;
     private int groundContactCount = 0;
     public bool isGrounded = true;
 
@@ -27,30 +27,26 @@ public class Player : Teleportable
 
     private float timeHoldingR = 0;
 
-    public float timer;
     public int numResets = 0;
     public int numDeaths = 0;
 
     private bool amHome = false;
 
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            instance.GetComponent<PortalGun>().portals = GetComponent<PortalGun>().portals;
-            instance.GetComponent<PortalGun>().ResetPortals();
-            Destroy(gameObject);
-        }
-    }
-
     protected override void Start()
     {
+        // if (instance == null)
+        // {
+        //     instance = this;
+        //     DontDestroyOnLoad(gameObject);
+        // }
+        // else
+        // {
+        //     instance.GetComponent<PortalGun>().portals = GetComponent<PortalGun>().portals;
+        //     instance.GetComponent<PortalGun>().ResetPortals();
+        //     Destroy(gameObject);
+        // }
         base.Start();
+        Timer.instance.timer = 0;
         portalGun = GetComponent<PortalGun>();
         if (portalGun == null)
         {
@@ -66,6 +62,7 @@ public class Player : Teleportable
             return;
         }
         base.Update();
+        Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
         {
@@ -83,7 +80,7 @@ public class Player : Teleportable
                     level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                     x_pos = transform.position.x,
                     y_pos = transform.position.y,
-                    timer = timer
+                    timer = Timer.instance.timer
                 };
                 AnalyticsService.Instance.RecordEvent(resetEvent);
 
@@ -121,7 +118,7 @@ public class Player : Teleportable
                 level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                 x_pos = transform.position.x,
                 y_pos = transform.position.y,
-                timer = timer
+                timer = Timer.instance.timer
             };
             AnalyticsService.Instance.RecordEvent(deathEvent);
             // Reset the player position if they fall off the screen
@@ -131,21 +128,7 @@ public class Player : Teleportable
 
         }
         RotateWithGravity();
-        UpdateTimer();
     }
-
-    public void UpdateTimer(){
-		//set timer UI
-		timer += Time.deltaTime;
-		// timerText.text = hourCount +"h:"+ minuteCount +"m:"+(int)secondsCount + "s";
-		// if(secondsCount >= 60){
-		// 	minuteCount++;
-		// 	secondsCount = 0;
-		// }else if(minuteCount >= 60){
-		// 	hourCount++;
-		// 	minuteCount = 0;
-		// }	
-	}
 
     public void RotateWithGravity()
     {
@@ -185,7 +168,7 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
-        timer = 0;
+        Timer.instance.timer = 0;
     }
 
     /// <summary>Resets the portals in the scene</summary>

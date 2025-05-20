@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Services.Analytics;
+using Unity.Services.CloudSave;
 
 public class ExitDoor : MonoBehaviour
 {
@@ -12,36 +13,47 @@ public class ExitDoor : MonoBehaviour
         Player player = other.GetComponent<Player>();
         if (player && player.isGrounded)
         {
-            BeatLevel(player);
-            player.numDeaths = 0;
-            player.numResets = 0;
-            // Load the next scene
-            player.ResetPlayer();
-            player.ResetPortals();
-            UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
+            BeatLevel(player, Timer.instance.timer);
             if (GetNextLevel() == "Home")
             {
-                player.GoHome();
+                MainMenu.instance.gameObject.SetActive(true);
+                Timer.instance.timerText.enabled = false;
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
             }
+            else
+                UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
         }
     }
 
-    private void BeatLevel(Player player)
+    async private void BeatLevel(Player player, float time)
     {
         Level level = new Level(currWorld, currLevel);
         // Send an event to Unity Analytics when the player completes a level
+        string levelTitle = "W" + currWorld + "L" + currLevel;
         level_complete levelCompleteEvent = new level_complete
         {
-            level = "W" + currWorld + "L" + currLevel,
+            level = levelTitle,
             num_deaths = player.numDeaths,
             num_resets = player.numResets,
-            timer = player.timer
+            timer = time
         };
         AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
-        if (player.timer < PlayerPrefs.GetFloat("W" + currWorld + "L" + currLevel, float.PositiveInfinity))
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{levelTitle});
+        float bestTime = float.PositiveInfinity;
+        Debug.Log("Beat " + levelTitle + " in " + time + " seconds");
+        if (playerData.TryGetValue(levelTitle, out var levelTime))
         {
-            PlayerPrefs.SetFloat("W" + currWorld + "L" + currLevel, player.timer);
-            PlayerPrefs.Save();
+            bestTime = float.Parse(levelTime.Value.GetAs<string>());
+            Debug.Log($"Best time for {levelTitle}: {bestTime}");
+        }
+
+        if (time < bestTime)
+        {
+            var saveBestTime = new Dictionary<string, object>{ { levelTitle, time } };
+            await CloudSaveService.Instance.Data.Player.SaveAsync(saveBestTime);
+            Debug.Log($"New best time for {levelTitle}: {time}");
+
+
 
             
             if (LevelSelect.instance == null)
@@ -50,8 +62,10 @@ public class ExitDoor : MonoBehaviour
             }
             else
             {
-                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].bestTime = player.timer;
+                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].bestTime = time;
                 LevelSelect.instance.levels[currWorld - 1, currLevel - 1].beaten = true;
+                level.bestTime = time;
+                LevelSelect.instance.levelsToReload.Add(level);
             }
         }
     }

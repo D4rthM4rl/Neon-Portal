@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Services.Core;
 using Unity.Services.Analytics;
+using Unity.Services.Authentication;
+using Unity.Services.CloudSave;
+using TMPro;
 
 public class MainMenu : MonoBehaviour
 {
@@ -17,34 +20,73 @@ public class MainMenu : MonoBehaviour
     private GameObject levelSelectUI;
     [SerializeField]
     private GameObject optionsUI;
+    [SerializeField]
+    private GameObject optButton;
 
-    public static bool rotateCameraWithGravity = true;
+    public static MainMenu instance;
 
-    async void Start()
+
+    private void Awake()
     {
-        await UnityServices.InitializeAsync();
-        if (PlayerPrefs.GetInt("AnalyticsOpt", 0) == 1)
+        if (instance == null)
         {
-            AnalyticsService.Instance.StartDataCollection();
+            instance = this;
         }
         else
         {
-            AnalyticsService.Instance.StopDataCollection();
+            instance.gameObject.SetActive(true);
+            Destroy(gameObject);
+            return;
+        }
+
+        DontDestroyOnLoad(gameObject);
+
+        StartCoroutine(LoadOptButton());
+    }
+
+    private IEnumerator LoadOptButton()
+    {
+        while (Settings.instance == null || Settings.instance.loaded)
+        {
+            yield return new WaitForSeconds(0.01f);
+        }
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = Settings.instance.optedIn ? "Opt In" : "Opt Out";
+    }
+
+    public void ToggleOpt()
+    {
+        if (optButton.GetComponentInChildren<TextMeshProUGUI>().text == "Opt In")
+        {
+            OptIn();
+        }
+        else
+        {
+            OptOut();
         }
     }
 
-    public void OptOut()
+    async public void OptOut()
     {
-        PlayerPrefs.SetInt("AnalyticsOpt", 0);
-        PlayerPrefs.Save();
+        Settings.instance.optedIn = false;
+        Debug.Log("Opted out of analytics");
+
+        var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt Out" } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
         AnalyticsService.Instance.StopDataCollection();
+
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = "Opt In";
     }
 
-    public void OptIn()
+    async public void OptIn()
     {
-        PlayerPrefs.SetInt("AnalyticsOpt", 1);
-        PlayerPrefs.Save();
+        Settings.instance.optedIn = true;
+        Debug.Log("Opted in to analytics");
+
+        var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt In" } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
         AnalyticsService.Instance.StartDataCollection();
+
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = "Opt Out";
     }
 
     public void RequestDataDelection()
@@ -54,6 +96,7 @@ public class MainMenu : MonoBehaviour
 
     public void Play()
     {
+        gameObject.SetActive(false);
         Level nextLevel = LevelSelect.instance.GetNextLevel();
         if (nextLevel == null) 
             OpenLevelSelect();
@@ -75,6 +118,11 @@ public class MainMenu : MonoBehaviour
         levelSelectUI.SetActive(true);
         optionsUI.SetActive(false);
         title.SetActive(false);
+        foreach (Level level in LevelSelect.instance.levelsToReload)
+        {
+            LevelSelect.instance.ReloadLevelTime(level);
+        }
+        LevelSelect.instance.levelsToReload.Clear();
     }
 
     public void OpenOptions()

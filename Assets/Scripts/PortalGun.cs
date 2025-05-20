@@ -35,22 +35,16 @@ public class PortalGun : MonoBehaviour
     public static PortalController[] portalsInScene;
     private int portalIndex = 0;
 
-    void Awake()
-    {
-        lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.positionCount = 2;
-    }
-
     void Start()
     {
         if (validIndicator == null) validIndicator = Instantiate(validIndicatorPrefab);
         validIndicator.SetActive(false);
-        DontDestroyOnLoad(validIndicator);
         if (invalidIndicator == null) invalidIndicator = Instantiate(invalidIndicatorPrefab);
         invalidIndicator.SetActive(false);
-        DontDestroyOnLoad(invalidIndicator);
         currentPortalToSpawn = portals[portalIndex];
         portalsInScene = new PortalController[portals.Count];
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.positionCount = 2;
     }
 
     void Update()
