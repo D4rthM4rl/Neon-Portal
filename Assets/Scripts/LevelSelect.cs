@@ -47,11 +47,14 @@ public class LevelSelect : MonoBehaviour
         new Level(4, 5)}
     };
 
+    public bool loading = false;
+
     public Dictionary<Level, Button> levelButtons = new Dictionary<Level, Button>();
 
     private void Start() {
         if (instance == null)
         {
+            loading = true;
             instance = this;
         }
         else
@@ -72,6 +75,7 @@ public class LevelSelect : MonoBehaviour
 
     async private void LoadLevels()
     {
+        loading = true;
         // titleOrLoadingText.text = "Loading Levels...";
 
         string levelTitle = "";
@@ -116,11 +120,13 @@ public class LevelSelect : MonoBehaviour
             }
         }
         // titleOrLoadingText.text = "Level Select";
+        loading = false;
     }
 
 
     public void ReloadLevelTime(Level level)
     {
+        loading = true;
         // titleOrLoadingText.text = "Loading Level Times...";
         float time = level.bestTime;
         level = levels[level.world - 1, level.level - 1];
@@ -132,6 +138,7 @@ public class LevelSelect : MonoBehaviour
             + Environment.NewLine + time.ToString("F2") + "s";
             SetButtonColors(level, levelButton);
         }
+        loading = false;
     }
 
     private async void SetButtonColors(Level level, Button levelButton)
@@ -216,6 +223,8 @@ public class LevelSelect : MonoBehaviour
 
     public void LoadLevel(Level level)
     {
+        if (loading)
+            return;
         UnityEngine.SceneManagement.SceneManager.LoadScene(level.ToString());
         if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
         else Timer.instance.timerText.enabled = false;
@@ -225,6 +234,8 @@ public class LevelSelect : MonoBehaviour
 
     public void LoadLevel(string level)
     {
+        if (loading)
+            return;
         UnityEngine.SceneManagement.SceneManager.LoadScene(level);
         gameObject.SetActive(false);
         if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;

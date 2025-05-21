@@ -96,6 +96,8 @@ public class MainMenu : MonoBehaviour
 
     public void Play()
     {
+        if (LevelSelect.instance.loading)
+            return;
         Level nextLevel = LevelSelect.instance.GetNextLevel();
         if (nextLevel == null) 
             OpenLevelSelect();
