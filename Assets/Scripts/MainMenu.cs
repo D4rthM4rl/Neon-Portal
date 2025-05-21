@@ -50,7 +50,7 @@ public class MainMenu : MonoBehaviour
         {
             yield return new WaitForSeconds(0.01f);
         }
-        optButton.GetComponentInChildren<TextMeshProUGUI>().text = Settings.instance.optedIn ? "Opt In" : "Opt Out";
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = !Settings.instance.optedIn ? "Opt In" : "Opt Out";
     }
 
     public void ToggleOpt()
