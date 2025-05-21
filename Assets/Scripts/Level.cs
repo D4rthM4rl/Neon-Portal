@@ -13,4 +13,9 @@ public class Level
         this.bestTime = 0;
         this.beaten = false;
     }
+
+	public override string ToString()
+	{
+		return "W" + world + "L" + level;
+	}
 }

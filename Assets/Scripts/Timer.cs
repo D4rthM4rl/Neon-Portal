@@ -21,12 +21,6 @@ public class Timer : MonoBehaviour
             Destroy(gameObject);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void UpdateTimer()
     {
         if (gameObject.activeSelf == false)

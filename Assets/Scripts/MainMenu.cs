@@ -96,12 +96,14 @@ public class MainMenu : MonoBehaviour
 
     public void Play()
     {
-        gameObject.SetActive(false);
         Level nextLevel = LevelSelect.instance.GetNextLevel();
         if (nextLevel == null) 
             OpenLevelSelect();
         else 
-            LevelSelect.instance.LoadLevel(LevelSelect.instance.GetNextLevel());
+        {
+            gameObject.SetActive(false);
+            LevelSelect.instance.LoadLevel(nextLevel);
+        }
     }
 
     public void OpenMainMenu()
@@ -118,10 +120,12 @@ public class MainMenu : MonoBehaviour
         levelSelectUI.SetActive(true);
         optionsUI.SetActive(false);
         title.SetActive(false);
+        // LevelSelect.instance.titleOrLoadingText.text = "Loading Level Times...";
         foreach (Level level in LevelSelect.instance.levelsToReload)
         {
             LevelSelect.instance.ReloadLevelTime(level);
         }
+        // LevelSelect.instance.titleOrLoadingText.text = "Level Select";
         LevelSelect.instance.levelsToReload.Clear();
     }
 
@@ -131,8 +135,9 @@ public class MainMenu : MonoBehaviour
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(true);
         title.SetActive(false);
+        Settings.instance.playerNameInput.GetComponent<TMP_InputField>().text = Settings.instance.playerLeaderboardName;
     }
-
+    
     public void Quit()
     {
         Application.Quit();

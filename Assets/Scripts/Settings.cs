@@ -5,6 +5,7 @@ using Unity.Services.Core;
 using Unity.Services.Analytics;
 using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
+using TMPro;
 
 public class Settings : MonoBehaviour
 {
@@ -12,8 +13,31 @@ public class Settings : MonoBehaviour
     public bool rotateCameraWithGravity = true;
     public bool showTimer = true;
 
+    public bool participateInLeaderboard = true;
+    public string playerLeaderboardName = "";
+    [SerializeField]
+    public TMP_InputField playerNameInput;
+    [SerializeField]
+    private TextMeshProUGUI playerNameErrorText;
+
+
     public bool optedIn = false;
     public bool loaded = false;
+
+    private List<string> badWords = new List<string>
+    {
+        "nigger",
+        "nigga",
+        "bitch",
+        "fuck",
+        "shit",
+        "whore",
+        "cunt",
+        "faggot",
+        "dyke",
+        "cock",
+        "damn",
+    };
 
     async void Awake()
     {
@@ -45,6 +69,8 @@ public class Settings : MonoBehaviour
                 AnalyticsService.Instance.StopDataCollection();
             }
         }
+        playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
+        // playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
         loaded = true;
     }
 
@@ -57,9 +83,32 @@ public class Settings : MonoBehaviour
         showTimer = value;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void CompletePlayerName()
     {
-        
+        string text = playerNameInput.GetComponent<TMP_InputField>().text;
+        if (text.Contains(" ") || text.Contains("\"") || text.Contains("{") || text.Contains("}") || text.Contains(","))
+        {
+            playerNameErrorText.enabled = true;
+            playerNameErrorText.text = "No quotes, commas, brackets, or spaces allowed";
+            return;
+        }
+        if (text.Length > 20)
+        {
+            playerNameErrorText.enabled = true;
+            playerNameErrorText.text = "Must be less than 20 characters";
+            return;
+        }
+        foreach (string badWord in badWords)
+        {
+            if (text.ToLower().Contains(badWord))
+            {
+                playerNameErrorText.enabled = true;
+                playerNameErrorText.text = "Contains bad word";
+                return;
+            }
+        }
+        playerNameErrorText.enabled = false;
+        playerLeaderboardName = text;
+        AuthenticationService.Instance.UpdatePlayerNameAsync(text);
     }
 }

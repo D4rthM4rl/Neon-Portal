@@ -38,6 +38,9 @@ public class ExitDoor : MonoBehaviour
             timer = time
         };
         AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
+
+        Leaderboard.instance.SubmitTimeAsync(level, time);
+
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{levelTitle});
         float bestTime = float.PositiveInfinity;
         Debug.Log("Beat " + levelTitle + " in " + time + " seconds");
