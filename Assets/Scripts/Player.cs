@@ -203,6 +203,7 @@ public class Player : Teleportable
     {
         if (!isJumping && isGrounded) 
         {
+        // Debug.Log("Jumping");
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
             rb.AddForce(initialJumpForce * -gravityDirection.normalized, ForceMode2D.Impulse);
@@ -237,8 +238,23 @@ public class Player : Teleportable
     {
         foreach (ContactPoint2D contact in col.contacts)
         {
-            if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
+            if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected())
             {
+                Debug.Log("Not grounded because portal");
+                groundContactCount = 0;
+                isGrounded = false;
+                break;
+            }
+            else if (col.gameObject.CompareTag("Portal") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
+            {
+                Debug.Log("Grounded");
+                groundContactCount++;
+                isGrounded = true;
+                break;
+            }
+            else if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
+            {
+                Debug.Log("Grounded");
                 groundContactCount++;
                 isGrounded = true;
                 break;
@@ -266,6 +282,12 @@ public class Player : Teleportable
         for (int i = 0; i < count; i++)
         {
             if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
+            {
+                groundContactCount++;
+            }
+            else if (contacts[i].collider.CompareTag("Portal") && 
+                    !contacts[i].collider.GetComponent<PortalController>().IsConnected()
+                    && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
             }

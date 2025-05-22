@@ -51,6 +51,12 @@ public class PortalController : MonoBehaviour
             sr.color = description.color;
         }
     }
+
+    public bool IsConnected()
+    {
+        PortalController receivingPortal = PortalGun.portalsInScene[(index + 1) % PortalGun.portalsInScene.Length];
+        return receivingPortal != null;
+    }
     
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject != null && other.GetComponent<Teleportable>())
