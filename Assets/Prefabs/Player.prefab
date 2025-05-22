@@ -399,7 +399,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 2
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
@@ -485,7 +485,8 @@ MonoBehaviour:
   maxJumpDuration: 0.1
   moveSpeed: 12
   groundCheckDistance: 0.6
-  timer: 0
+  numResets: 0
+  numDeaths: 0
 --- !u!120 &831864058123744942
 LineRenderer:
   serializedVersion: 2
