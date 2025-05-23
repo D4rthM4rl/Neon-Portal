@@ -766,7 +766,7 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 4.556922, y: 19.814396}
+    - - {x: 1, y: 19.814396}
       - {x: 4.556922, y: 23}
       - {x: -17.934317, y: 23}
       - {x: -17.922693, y: -6.1572776}
@@ -1331,11 +1331,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.7810905
+      value: 2.7847705
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.78163
+      value: 6.78393
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.z

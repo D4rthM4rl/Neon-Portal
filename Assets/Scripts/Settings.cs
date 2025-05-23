@@ -21,7 +21,7 @@ public class Settings : MonoBehaviour
     private TextMeshProUGUI playerNameErrorText;
 
 
-    public bool optedIn = false;
+    public bool optedIn = true;
     public bool loaded = false;
 
     private List<string> badWords = new List<string>
