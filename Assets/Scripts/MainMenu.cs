@@ -96,6 +96,7 @@ public class MainMenu : MonoBehaviour
 
     public void Play()
     {
+        Timer.instance.ResetInactivityTimer();
         if (LevelSelect.instance.loading)
             return;
         Level nextLevel = LevelSelect.instance.GetNextLevel();
@@ -110,6 +111,7 @@ public class MainMenu : MonoBehaviour
 
     public void OpenMainMenu()
     {
+        Timer.instance.ResetInactivityTimer();
         mainMenuUI.SetActive(true);
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(false);
@@ -118,6 +120,7 @@ public class MainMenu : MonoBehaviour
 
     public void OpenLevelSelect()
     {
+        Timer.instance.ResetInactivityTimer();
         mainMenuUI.SetActive(false);
         levelSelectUI.SetActive(true);
         optionsUI.SetActive(false);
@@ -133,6 +136,7 @@ public class MainMenu : MonoBehaviour
 
     public void OpenOptions()
     {
+        Timer.instance.ResetInactivityTimer();
         mainMenuUI.SetActive(false);
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(true);

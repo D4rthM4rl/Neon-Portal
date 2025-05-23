@@ -13,48 +13,43 @@ public class ExitDoor : MonoBehaviour
         Player player = other.GetComponent<Player>();
         if (player && player.isGrounded)
         {
-            BeatLevel(player, Timer.instance.timer);
-            if (GetNextLevel() == "Home")
+            BeatLevel(player, Timer.instance.levelTimer, Timer.instance.unresetLevelTimer);
+            string nextLevel = GetNextLevel();
+            if (nextLevel == "Home")
             {
                 MainMenu.instance.gameObject.SetActive(true);
                 Timer.instance.timerText.enabled = false;
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
             }
             else
-                UnityEngine.SceneManagement.SceneManager.LoadScene(GetNextLevel());
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(nextLevel);
+            }
         }
     }
 
-    async private void BeatLevel(Player player, float time)
+    async private void BeatLevel(Player player, float levelTimer, float unresetLevelTimer)
     {
-        Level level = new Level(currWorld, currLevel);
+        Level level = LevelSelect.instance.levels[currWorld - 1, currLevel - 1];
         // Send an event to Unity Analytics when the player completes a level
         string levelTitle = "W" + currWorld + "L" + currLevel;
-        level_complete levelCompleteEvent = new level_complete
-        {
-            level = levelTitle,
-            num_deaths = player.numDeaths,
-            num_resets = player.numResets,
-            timer = time
-        };
-        AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
-
-        Leaderboard.instance.SubmitTimeAsync(level, time);
+        
+        RecordLevelCompleteEvent(level, player, levelTimer, unresetLevelTimer);
+        Leaderboard.instance.SubmitTimeAsync(level, levelTimer);
 
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{levelTitle});
         float bestTime = float.PositiveInfinity;
-        Debug.Log("Beat " + levelTitle + " in " + time + " seconds");
         if (playerData.TryGetValue(levelTitle, out var levelTime))
         {
             bestTime = float.Parse(levelTime.Value.GetAs<string>());
             Debug.Log($"Best time for {levelTitle}: {bestTime}");
         }
 
-        if (time < bestTime)
+        if (levelTimer < bestTime)
         {
-            var saveBestTime = new Dictionary<string, object>{ { levelTitle, time } };
+            var saveBestTime = new Dictionary<string, object>{ { levelTitle, levelTimer } };
             await CloudSaveService.Instance.Data.Player.SaveAsync(saveBestTime);
-            Debug.Log($"New best time for {levelTitle}: {time}");
+            Debug.Log($"New best time for {levelTitle}: {levelTimer}");
 
 
 
@@ -65,9 +60,8 @@ public class ExitDoor : MonoBehaviour
             }
             else
             {
-                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].bestTime = time;
-                LevelSelect.instance.levels[currWorld - 1, currLevel - 1].beaten = true;
-                level.bestTime = time;
+                level.bestTime = levelTimer;
+                level.beaten = true;
                 LevelSelect.instance.levelsToReload.Add(level);
             }
         }
@@ -94,5 +88,33 @@ public class ExitDoor : MonoBehaviour
             
             return "Home";
         }
+    }
+
+    private void RecordLevelCompleteEvent(Level level, Player player, float levelTimer, float unresetLevelTimer)
+    {
+        level_complete levelCompleteEvent = new level_complete
+        {
+            level = level.ToString(),
+            level_beaten = level.beaten,
+            num_deaths = player.numDeaths,
+            num_resets = player.numResets,
+            timer = levelTimer,
+            unreset_timer = unresetLevelTimer
+        };
+
+        if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[0].transform.position;
+            levelCompleteEvent.portal1_x = portalPos.x;
+            levelCompleteEvent.portal1_y = portalPos.y;
+        }
+        if (PortalGun.portalsInScene.Length > 1 && PortalGun.portalsInScene[1] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[1].transform.position;
+            levelCompleteEvent.portal2_x = portalPos.x;
+            levelCompleteEvent.portal2_y = portalPos.y;
+        }
+
+        AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
     }
 }

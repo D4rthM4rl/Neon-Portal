@@ -32,6 +32,8 @@ public class Player : Teleportable
 
     private bool amHome = false;
 
+    private Level level;
+
     protected override void Start()
     {
         // if (instance == null)
@@ -46,12 +48,18 @@ public class Player : Teleportable
         //     Destroy(gameObject);
         // }
         base.Start();
-        Timer.instance.timer = 0;
+        Timer.instance.levelTimer = 0;
+        Timer.instance.unresetLevelTimer = 0;
         portalGun = GetComponent<PortalGun>();
         if (portalGun == null)
         {
             Debug.LogError("Player does not have a PortalGun component.");
         }
+
+        string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        level = LevelSelect.instance.GetLevelByName(levelName);
+        Timer.instance.lastLevelPlayed = level;
+        RecordLevelStartEvent();
     }
 
     // Update is called once per frame
@@ -67,22 +75,18 @@ public class Player : Teleportable
         if (Input.GetButtonDown("Pause"))
         {
             PauseMenuController.instance.ToggleMenu();
+            Timer.instance.ResetInactivityTimer();
         }
 
         if (Input.GetButton("Reset"))
         {
+            Timer.instance.ResetInactivityTimer();
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > 1.0)
             {
                 timeHoldingR = 0;
-                player_reset resetEvent = new player_reset
-                {
-                    level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
-                    x_pos = transform.position.x,
-                    y_pos = transform.position.y,
-                    timer = Timer.instance.timer
-                };
-                AnalyticsService.Instance.RecordEvent(resetEvent);
+
+                RecordResetEvent();
 
                 numResets++;
                 ResetWorld();
@@ -102,6 +106,7 @@ public class Player : Teleportable
         // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
         if (Input.GetButton("Jump"))
         {
+            Timer.instance.ResetInactivityTimer();
             jumpQueued = true;
         }
         else
@@ -113,14 +118,9 @@ public class Player : Teleportable
         if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 60f || transform.position.y > 50)
         {
             numDeaths++;
-            player_death deathEvent = new player_death
-            {
-                level = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
-                x_pos = transform.position.x,
-                y_pos = transform.position.y,
-                timer = Timer.instance.timer
-            };
-            AnalyticsService.Instance.RecordEvent(deathEvent);
+
+            RecordDeathEvent();
+
             // Reset the player position if they fall off the screen
             ResetPlayer();
             ResetPortals();
@@ -168,7 +168,7 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
-        Timer.instance.timer = 0;
+        Timer.instance.levelTimer = 0;
     }
 
     /// <summary>Resets the portals in the scene</summary>
@@ -191,6 +191,7 @@ public class Player : Teleportable
         }
         base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
+        if (h != 0) Timer.instance.ResetInactivityTimer();
         Vector2 gravDir = gravityDirection.normalized;
         Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
         Vector2 hVel = moveAxis * h * Time.deltaTime;
@@ -203,7 +204,6 @@ public class Player : Teleportable
     {
         if (!isJumping && isGrounded) 
         {
-        // Debug.Log("Jumping");
             isJumping = true;
             jumpTimeCounter = maxJumpDuration;
             rb.AddForce(initialJumpForce * -gravityDirection.normalized, ForceMode2D.Impulse);
@@ -240,21 +240,18 @@ public class Player : Teleportable
         {
             if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected())
             {
-                Debug.Log("Not grounded because portal");
                 groundContactCount = 0;
                 isGrounded = false;
                 break;
             }
             else if (col.gameObject.CompareTag("Portal") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
             {
-                Debug.Log("Grounded");
                 groundContactCount++;
                 isGrounded = true;
                 break;
             }
             else if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
             {
-                Debug.Log("Grounded");
                 groundContactCount++;
                 isGrounded = true;
                 break;
@@ -325,4 +322,75 @@ public class Player : Teleportable
         ResetPortals();
         ResetWorld();
     }
+
+
+    #region Analytics Events
+
+    /// <summary>Sends a level_start event to Unity Analytics</summary>
+    public void RecordLevelStartEvent()
+    {
+        level_start resetEvent = new level_start
+        {
+            level = level.ToString(),
+            level_beaten = level.beaten,
+            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer)
+        };
+        AnalyticsService.Instance.RecordEvent(resetEvent);
+    }
+
+    /// <summary>Sends a player_death event to Unity Analytics</summary>
+    public void RecordDeathEvent()
+    {
+        player_death deathEvent = new player_death
+        {
+            level = level.ToString(),
+            level_beaten = level.beaten,
+            x_pos = transform.position.x,
+            y_pos = transform.position.y,
+            timer = Timer.instance.levelTimer,
+            unreset_timer = Timer.instance.unresetLevelTimer
+        };
+        if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[0].transform.position;
+            deathEvent.portal1_x = portalPos.x;
+            deathEvent.portal1_y = portalPos.y;
+        }
+        if (PortalGun.portalsInScene.Length > 1 && PortalGun.portalsInScene[1] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[1].transform.position;
+            deathEvent.portal2_x = portalPos.x;
+            deathEvent.portal2_y = portalPos.y;
+        }
+
+        AnalyticsService.Instance.RecordEvent(deathEvent);
+    }
+
+    /// <summary>Sends a player_reset event to Unity Analytics</summary>
+    public void RecordResetEvent()
+    {
+        player_reset resetEvent = new player_reset
+        {
+            level = level.ToString(),
+            level_beaten = level.beaten,
+            x_pos = transform.position.x,
+            y_pos = transform.position.y,
+            timer = Timer.instance.levelTimer,
+            unreset_timer = Timer.instance.unresetLevelTimer
+        };
+        if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[0].transform.position;
+            resetEvent.portal1_x = portalPos.x;
+            resetEvent.portal1_y = portalPos.y;
+        }
+        if (PortalGun.portalsInScene.Length > 1 && PortalGun.portalsInScene[1] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[1].transform.position;
+            resetEvent.portal2_x = portalPos.x;
+            resetEvent.portal2_y = portalPos.y;
+        }
+        AnalyticsService.Instance.RecordEvent(resetEvent);
+    }
+    #endregion
 }

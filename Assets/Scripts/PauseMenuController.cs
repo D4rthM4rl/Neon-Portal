@@ -1,11 +1,14 @@
 using UnityEngine;
 using System.Collections;
+using Unity.Services.Analytics;
 using TMPro;
 
 public class PauseMenuController : MonoBehaviour
 {
     [SerializeField]
     private GameObject pauseMenuUI;
+    [SerializeField]
+    private GameObject mainMenuUI;
 
     private float originalTimeScale;
     public static PauseMenuController instance;
@@ -34,6 +37,7 @@ public class PauseMenuController : MonoBehaviour
 
     public void ToggleMenu()
     {
+        Timer.instance.ResetInactivityTimer();
         if (pauseMenuUI.activeSelf)
         {
             Resume();
@@ -44,9 +48,10 @@ public class PauseMenuController : MonoBehaviour
         }
     }
 
-    /// <summary>Resumes game (sets timeScale back, </summary>
+    /// <summary>Resumes game (sets timeScale back) </summary>
     public void Resume()
     {
+        Timer.instance.ResetInactivityTimer();
         Time.timeScale = originalTimeScale;
         if (Settings.instance.showTimer == true)
         {
@@ -66,6 +71,7 @@ public class PauseMenuController : MonoBehaviour
 
     public void Pause()
     {
+        Timer.instance.ResetInactivityTimer();
         originalTimeScale = Time.timeScale;
         Time.timeScale = 0f;
         Timer.instance.timerText.enabled = false;
@@ -77,49 +83,59 @@ public class PauseMenuController : MonoBehaviour
         isPaused = true;
     }
 
-    // Call this from the Quit button
-    public void QuitGame()
+    public void Exit()
     {
-        pauseMenuUI.SetActive(false);
-        #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-        #else
-            Application.Quit();
-        #endif
-    }
-
-    public void GoHome()
-    {
+        Timer.instance.ResetInactivityTimer();
+        RecordLevelQuitEvent();
         pauseMenuUI.SetActive(false);
         MainMenu.instance.gameObject.SetActive(true);
         isPaused = false;
         Time.timeScale = 1f;
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if  (player != null)
-        {
-            player.GetComponent<Player>().portalGun.DestroyIndicators();
-            Destroy(player);
-        }
         UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
-        StartCoroutine(WaitForLevelSelect());
+    }
+
+    public void OpenLevelSelect()
+    {
+        Exit();
+        mainMenuUI.GetComponent<MainMenu>().OpenLevelSelect();
     }
 
     // Call this from the Options button
     public void OpenOptions()
     {
+        Timer.instance.ResetInactivityTimer();
         // Implement options menu functionality
         Debug.Log("Options menu requested");
     }
 
-    private IEnumerator WaitForLevelSelect()
+    private void RecordLevelQuitEvent()
     {
-        GameObject mainMenu = GameObject.Find("Menus Canvas");
-        // yield return new WaitForSeconds(0.05f);
-        while (!mainMenu)
+        string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        Level level = LevelSelect.instance.GetLevelByName(levelName);
+        Player player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        level_quit levelQuitEvent = new level_quit
         {
-            mainMenu = GameObject.Find("Menus Canvas");
-            yield return new WaitForSeconds(0.005f);
+            level = levelName,
+            level_beaten = level.beaten,
+            x_pos = player.transform.position.x,
+            y_pos = player.transform.position.y,
+            num_deaths = player.numDeaths,
+            num_resets = player.numResets,
+            unreset_timer = Timer.instance.unresetLevelTimer,
+            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer)
+        };
+        if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[0].transform.position;
+            levelQuitEvent.portal1_x = portalPos.x;
+            levelQuitEvent.portal1_y = portalPos.y;
         }
-        mainMenu.GetComponent<MainMenu>().OpenLevelSelect();
+        if (PortalGun.portalsInScene.Length > 1 && PortalGun.portalsInScene[1] != null)
+        {
+            Vector3 portalPos = PortalGun.portalsInScene[1].transform.position;
+            levelQuitEvent.portal2_x = portalPos.x;
+            levelQuitEvent.portal2_y = portalPos.y;
+        }
+        AnalyticsService.Instance.RecordEvent(levelQuitEvent);
     }
 }

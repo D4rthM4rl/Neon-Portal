@@ -8,6 +8,7 @@ TagManager:
   - Unportalable
   - Not On Pause
   - Level Select
+  - Portal
   layers:
   - Default
   - TransparentFX

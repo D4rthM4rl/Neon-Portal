@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using TMPro;
 
 public record LeaderboardEntry
-{  
+{
     public string DisplayName { get; set; }
     public float Time { get; set; }
 }
@@ -54,8 +54,10 @@ public class Leaderboard : MonoBehaviour
         }
         else 
         {
-            leaderboardTitle.transform.localPosition = Vector3.up * 53;;
+            leaderboardTitle.transform.localPosition = Vector3.up * 53;
         }
+        // float vertOffset = 1080 / Screen.height;
+        float vertOffset = 1;
         GameObject rank;
         TextMeshProUGUI rankText;
         GameObject username;
@@ -68,7 +70,7 @@ public class Leaderboard : MonoBehaviour
             rank = ranks.Count > i ? ranks[i] : null;
             if (rank == null) 
             {
-                rank = Instantiate(rankExample, rankExample.transform.position + (Vector3.down * i * 25),
+                rank = Instantiate(rankExample, rankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
                     Quaternion.identity, rankExample.transform.parent);
                 ranks.Add(rank);
             }
@@ -79,7 +81,7 @@ public class Leaderboard : MonoBehaviour
             username = usernames.Count > i ? usernames[i] : null;
             if (username == null)
             {
-                username = Instantiate(usernameExample, usernameExample.transform.position + (Vector3.down * i * 25),
+                username = Instantiate(usernameExample, usernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
                     Quaternion.identity, usernameExample.transform.parent);
                 usernames.Add(username);
             }
@@ -90,7 +92,7 @@ public class Leaderboard : MonoBehaviour
             time = times.Count > i ? times[i] : null;
             if (time == null)
             {
-                time = Instantiate(timeExample, timeExample.transform.position + (Vector3.down * i * 25),
+                time = Instantiate(timeExample, timeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
                     Quaternion.identity, timeExample.transform.parent);
                 times.Add(time);
             }
@@ -133,11 +135,10 @@ public class Leaderboard : MonoBehaviour
             try 
             {
                 await LeaderboardsService.Instance.AddPlayerScoreAsync(level.ToString(), time);
-                Debug.Log($"Score submitted for {level.ToString()}: {time}");
+                // Debug.Log($"Score submitted for {level.ToString()}: {time}"
             }
             catch (Exception e) 
             {
-                // messageText.text = $"Failed to submit score: {e}";
                 Debug.LogError($"Failed to submit score: {e}");
                 throw;
             }
@@ -153,17 +154,14 @@ public class Leaderboard : MonoBehaviour
             string response = JsonConvert.SerializeObject(leaderboardResponse.Results);
             string name = "";
             string score = "";
-            Debug.Log(response);
             if (response == "[]")
             {
-                Debug.Log("No scores found for this level.");
                 return new LeaderboardEntry { DisplayName = "No scores", Time = float.PositiveInfinity };
             }
             else
             {
                 name = response.Split(',')[1].Split(':')[1].Replace("\"", "");
                 score = response.Split(',')[3].Split(':')[1];
-                Debug.Log("Score: " + score + " by "  + name);
                 return new LeaderboardEntry { DisplayName = "No scores", Time = float.Parse(score) };;
             }
         }
@@ -201,7 +199,6 @@ public class Leaderboard : MonoBehaviour
                         continue;
                     name = entry.Split(',')[1].Split(':')[1].Replace("\"", "");
                     score = entry.Split(',')[3].Split(':')[1];
-                    Debug.Log("Score: " + score + " by "  + name);
                     leaderboardEntries.Add(new LeaderboardEntry { DisplayName = name, Time = float.Parse(score) });
                 }
                 return leaderboardEntries;
@@ -255,5 +252,9 @@ public class LeaderboardTierColorset
     public Color highlightedColor = Color.white;
     public Color pressedColor = Color.white;
     public Color selectedColor = Color.white;
+    public Color trophyNormalColor = Color.white;
+    public Color trophyHighlightedColor = Color.white;
+    public Color trophyPressedColor = Color.white;
+    public Color trophySelectedColor = Color.white;
     public Color textColor = Color.black;
 }
