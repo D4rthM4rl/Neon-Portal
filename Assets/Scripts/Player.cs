@@ -82,7 +82,7 @@ public class Player : Teleportable
         {
             Timer.instance.ResetInactivityTimer();
             timeHoldingR += Time.deltaTime;
-            if (timeHoldingR > 1.0)
+            if (timeHoldingR > .75)
             {
                 timeHoldingR = 0;
 

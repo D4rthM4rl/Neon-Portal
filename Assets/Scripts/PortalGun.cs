@@ -64,8 +64,20 @@ public class PortalGun : MonoBehaviour
             // 2) Draw the line
             lineRenderer.SetPosition(0, transform.position);
             lineRenderer.SetPosition(1, endPoint);
-            lineRenderer.startColor = currentPortalToSpawn.color;
-            lineRenderer.endColor = currentPortalToSpawn.color;
+            if (portalIndex == 0)
+            {
+                lineRenderer.startColor = Settings.instance.portal1Color;
+                lineRenderer.endColor = Settings.instance.portal1Color;
+            }
+            else if (portalIndex == 1)
+            {
+                lineRenderer.startColor = Settings.instance.portal2Color;
+                lineRenderer.endColor = Settings.instance.portal2Color;
+            }
+            else
+            {
+                Debug.LogError("Invalid portal index: " + portalIndex);
+            }
 
             // 3) Handle indicator
             RemoveIndicator();

@@ -16,7 +16,6 @@ public enum PortalType
 [System.Serializable]
 public struct PortalDescription
 {
-    public Color color;
     public PortalType type;
 }
 
@@ -44,11 +43,25 @@ public class PortalController : MonoBehaviour
         this.description = description;
         this.index = index;
         this.direction = direction;
-        GetComponent<Light2D>().color = description.color;
+        Color color;
+        if (index == 0)
+        {
+            color = Settings.instance.portal1Color;
+        }
+        else if (index == 1)
+        {
+            color = Settings.instance.portal2Color;
+        }
+        else
+        {
+            Debug.LogError("Invalid portal index: " + index);
+            color = Color.white; // Fallback color
+        }
+        GetComponent<Light2D>().color = color;
         Debug.Assert(GetComponentInChildren<SpriteRenderer>() != null, "No sprite renderer found in children of portal");
         foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
         {
-            sr.color = description.color;
+            sr.color = color;
         }
     }
 
