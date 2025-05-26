@@ -69,16 +69,15 @@ public class Settings : MonoBehaviour
         if (playerData.TryGetValue("AnalyticsOptChoice", out var analyticsOptChoice)) 
         {
             Debug.Log($"AnalyticsOptChoice: {analyticsOptChoice.Value.GetAs<string>()}");
-            if (analyticsOptChoice.Value.GetAs<string>() == "Opt In")
-            {
-                optedIn = true;
-                
-                AnalyticsService.Instance.StartDataCollection();
-            }
-            else
+            if (analyticsOptChoice.Value.GetAs<string>() == "Opt Out")
             {
                 optedIn = false;
                 AnalyticsService.Instance.StopDataCollection();
+            }
+            else
+            {
+                optedIn = true;
+                AnalyticsService.Instance.StartDataCollection();
             }
         }
         playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();

@@ -46,7 +46,7 @@ public class MainMenu : MonoBehaviour
 
     private IEnumerator LoadOptButton()
     {
-        while (Settings.instance == null || Settings.instance.loaded)
+        while (Settings.instance == null || !Settings.instance.loaded)
         {
             yield return new WaitForSeconds(0.01f);
         }
