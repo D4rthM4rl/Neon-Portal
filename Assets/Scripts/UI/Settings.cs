@@ -105,8 +105,17 @@ public class Settings : MonoBehaviour
         loaded = true;
     }
 
-    [DllImport("__Internal")]
-    private static extern bool IsMobile();
+    #if !UNITY_EDITOR && UNITY_WEBGL
+
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        public static extern bool IsMobileBrowser();
+      
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        public static extern bool IsPreferredDesktopPlatform();
+    #else
+            public static bool IsMobileBrowser() => false;
+            public static bool IsPreferredDesktopPlatform() => true;
+    #endif
 
     /// <summary>
     /// Returns if the game is WebGL and running on a mobile device
@@ -114,10 +123,7 @@ public class Settings : MonoBehaviour
     /// <returns>if the game is on WebGL on a mobile device</returns>
     public bool isMobile()
     {
-        #if !UNITY_EDITOR && UNITY_WEBGL
-            return IsMobile();
-        #endif
-        return false;
+        return IsMobileBrowser();
     }
 
     public void SetRotateCameraWithGravity(bool value)
