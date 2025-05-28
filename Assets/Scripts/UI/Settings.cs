@@ -7,12 +7,14 @@ using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
 using UnityEngine.UI;
 using TMPro;
+using System.Runtime.InteropServices;
 
 public class Settings : MonoBehaviour
 {
     public static Settings instance;
     public bool rotateCameraWithGravity = true;
     public bool showTimer = true;
+    public bool optedIn = true;
 
     public Color portal1Color;
     [SerializeField]
@@ -32,8 +34,7 @@ public class Settings : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI playerNameErrorText;
 
-
-    public bool optedIn = true;
+    public PlatformType platform = PlatformType.Computer;
     public bool loaded = false;
 
     private List<string> badWords = new List<string>
@@ -80,9 +81,43 @@ public class Settings : MonoBehaviour
                 AnalyticsService.Instance.StartDataCollection();
             }
         }
+        else 
+        {
+            // If the key doesn't exist, default to opted in
+            optedIn = true;
+            AnalyticsService.Instance.StartDataCollection();
+        }
+
         playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
+        if (isMobile())
+        {
+            // If on mobile, set the platform type to Phone
+            platform = PlatformType.Phone;
+            Debug.Log("Running on mobile device");
+        }
+        else
+        {
+            // If on computer, set the platform type to Computer
+            platform = PlatformType.Computer;
+            Debug.Log("Running on computer");
+        }
         // playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
         loaded = true;
+    }
+
+    [DllImport("__Internal")]
+    private static extern bool IsMobile();
+
+    /// <summary>
+    /// Returns if the game is WebGL and running on a mobile device
+    /// </summary>
+    /// <returns>if the game is on WebGL on a mobile device</returns>
+    public bool isMobile()
+    {
+        #if !UNITY_EDITOR && UNITY_WEBGL
+            return IsMobile();
+        #endif
+        return false;
     }
 
     public void SetRotateCameraWithGravity(bool value)
@@ -183,4 +218,10 @@ public class Settings : MonoBehaviour
         cb.disabledColor = c;
         button.colors = cb;
     }
+}
+
+public enum PlatformType
+{
+    Phone,
+    Computer
 }
