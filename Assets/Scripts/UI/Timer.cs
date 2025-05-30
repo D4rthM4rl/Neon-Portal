@@ -38,7 +38,7 @@ public class Timer : MonoBehaviour
         unresetLevelTimer += Time.unscaledDeltaTime;
         sessionTimer += Time.unscaledDeltaTime;
 
-        if (inactivityTimer >= numMinutesForInactive * 60 && recordedInactivityEvent)
+        if (inactivityTimer >= numMinutesForInactive * 60 && !recordedInactivityEvent)
         {
             recordedInactivityEvent = true;
             RecordInactivityEvent();
@@ -58,7 +58,16 @@ public class Timer : MonoBehaviour
             return;
         }
 		levelTimer += Time.deltaTime;
-        timerText.text = "Time: " + (int)levelTimer / 60 + ":" + (int)levelTimer % 60;
+        int minutes = (int)levelTimer / 60;
+        int seconds = (int)levelTimer % 60;
+        if (seconds < 10)
+        {
+            timerText.text = "Time: " + minutes + ":0" + seconds;
+        }
+        else
+        {
+            timerText.text = "Time: " + minutes + ":" + seconds;
+        }
 	}
 
     private void RecordInactivityEvent()
@@ -73,7 +82,8 @@ public class Timer : MonoBehaviour
                 inactiveEvent = new inactive
                 {
                     level = levelName,
-                    session_time = Mathf.RoundToInt(sessionTimer)
+                    session_time = Mathf.RoundToInt(sessionTimer),
+                    movement_type = (int)Settings.instance.movement,
                 };
             }
             else 
@@ -83,7 +93,8 @@ public class Timer : MonoBehaviour
                 {
                     level = levelName,
                     level_beaten = lastLevelPlayed.beaten,
-                    session_time = Mathf.RoundToInt(sessionTimer)
+                    session_time = Mathf.RoundToInt(sessionTimer),
+                    movement_type = (int)Settings.instance.movement,
                 };
             }
         }
@@ -100,7 +111,8 @@ public class Timer : MonoBehaviour
                 num_deaths = player.numDeaths,
                 num_resets = player.numResets,
                 unreset_timer = unresetLevelTimer,
-                session_time = Mathf.RoundToInt(sessionTimer)
+                session_time = Mathf.RoundToInt(sessionTimer),
+                movement_type = (int)Settings.instance.movement,
             };
             if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
             {

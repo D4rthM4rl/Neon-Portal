@@ -7,7 +7,6 @@ using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
 using UnityEngine.UI;
 using TMPro;
-using System.Runtime.InteropServices;
 
 public class Settings : MonoBehaviour
 {
@@ -15,17 +14,23 @@ public class Settings : MonoBehaviour
     public bool rotateCameraWithGravity = true;
     public bool showTimer = true;
     public bool optedIn = true;
+    public PlayerMovementType movement = PlayerMovementType.Normal;
 
     public Color portal1Color;
+    private Color portal1SavedColor;
     [SerializeField]
     private Button portal1ColorButton;
     private bool settingPortal1Color = false;
+
     public Color portal2Color;
+    private Color portal2SavedColor;
     [SerializeField]
     private Button portal2ColorButton;
     private bool settingPortal2Color = false;
     [SerializeField]
     private ColorPickerControl colorPicker;
+
+    public TMP_Dropdown playerMovementDropdown;
 
     public bool participateInLeaderboard = true;
     public string playerLeaderboardName = "";
@@ -66,27 +71,9 @@ public class Settings : MonoBehaviour
             Destroy(gameObject);
         }
         
-        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"AnalyticsOptChoice"});
-        if (playerData.TryGetValue("AnalyticsOptChoice", out var analyticsOptChoice)) 
-        {
-            Debug.Log($"AnalyticsOptChoice: {analyticsOptChoice.Value.GetAs<string>()}");
-            if (analyticsOptChoice.Value.GetAs<string>() == "Opt Out")
-            {
-                optedIn = false;
-                AnalyticsService.Instance.StopDataCollection();
-            }
-            else
-            {
-                optedIn = true;
-                AnalyticsService.Instance.StartDataCollection();
-            }
-        }
-        else 
-        {
-            // If the key doesn't exist, default to opted in
-            optedIn = true;
-            AnalyticsService.Instance.StartDataCollection();
-        }
+        GetOpt();
+
+        GetPlayerMovementType();
 
         playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
         if (isMobile())
@@ -116,6 +103,49 @@ public class Settings : MonoBehaviour
             public static bool IsMobileBrowser() => false;
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
+
+    async private void GetOpt()
+    {
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"AnalyticsOptChoice"});
+        if (playerData.TryGetValue("AnalyticsOptChoice", out var analyticsOptChoice)) 
+        {
+            Debug.Log($"AnalyticsOptChoice: {analyticsOptChoice.Value.GetAs<string>()}");
+            if (analyticsOptChoice.Value.GetAs<string>() == "Opt Out")
+            {
+                optedIn = false;
+                AnalyticsService.Instance.StopDataCollection();
+            }
+            else
+            {
+                optedIn = true;
+                AnalyticsService.Instance.StartDataCollection();
+            }
+        }
+        else 
+        {
+            // If the key doesn't exist, default to opted in
+            optedIn = true;
+            AnalyticsService.Instance.StartDataCollection();
+        }
+    }
+
+    async private void GetPlayerMovementType()
+    {
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"PlayerMovementType"});
+        if (playerData.TryGetValue("PlayerMovementType", out var playerMovementType))
+        {
+            movement = (PlayerMovementType)playerMovementType.Value.GetAs<int>();
+            // playerMovementDropdown.value = (int)movement;
+        }
+        else
+        {
+            // If the key doesn't exist, generate a random choice
+            movement = (PlayerMovementType)Random.Range(0, 2);
+            var saveMovement = new Dictionary<string, object> { { "PlayerMovementType", (int)movement } };
+            await CloudSaveService.Instance.Data.Player.SaveAsync(saveMovement);
+            // playerMovementDropdown.value = (int)movement;
+        }
+    }
 
     /// <summary>
     /// Returns if the game is WebGL and running on a mobile device
@@ -165,8 +195,26 @@ public class Settings : MonoBehaviour
         AuthenticationService.Instance.UpdatePlayerNameAsync(text);
     }
 
-    public void SetPortalButtonColors()
+    async public void SetPlayerMovement()
     {
+        movement = (PlayerMovementType)playerMovementDropdown.value;
+        var saveMovement = new Dictionary<string, object> { { "PlayerMovementType", playerMovementDropdown.value } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(saveMovement);
+        // playerMovementDropdown.value = (int)movement;
+    }
+
+    async public void SetPortalButtonColors()
+    {
+        var portal1Data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"Portal1Color"});
+        if (portal1Data.TryGetValue("Portal1Color", out var portal1ColorValue))
+        {
+            portal1Color = portal1ColorValue.Value.GetAs<Color>();
+        }
+        var portal2Data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"Portal2Color"});
+        if (portal2Data.TryGetValue("Portal2Color", out var portal2ColorValue))
+        {
+            portal2Color = portal1ColorValue.Value.GetAs<Color>();
+        }
         SetButtonColor(portal1Color, portal1ColorButton);
         SetButtonColor(portal2Color, portal2ColorButton);
     }
@@ -189,7 +237,9 @@ public class Settings : MonoBehaviour
             portal1Color = c;
             SetButtonColor(c, portal1ColorButton);
             
-            yield return new WaitForSeconds(0.05f);
+            // StartCoroutine(SavePortalColor("Portal1Color", portal1Color));
+            
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
@@ -210,8 +260,26 @@ public class Settings : MonoBehaviour
             Color c = colorPicker.pickedColor;
             portal2Color = c;
             SetButtonColor(c, portal2ColorButton);
-            yield return new WaitForSeconds(0.05f);
+
+            // StartCoroutine(SavePortalColor("Portal2Color", portal1Color));
+
+            yield return new WaitForSeconds(0.1f);
         }
+    }
+
+    // private IEnumerator SavePortalColor(string key, Color color)
+    // {
+    //     yield return new WaitForSeconds(3);
+    //     if (color != )
+    //         yield break; // If saving was cancelled, exit the coroutine
+    //     var saveColor = new Dictionary<string, object> { { key, color } };
+    //     CloudSaveService.Instance.Data.Player.SaveAsync(saveColor);
+    // }
+
+    public void InitializePlayerMovementType()
+    {
+        GetPlayerMovementType();
+        playerMovementDropdown.value = (int)movement;
     }
 
     private void SetButtonColor(Color c, Button button)
@@ -224,6 +292,12 @@ public class Settings : MonoBehaviour
         cb.disabledColor = c;
         button.colors = cb;
     }
+}
+
+public enum PlayerMovementType
+{
+    Quick,
+    Normal,
 }
 
 public enum PlatformType

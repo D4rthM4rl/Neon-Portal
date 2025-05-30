@@ -5,32 +5,68 @@ using Unity.Services.Analytics;
 
 public class Player : Teleportable
 {
-    // private static Player instance;
+    public PortalGun portalGun;
+
+    [SerializeField]
+    private Gradient speedGradient;
+    [SerializeField]
+    private SpriteRenderer topSprite;
+    [SerializeField]
+    private Color topChangeColor = Color.white;
+    [SerializeField]
+    private SpriteRenderer rightSprite;
+    [SerializeField]
+    private Color rightChangeColor = Color.white;
+    [SerializeField]
+    private SpriteRenderer leftSprite;
+    [SerializeField]
+    private Color leftChangeColor = Color.white;
+    [SerializeField]
+    private SpriteRenderer bottomSprite;
+    [SerializeField]
+    private Color bottomChangeColor = Color.white;
+
+    private Color rightCurrentColor;
+    private Color leftCurrentColor;
+    private Color topCurrentColor;
+    private Color bottomCurrentColor;
+
     private int groundContactCount = 0;
     public bool isGrounded = true;
 
-    public PortalGun portalGun;
+    #region Movement Fields
+    [SerializeField]
+    private float initialJumpForce = 4f; // impulse on button down
+    [SerializeField]
+    private float extraJumpForce = 7f; // continuous “hold” force
+    [SerializeField]
+    private float jumpFalloffRate = 0.5f;
+    [SerializeField]
+    private float maxJumpDuration = 0.3f; // how long you can hold
 
-    public float initialJumpForce = 4f; // impulse on button down
-    public float extraJumpForce = 7f; // continuous “hold” force
-    public float jumpFalloffRate = 0.5f;
-    public float maxJumpDuration = 0.3f; // how long you can hold
-    public float moveSpeed = 20f; // your horizontal speed
-    
     private bool isJumping; // are we in the “hold” phase?
     private float jumpTimeCounter; // how much “hold time” left
-    public float groundCheckDistance = .58f;
-
     private int jumpBoostsGiven = 0;
-
     private bool jumpQueued = false;
 
+    [SerializeField]
+    private float maxAccel = 20f; // your horizontal speed
+    [SerializeField]
+    private float minAccel = 1f;
+    [SerializeField]
+    private float accelRate = 5f;
+    [SerializeField]
+    private float accelFalloffRate = 5f;
+    private float currLeftAccel = 0f;
+    private float currRightAccel = 0f;
+    #endregion
+
     private float timeHoldingR = 0;
+    [SerializeField]
+    private Gradient resetGradient;
 
     public int numResets = 0;
     public int numDeaths = 0;
-
-    private bool amHome = false;
 
     private Level level;
 
@@ -48,6 +84,14 @@ public class Player : Teleportable
         //     Destroy(gameObject);
         // }
         base.Start();
+        currLeftAccel = minAccel;
+        currRightAccel = minAccel;
+
+        rightCurrentColor = rightSprite.color;
+        leftCurrentColor = leftSprite.color;
+        topCurrentColor = topSprite.color;
+        bottomCurrentColor = bottomSprite.color;
+
         Timer.instance.levelTimer = 0;
         Timer.instance.unresetLevelTimer = 0;
         portalGun = GetComponent<PortalGun>();
@@ -65,10 +109,6 @@ public class Player : Teleportable
     // Update is called once per frame
     protected override void Update()
     {
-        if (amHome)
-        {
-            return;
-        }
         base.Update();
         Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
@@ -127,8 +167,50 @@ public class Player : Teleportable
             ResetWorld();
 
         }
+        UpdateSpriteColors();
         RotateWithGravity();
     }
+
+    void UpdateSpriteColors()
+    {
+        if (timeHoldingR > 0)
+        {
+            Color c = resetGradient.Evaluate(timeHoldingR / .75f);
+            rightSprite.color = c;
+            leftSprite.color = c;
+            bottomSprite.color = c;
+            topSprite.color = c;
+            return;
+        }
+        Vector2 velocity = rb.velocity; // You can tweak or dynamically compute this if needed
+
+        float lerpSpeed = Time.deltaTime * 2f; // speed of color smoothing
+
+        // RIGHT
+        float rightSpeed = Mathf.Clamp01(velocity.x / terminalVelocity);
+        Color rightTarget = speedGradient.Evaluate(rightSpeed);
+        rightCurrentColor = Color.Lerp(rightCurrentColor, rightTarget, lerpSpeed);
+        rightSprite.color = rightCurrentColor;
+
+        // LEFT
+        float leftSpeed = Mathf.Clamp01(-velocity.x / terminalVelocity);
+        Color leftTarget = speedGradient.Evaluate(leftSpeed);
+        leftCurrentColor = Color.Lerp(leftCurrentColor, leftTarget, lerpSpeed);
+        leftSprite.color = leftCurrentColor;
+
+        // TOP
+        float upSpeed = Mathf.Clamp01(velocity.y / terminalVelocity);
+        Color topTarget = speedGradient.Evaluate(upSpeed);
+        topCurrentColor = Color.Lerp(topCurrentColor, topTarget, lerpSpeed);
+        topSprite.color = topCurrentColor;
+
+        // BOTTOM
+        float downSpeed = Mathf.Clamp01(-velocity.y / terminalVelocity);
+        Color bottomTarget = speedGradient.Evaluate(downSpeed);
+        bottomCurrentColor = Color.Lerp(bottomCurrentColor, bottomTarget, lerpSpeed);
+        bottomSprite.color = bottomCurrentColor;
+    }
+
 
     public void RotateWithGravity()
     {
@@ -163,6 +245,8 @@ public class Player : Teleportable
     /// <summary>Sends player back to start</summary>
     public void ResetPlayer()
     {
+        currLeftAccel = minAccel;
+        currRightAccel = minAccel;
         rb.velocity = Vector2.zero;
         transform.position = Vector3.up;
         rb.angularVelocity = 0;
@@ -179,25 +263,51 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
-        if (amHome)
-        {
-            return;
-        }
         if (jumpQueued)
         {
             Jump();
             jumpQueued = false;
-
         }
         base.FixedUpdate();
         float h = Input.GetAxisRaw("Horizontal");
-        if (h != 0) Timer.instance.ResetInactivityTimer();
         Vector2 gravDir = gravityDirection.normalized;
         Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
-        Vector2 hVel = moveAxis * h * Time.deltaTime;
-        if (isGrounded) hVel *= 5000;
-        else hVel *= 4000;
-        rb.AddForce(hVel, ForceMode2D.Force);
+        Vector2 hVel = moveAxis;
+        if (Settings.instance.movement == PlayerMovementType.Normal)
+        {
+            if (h != 0) 
+            {
+                Timer.instance.ResetInactivityTimer();
+                if (h < 0)
+                {
+                    currLeftAccel = Mathf.Clamp(currLeftAccel + accelRate * Time.deltaTime, minAccel, maxAccel);
+                    currRightAccel = Mathf.Clamp(currRightAccel - accelRate * accelFalloffRate * Time.deltaTime, minAccel, maxAccel);
+                    hVel *= -currLeftAccel;
+                }
+                else if (h > 0)
+                {
+                    currRightAccel = Mathf.Clamp(currRightAccel + accelRate * Time.deltaTime, minAccel, maxAccel);
+                    currLeftAccel = Mathf.Clamp(currLeftAccel - accelRate * accelFalloffRate * Time.deltaTime, minAccel, maxAccel);
+                    hVel *= currRightAccel;
+                }
+                if (isGrounded) hVel *= 50;
+                else hVel *= 40;
+                rb.AddForce(hVel, ForceMode2D.Force);
+            }
+            else
+            {
+                currLeftAccel = Mathf.Clamp(currLeftAccel - accelRate * accelFalloffRate * Time.deltaTime, minAccel, maxAccel);
+                currRightAccel = Mathf.Clamp(currRightAccel - accelRate * accelFalloffRate * Time.deltaTime, minAccel, maxAccel);
+            }
+        }
+        else
+        {
+            if (h != 0) Timer.instance.ResetInactivityTimer();
+            hVel *= h * Time.deltaTime;
+            if (isGrounded) hVel *= 5000;
+            else hVel *= 4000;
+            rb.AddForce(hVel, ForceMode2D.Force);
+        }
     }
 
     void Jump()
@@ -296,33 +406,6 @@ public class Player : Teleportable
         //     Debug.Log("Left Ground");
     }
 
-    public void GoHome()
-    {
-        portalGun.DestroyIndicators();
-        // gameObject.SetActive(false);
-        GetComponent<PortalGun>().enabled = false;
-        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
-        {
-            sr.enabled = false;
-        }
-        GetComponent<LineRenderer>().enabled = false;
-        amHome = true;
-    }
-
-    public void GetReady()
-    {
-        GetComponent<PortalGun>().enabled = true;
-        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
-        {
-            sr.enabled = true;
-        }
-        GetComponent<LineRenderer>().enabled = true;
-        amHome = false;
-        ResetPlayer();
-        ResetPortals();
-        ResetWorld();
-    }
-
 
     #region Analytics Events
 
@@ -333,7 +416,8 @@ public class Player : Teleportable
         {
             level = level.ToString(),
             level_beaten = level.beaten,
-            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer)
+            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer),
+            movement_type = (int)Settings.instance.movement,
         };
         AnalyticsService.Instance.RecordEvent(resetEvent);
     }
@@ -348,7 +432,8 @@ public class Player : Teleportable
             x_pos = transform.position.x,
             y_pos = transform.position.y,
             timer = Timer.instance.levelTimer,
-            unreset_timer = Timer.instance.unresetLevelTimer
+            unreset_timer = Timer.instance.unresetLevelTimer,
+            movement_type = (int)Settings.instance.movement,
         };
         if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
         {
@@ -376,7 +461,8 @@ public class Player : Teleportable
             x_pos = transform.position.x,
             y_pos = transform.position.y,
             timer = Timer.instance.levelTimer,
-            unreset_timer = Timer.instance.unresetLevelTimer
+            unreset_timer = Timer.instance.unresetLevelTimer,
+            movement_type = (int)Settings.instance.movement
         };
         if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
         {

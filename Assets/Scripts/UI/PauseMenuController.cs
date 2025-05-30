@@ -122,7 +122,8 @@ public class PauseMenuController : MonoBehaviour
             num_deaths = player.numDeaths,
             num_resets = player.numResets,
             unreset_timer = Timer.instance.unresetLevelTimer,
-            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer)
+            session_time = Mathf.RoundToInt(Timer.instance.sessionTimer),
+            movement_type = (int)Settings.instance.movement
         };
         if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
         {

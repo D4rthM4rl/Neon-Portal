@@ -14,6 +14,8 @@ public class player_death : Unity.Services.Analytics.Event
 	public float portal2_y { set {SetParameter("portal2_y", value); } }
 	public float timer { set { SetParameter("timer", value); } }
 	public float unreset_timer { set { SetParameter("unreset_timer", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }
 
 public class player_reset : Unity.Services.Analytics.Event
@@ -32,6 +34,8 @@ public class player_reset : Unity.Services.Analytics.Event
 	public float portal2_y { set {SetParameter("portal2_y", value); } }
 	public float timer { set { SetParameter("timer", value); } }
 	public float unreset_timer { set { SetParameter("unreset_timer", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }
 
 public class level_start : Unity.Services.Analytics.Event
@@ -43,6 +47,8 @@ public class level_start : Unity.Services.Analytics.Event
 	public string level { set { SetParameter("level", value); } }
 	public bool level_beaten { set { SetParameter("level_beaten", value); } }
 	public int session_time { set { SetParameter("session_time", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }
 
 public class level_complete : Unity.Services.Analytics.Event
@@ -64,6 +70,8 @@ public class level_complete : Unity.Services.Analytics.Event
 	public int num_resets { set { SetParameter("num_resets", value); } }
     public float timer { set { SetParameter("timer", value); } }
 	public float unreset_timer { set { SetParameter("unreset_timer", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }
 
 public class level_quit : Unity.Services.Analytics.Event
@@ -84,6 +92,8 @@ public class level_quit : Unity.Services.Analytics.Event
 	public int num_resets { set { SetParameter("num_resets", value); } }
 	public float unreset_timer { set { SetParameter("unreset_timer", value); } }
 	public int session_time { set { SetParameter("session_time", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }
 
 // When a player is inactive for 5 minutes
@@ -105,4 +115,6 @@ public class inactive : Unity.Services.Analytics.Event
 	public int num_resets { set { SetParameter("num_resets", value); } }
 	public float unreset_timer { set { SetParameter("unreset_timer", value); } }
 	public int session_time { set { SetParameter("session_time", value); } }
+	// Settings
+	public int movement_type { set { SetParameter("movement_type", value); } }
 }

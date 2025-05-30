@@ -399,7 +399,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 2
+  m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
@@ -477,14 +477,84 @@ MonoBehaviour:
   - {x: 1.0404984e-19, y: 0}
   - {x: 1.0404984e-19, y: 0}
   - {x: 1.0404984e-19, y: 0}
-  isGrounded: 1
   portalGun: {fileID: 0}
+  speedGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 0, g: 0.9421966, b: 1, a: 1}
+    key2: {r: 0.33578205, g: 0, b: 1, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 28720
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
+  topSprite: {fileID: 3092735770953097149}
+  topChangeColor: {r: 1, g: 1, b: 1, a: 1}
+  rightSprite: {fileID: 3923975031188965772}
+  rightChangeColor: {r: 1, g: 1, b: 1, a: 1}
+  leftSprite: {fileID: 3370239688658887465}
+  leftChangeColor: {r: 1, g: 1, b: 1, a: 1}
+  bottomSprite: {fileID: 5138194353715533737}
+  bottomChangeColor: {r: 1, g: 1, b: 1, a: 1}
+  isGrounded: 1
   initialJumpForce: 20
   extraJumpForce: 9000
   jumpFalloffRate: 20000
   maxJumpDuration: 0.1
-  moveSpeed: 12
-  groundCheckDistance: 0.6
+  maxAccel: 2
+  minAccel: 0.75
+  accelRate: 5
+  accelFalloffRate: 5
+  resetGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 0, b: 0, a: 1}
+    key1: {r: 0, g: 0, b: 0, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
   numResets: 0
   numDeaths: 0
 --- !u!120 &831864058123744942
@@ -616,7 +686,5 @@ MonoBehaviour:
   invalidIndicatorPrefab: {fileID: 9171598603272245552, guid: 4c4d31506865a490ba3b1fc6cde2bb76, type: 3}
   portalPrefab: {fileID: 9213767316539425225, guid: 597e077362fdd48a29164948f9ddb6d8, type: 3}
   portals:
-  - color: {r: 0, g: 1, b: 0.66422915, a: 1}
-    type: 0
-  - color: {r: 1, g: 0, b: 0.7137255, a: 1}
-    type: 0
+  - type: 0
+  - type: 0

@@ -143,6 +143,7 @@ public class MainMenu : MonoBehaviour
         title.SetActive(false);
         Settings.instance.SetPortalButtonColors();
         Settings.instance.playerNameInput.GetComponent<TMP_InputField>().text = Settings.instance.playerLeaderboardName;
+        Settings.instance.InitializePlayerMovementType();
     }
     
     public void Quit()

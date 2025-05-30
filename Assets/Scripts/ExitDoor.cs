@@ -99,7 +99,8 @@ public class ExitDoor : MonoBehaviour
             num_deaths = player.numDeaths,
             num_resets = player.numResets,
             timer = levelTimer,
-            unreset_timer = unresetLevelTimer
+            unreset_timer = unresetLevelTimer,
+            movement_type = (int)Settings.instance.movement
         };
 
         if (PortalGun.portalsInScene.Length > 0 && PortalGun.portalsInScene[0] != null)
