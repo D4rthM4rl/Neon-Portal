@@ -33,7 +33,6 @@ public class Transition : MonoBehaviour
 
     public void StartTransition(int world, int level, float time)
     {
-        inBetweenMenu.SetActive(true);
         Timer.instance.timerText.enabled = false;
         Time.timeScale = 0f;
         StartCoroutine(ChooseNext(world, level, time));
@@ -46,15 +45,12 @@ public class Transition : MonoBehaviour
     /// <param name="level">Level that was just completed</param>
     private IEnumerator ChooseNext(int world, int level, float time)
     {
-        Debug.Log("Transitioning");
-        
-        Scene currentScene = SceneManager.GetActiveScene();
-
         StartCoroutine(FadeAsync(0f, 1f)); // Fade out
-        yield return new WaitForSecondsRealtime(fadeDuration/2);
-
+        yield return new WaitForSecondsRealtime(fadeDuration); // Wait for fade out to complete
+        inBetweenMenu.SetActive(true);
         levelCompleteText.text = "World " + world + ", Level " + level + 
             '\n' + "Completed in " + time.ToString("F2") + "s";
+
 
         prevLevel = LevelSelect.instance.levels[world - 1, level - 1];
         nextLevel = LevelSelect.instance.GetNextLevel(prevLevel);
@@ -70,13 +66,14 @@ public class Transition : MonoBehaviour
         // nextLevelText.enabled = true; // Show level text
         yield return new WaitForSecondsRealtime(fadeDuration/2); // Wait for fade in to complete
 
-        SceneManager.LoadScene(currLevel.ToString());
-        foreach (SpriteRenderer sr in FindObjectsOfType<SpriteRenderer>())
-        {
-            sr.enabled = false;
-        }
+        // SceneManager.LoadScene(currLevel.ToString());
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(currLevel.ToString());
+        while (!loadOp.isDone)
+            yield return null;
+        StartCoroutine(FadeAllObjectsAsync(0, true));
 
-        StartCoroutine(FadeAsync(1f, 0f)); // Fade in
+        StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
+        StartCoroutine(FadeAllObjectsAsync(.3f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }
 
@@ -85,14 +82,14 @@ public class Transition : MonoBehaviour
     /// </summary>
     /// <param name="from">Alpha value of overlay to start with</param>
     /// <param name="to">Alpha value of overlay to end with</param>
-    IEnumerator FadeAsync(float from, float to)
+    IEnumerator FadeAsync(float from, float to, float duration = 1f)
     {
         float timer = 0f;
         Color c = fadeImage.color;
 
-        while (timer < fadeDuration)
+        while (timer < duration)
         {
-            float alpha = Mathf.Lerp(from, to, timer / fadeDuration);
+            float alpha = Mathf.Lerp(from, to, timer / duration);
             fadeImage.color = new Color(c.r, c.g, c.b, alpha);
             timer += Time.unscaledDeltaTime;
             yield return null;
@@ -101,7 +98,7 @@ public class Transition : MonoBehaviour
         fadeImage.color = new Color(c.r, c.g, c.b, to);
     }
 
-    private IEnumerator FadeInAllObjectsAsync()
+    private IEnumerator FadeAllObjectsAsync(float secBetweenFades = 0.3f, bool fadeOut = false)
     {
         // Normal plats
         GameObject[] ground = GameObject.FindGameObjectsWithTag("Ground");
@@ -123,29 +120,33 @@ public class Transition : MonoBehaviour
                 normalGround.Add(obj);
             }
         }
-        FadeInObjects(normalGround.ToArray());
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(normalGround.ToArray(), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // 1-Way platforms
-        FadeInObjects(platforms.ToArray());
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(platforms.ToArray(), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Movable blocks
-        FadeInObjects(movables.ToArray());
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(movables.ToArray(), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Unportalable areas
-        FadeInObjects(GameObject.FindGameObjectsWithTag("Unportalable"));
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Unportalable"), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Gravity zones
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Gravity Zone"), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Indicators
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Indicator"), fadeOut))
+            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Player and exit
-        yield return new WaitForSeconds(secBetweenObjectFades);
+        FadeObjects(GameObject.FindGameObjectsWithTag("Level Exit"), fadeOut);
+        FadeObjects(GameObject.FindGameObjectsWithTag("Player"), fadeOut);
+        yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Background
         GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -154,21 +155,42 @@ public class Transition : MonoBehaviour
             SpriteRenderer bg = camera.GetComponentInChildren<SpriteRenderer>();
             if (bg != null)
             {
-                bg.enabled = true; // Enable background
+                bg.enabled = !fadeOut;
             }
         }
     }
 
-    private void FadeInObjects(GameObject[] objectsToFade)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="objectsToFade"></param>
+    /// <returns>True if there was anything to fade</returns>
+    private bool FadeObjects(GameObject[] objectsToFade, bool fadeOut = true)
     {
+        if (objectsToFade.Length == 0)
+        {
+            return false; // Nothing to fade
+        }
+        bool anySprites = false;
         foreach (GameObject obj in objectsToFade)
         {
-            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+            SpriteRenderer[] sr = obj.GetComponentsInChildren<SpriteRenderer>();
             if (sr != null)
             {
-                sr.enabled = true;
+                foreach (SpriteRenderer spriteRenderer in sr)
+                {
+                    spriteRenderer.enabled = true; // Enable sprite renderers
+                    anySprites = true; // At least one sprite was found
+                }
+            }
+            Image img = obj.GetComponent<Image>();
+            if (img != null)
+            {
+                img.enabled = true;
+                anySprites = true;
             }
         }
+        return anySprites;
     }
 
     public void NextLevel()

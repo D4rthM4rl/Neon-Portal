@@ -604,7 +604,7 @@ GameObject:
   - component: {fileID: 622565421}
   m_Layer: 5
   m_Name: Escape Info
-  m_TagString: Untagged
+  m_TagString: Indicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1007,7 +1007,7 @@ GameObject:
   - component: {fileID: 1190805330}
   m_Layer: 5
   m_Name: Escape Button
-  m_TagString: Untagged
+  m_TagString: Indicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2005,11 +2005,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 10.017475
+      value: 10.021537
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.010517
+      value: 8.01054
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.z

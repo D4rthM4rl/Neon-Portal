@@ -47,7 +47,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 1, g: 0, b: 0.07980776, a: 1}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -152,8 +152,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76a59b32faa3d456287d229513a8c680, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backgroundSprite: {fileID: 0}
-  unlitMat: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  rotateWithGravity: 1
+  player: {fileID: 0}
+  cameraRotateSpeed: 360
 --- !u!114 &4229664202389042265
 MonoBehaviour:
   m_ObjectHideFlags: 0

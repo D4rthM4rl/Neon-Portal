@@ -253,7 +253,7 @@ GameObject:
   - component: {fileID: 317311862}
   m_Layer: 5
   m_Name: R Info
-  m_TagString: Untagged
+  m_TagString: Indicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1625,11 +1625,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.836861
+      value: 3.8439338
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.4346695
+      value: 6.4347095
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2264,7 +2264,7 @@ GameObject:
   - component: {fileID: 1853208881}
   m_Layer: 5
   m_Name: R Key
-  m_TagString: Untagged
+  m_TagString: Indicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

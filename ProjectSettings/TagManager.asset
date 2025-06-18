@@ -9,6 +9,9 @@ TagManager:
   - Not On Pause
   - Level Select
   - Portal
+  - Indicator
+  - Gravity Zone
+  - Level Exit
   layers:
   - Default
   - TransparentFX
