@@ -120,33 +120,33 @@ public class Transition : MonoBehaviour
                 normalGround.Add(obj);
             }
         }
-        if (FadeObjects(normalGround.ToArray(), fadeOut))
+        if (FadeObjects(normalGround.ToArray(), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // 1-Way platforms
-        if (FadeObjects(platforms.ToArray(), fadeOut))
+        if (FadeObjects(platforms.ToArray(), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Movable blocks
-        if (FadeObjects(movables.ToArray(), fadeOut))
+        if (FadeObjects(movables.ToArray(), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Unportalable areas
-        if (FadeObjects(GameObject.FindGameObjectsWithTag("Unportalable"), fadeOut))
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Unportalable"), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Gravity zones
-        if (FadeObjects(GameObject.FindGameObjectsWithTag("Gravity Zone"), fadeOut))
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Gravity Zone"), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Indicators
-        if (FadeObjects(GameObject.FindGameObjectsWithTag("Indicator"), fadeOut))
+        if (FadeObjects(GameObject.FindGameObjectsWithTag("Indicator"), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Player and exit
         FadeObjects(GameObject.FindGameObjectsWithTag("Level Exit"), fadeOut);
         FadeObjects(GameObject.FindGameObjectsWithTag("Player"), fadeOut);
-        yield return new WaitForSecondsRealtime(secBetweenFades);
+        if (secBetweenFades > 0) yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Background
         GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
