@@ -97,7 +97,7 @@ public class PauseMenuController : MonoBehaviour
     public void OpenLevelSelect()
     {
         Exit();
-        mainMenuUI.GetComponent<MainMenu>().OpenLevelSelect();
+        MainMenu.instance.OpenLevelSelect();
     }
 
     // Call this from the Options button

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Unity.Services.Analytics;
 using Unity.Services.CloudSave;
 
@@ -8,23 +9,16 @@ public class ExitDoor : MonoBehaviour
 {
     public int currWorld;
     public int currLevel;
+    private bool transitioning = false;
 
     private void OnTriggerStay2D(Collider2D other) {
         Player player = other.GetComponent<Player>();
-        if (player && player.isGrounded)
+        if (player && player.isGrounded && !transitioning)
         {
+            transitioning = true;
+            player.enabled = false;
             BeatLevel(player, Timer.instance.levelTimer, Timer.instance.unresetLevelTimer);
-            string nextLevel = GetNextLevel();
-            if (nextLevel == "Home")
-            {
-                MainMenu.instance.gameObject.SetActive(true);
-                Timer.instance.timerText.enabled = false;
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
-            }
-            else
-            {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(nextLevel);
-            }
+            Transition.instance.StartTransition(currWorld, currLevel, Timer.instance.levelTimer);
         }
     }
 
@@ -64,29 +58,6 @@ public class ExitDoor : MonoBehaviour
                 level.beaten = true;
                 LevelSelect.instance.levelsToReload.Add(level);
             }
-        }
-    }
-
-    /// <summary>
-    /// Gets either the next level in current world or first level of the next world
-    /// </summary>
-    /// <returns>Next level</returns>
-    private string GetNextLevel()
-    {
-        if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath("W" + currWorld + "L" + (currLevel + 1)) != -1)
-        {
-            return "W" + currWorld + "L" + (currLevel + 1);
-        }
-        else if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath("W" + (currWorld + 1) + "L1") != -1)
-        {
-            return "W" + (currWorld + 1) + "L1";
-        }
-        else
-        {
-            // Debug.LogError("No next level found for " + "W" + currWorld + "L" + (currLevel + 1)
-            //  + " or W" + (currWorld + 1) + "L1");
-            
-            return "Home";
         }
     }
 

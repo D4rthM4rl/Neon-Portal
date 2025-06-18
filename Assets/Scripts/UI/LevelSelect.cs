@@ -245,7 +245,11 @@ public class LevelSelect : MonoBehaviour
 
     }
 
-    public Level GetNextLevel()
+    /// <summary>
+    /// Gets the first level that has not been beaten yet or returns null if all levels have been beaten.
+    /// </summary>
+    /// <returns>Earliest unbeaten level or null if all beaten</returns>
+    public Level GetNextUnbeatenLevel()
     {
         foreach (Level level in levels)
         {
@@ -255,6 +259,37 @@ public class LevelSelect : MonoBehaviour
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Gets the next level in the current world or the first level of the next world.
+    /// If the current level is the last level of the last world, returns null.
+    /// </summary>
+    /// <param name="currentLevel">What level you want the level after</param>
+    /// <returns>The level after the given level or null if there is no next level</returns>
+    /// <summary>
+    /// Gets either the next level in current world or first level of the next world
+    /// </summary>
+    /// <returns>Next level</returns>
+    public Level GetNextLevel(Level currentLevel)
+    {
+        int currWorld = currentLevel.world;
+        int currLevel = currentLevel.level;
+        if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath("W" + currWorld + "L" + (currLevel + 1)) != -1)
+        {
+            return levels[currWorld - 1, currLevel]; //"W" + currWorld + "L" + (currLevel + 1);
+        }
+        else if (UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath("W" + (currWorld + 1) + "L1") != -1)
+        {
+            return levels[currWorld, 0]; // "W" + (currWorld + 1) + "L1";
+        }
+        else
+        {
+            // Debug.LogError("No next level found for " + "W" + currWorld + "L" + (currLevel + 1)
+            //  + " or W" + (currWorld + 1) + "L1");
+            
+            return null;
+        }
     }
 
     public void LoadLevel(Level level)

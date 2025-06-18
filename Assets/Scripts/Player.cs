@@ -84,6 +84,7 @@ public class Player : Teleportable
         //     Destroy(gameObject);
         // }
         base.Start();
+        Time.timeScale = 0f;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
 
@@ -109,6 +110,7 @@ public class Player : Teleportable
     // Update is called once per frame
     protected override void Update()
     {
+        CheckForInputs();
         base.Update();
         Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
@@ -245,6 +247,8 @@ public class Player : Teleportable
     /// <summary>Sends player back to start</summary>
     public void ResetPlayer()
     {
+        Time.timeScale = 0f;
+        jumpQueued = false;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
         rb.velocity = Vector2.zero;
@@ -265,6 +269,7 @@ public class Player : Teleportable
     {
         if (jumpQueued)
         {
+            Time.timeScale = 1f;
             Jump();
             jumpQueued = false;
         }
@@ -277,6 +282,7 @@ public class Player : Teleportable
         {
             if (h != 0) 
             {
+                Time.timeScale = 1f;
                 Timer.instance.ResetInactivityTimer();
                 if (h < 0)
                 {
@@ -302,7 +308,11 @@ public class Player : Teleportable
         }
         else
         {
-            if (h != 0) Timer.instance.ResetInactivityTimer();
+            if (h != 0) 
+            {
+                Timer.instance.ResetInactivityTimer();
+                Time.timeScale = 1f;
+            }
             hVel *= h * Time.deltaTime;
             if (isGrounded) hVel *= 5000;
             else hVel *= 4000;
@@ -338,6 +348,14 @@ public class Player : Teleportable
                 if (isGrounded)
                     jumpTimeCounter = maxJumpDuration;
             }
+        }
+    }
+
+    void CheckForInputs()
+    {
+        if (Input.GetButtonDown("Jump") || Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Fire1"))
+        {
+            if (!PauseMenuController.instance.isPaused) Time.timeScale = 1f;
         }
     }
 

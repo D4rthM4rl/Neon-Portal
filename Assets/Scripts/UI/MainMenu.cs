@@ -99,7 +99,7 @@ public class MainMenu : MonoBehaviour
         Timer.instance.ResetInactivityTimer();
         if (LevelSelect.instance.loading)
             return;
-        Level nextLevel = LevelSelect.instance.GetNextLevel();
+        Level nextLevel = LevelSelect.instance.GetNextUnbeatenLevel();
         if (nextLevel == null) 
             OpenLevelSelect();
         else 
