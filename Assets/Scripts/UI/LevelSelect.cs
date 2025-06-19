@@ -60,7 +60,29 @@ public class LevelSelect : MonoBehaviour
         else
             Destroy(gameObject);
         // titleOrLoadingText.text = "Level Select";
+
+        //TODO: CREATE BUTTONS AT RUNTIME SO WE CAN HIDE AND SHOW THEM EASIER WHILE KEEPING THEM ACTIVE
         StartCoroutine(LoadLevelsCoroutine());
+    }
+
+    public void ShowButtons()
+    {
+        foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
+        {
+            button.enabled = true;
+            button.GetComponent<Image>().enabled = true;
+            button.GetComponentInChildren<TextMeshProUGUI>().enabled = true;
+        }
+    }
+
+    public void HideButtons()
+    {
+        foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
+        {
+            button.enabled = false;
+            button.GetComponent<Image>().enabled = false;
+            button.GetComponentInChildren<TextMeshProUGUI>().enabled = false;
+        }
     }
 
     private IEnumerator LoadLevelsCoroutine()
@@ -73,63 +95,65 @@ public class LevelSelect : MonoBehaviour
         // titleOrLoadingText.text = "Level Select";
     }
 
-    async private void LoadLevels()
+    private async void LoadLevels()
     {
         loading = true;
-        // titleOrLoadingText.text = "Loading Levels...";
 
-        string levelTitle = "";
         foreach (Button levelButton in levelSelectMenu.GetComponentsInChildren<Button>())
         {
-            // float trophyVertOffset = 1080 / Screen.height;
             float trophyVertOffset = 1;
-            // float trophyHorzOffset = 1920 / Screen.width;
             float trophyHorzOffset = 1;
             if (levelButton.gameObject == null || !levelButton.name.Contains("Level"))
-            {
                 continue;
-            }
-            // Debug.Log(levelButton.name);
+
             int world = int.Parse(levelButton.transform.parent.name.Substring(6, 1));
             int levelNum = int.Parse(levelButton.name.Substring(6, 1));
 
             Level level = levels[world - 1, levelNum - 1];
             levelButtons.Add(level, levelButton);
-                // levelButton.GetComponentInChildren<TextMeshProUGUI>().text = "Level " + levelNum + Environment.NewLine
-                // + Environment.NewLine + level.bestTime.ToString("F2") + "s";
 
-            Button trophyButton = Instantiate(leaderboardEnableButton, levelButton.transform.position + 
-                new Vector3(67*trophyHorzOffset, 67*trophyVertOffset, 0),
-                    Quaternion.identity, levelButton.transform).GetComponent<Button>();
+            Button trophyButton = Instantiate(leaderboardEnableButton,
+                levelButton.transform.position + new Vector3(67 * trophyHorzOffset, 67 * trophyVertOffset, 0),
+                Quaternion.identity, levelButton.transform).GetComponent<Button>();
 
-            // ColorBlock trophyColors = trophyButton.colors;
-            trophyButton.transform.localScale = new Vector3(1, 1, 1);
+            trophyButton.transform.localScale = Vector3.one;
             trophyButton.onClick.AddListener(() => Leaderboard.instance.ShowLeaderboard(level));
             levelButton.onClick.AddListener(() => LoadLevel(level.ToString()));
         }
 
-        // titleOrLoadingText.text = "Loading Level Times...";
-
+        // Load all level button data in parallel
+        List<Task> loadTasks = new List<Task>();
         foreach (Level level in levels)
         {
-            levelTitle = "W" + level.world + "L" + level.level;
-            var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{levelTitle});
-            if (!levelButtons.TryGetValue(level, out Button levelButton))
-                continue;
-
-            if (playerData.TryGetValue(levelTitle, out var levelTime))
-            {
-                level.bestTime = levelTime.Value.GetAs<float>();
-                level.beaten = true;
-                levelButton.GetComponentInChildren<TextMeshProUGUI>().text
-                  = "Level " + level.level + Environment.NewLine
-                + Environment.NewLine + level.bestTime.ToString("F2") + "s";
-            }
-            SetButtonColors(level, levelButton);
+            loadTasks.Add(LoadLevelButton(level));
         }
-        // titleOrLoadingText.text = "Level Select";
+
+        await Task.WhenAll(loadTasks); // Wait for all level data to load
         loading = false;
     }
+
+
+    private async Task LoadLevelButton(Level level)
+    {
+        string levelTitle = "W" + level.world + "L" + level.level;
+        var playerData = await CloudSaveService.Instance.Data.Player
+            .LoadAsync(new HashSet<string> { levelTitle });
+
+        if (!levelButtons.TryGetValue(level, out Button levelButton))
+            return;
+
+        if (playerData.TryGetValue(levelTitle, out var levelTime))
+        {
+            level.bestTime = levelTime.Value.GetAs<float>();
+            level.beaten = true;
+            levelButton.GetComponentInChildren<TextMeshProUGUI>().text
+                = "Level " + level.level + Environment.NewLine
+                + Environment.NewLine + level.bestTime.ToString("F2") + "s";
+        }
+
+        SetButtonColors(level, levelButton);
+    }
+
 
 
     public void ReloadLevelTime(Level level)
