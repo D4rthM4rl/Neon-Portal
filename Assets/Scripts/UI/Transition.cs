@@ -73,7 +73,7 @@ public class Transition : MonoBehaviour
         StartCoroutine(FadeAllObjectsAsync(0, true));
 
         StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
-        StartCoroutine(FadeAllObjectsAsync(.3f, false)); // Fade in all objects
+        StartCoroutine(FadeAllObjectsAsync(0.3f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }
 
@@ -115,33 +115,43 @@ public class Transition : MonoBehaviour
             {
                 movables.Add(obj);
             }
-            else
+            else if (obj.GetComponent<Collider2D>())
             {
                 normalGround.Add(obj);
             }
         }
         if (FadeObjects(normalGround.ToArray(), fadeOut) && secBetweenFades > 0)
+        {
+            Debug.Log("Faded normal ground and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
+        }
 
         // 1-Way platforms
         if (FadeObjects(platforms.ToArray(), fadeOut) && secBetweenFades > 0)
+        {
+            Debug.Log("Faded platforms and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
+        }
 
         // Movable blocks
         if (FadeObjects(movables.ToArray(), fadeOut) && secBetweenFades > 0)
+        {
+            Debug.Log("Faded movables and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
+        }
 
         // Unportalable areas
         if (FadeObjects(GameObject.FindGameObjectsWithTag("Unportalable"), fadeOut) && secBetweenFades > 0)
+        {
+            Debug.Log("Faded Unportalable and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
+        }
 
         // Gravity zones
         if (FadeObjects(GameObject.FindGameObjectsWithTag("Gravity Zone"), fadeOut) && secBetweenFades > 0)
             yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Indicators
-        if (FadeObjects(GameObject.FindGameObjectsWithTag("Indicator"), fadeOut) && secBetweenFades > 0)
-            yield return new WaitForSecondsRealtime(secBetweenFades);
 
         // Player and exit
         FadeObjects(GameObject.FindGameObjectsWithTag("Level Exit"), fadeOut);
@@ -158,6 +168,9 @@ public class Transition : MonoBehaviour
                 bg.enabled = !fadeOut;
             }
         }
+        if (secBetweenFades > 0) yield return new WaitForSecondsRealtime(secBetweenFades);
+
+        FadeObjects(GameObject.FindGameObjectsWithTag("Indicator"), fadeOut);
     }
 
     /// <summary>
@@ -174,19 +187,17 @@ public class Transition : MonoBehaviour
         bool anySprites = false;
         foreach (GameObject obj in objectsToFade)
         {
-            SpriteRenderer[] sr = obj.GetComponentsInChildren<SpriteRenderer>();
+            if (!fadeOut) Debug.Log("Fading object: " + obj.name);
+            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
-                foreach (SpriteRenderer spriteRenderer in sr)
-                {
-                    spriteRenderer.enabled = true; // Enable sprite renderers
-                    anySprites = true; // At least one sprite was found
-                }
+                sr.enabled = !fadeOut; // Enable sprite renderers
+                anySprites = true; // At least one sprite was found
             }
             Image img = obj.GetComponent<Image>();
             if (img != null)
             {
-                img.enabled = true;
+                img.enabled = !fadeOut;
                 anySprites = true;
             }
         }
@@ -221,6 +232,7 @@ public class Transition : MonoBehaviour
     public void GoToMainMenu()
     {
         inBetweenMenu.SetActive(false);
+        StartCoroutine(FadeAsync(1, 0, 0));
         Time.timeScale = 1f;
         MainMenu.instance.gameObject.SetActive(true);
 

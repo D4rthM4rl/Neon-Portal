@@ -112,7 +112,15 @@ public class PauseMenuController : MonoBehaviour
     {
         string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         Level level = LevelSelect.instance.GetLevelByName(levelName);
-        Player player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        Player player = null;
+        foreach (GameObject p in GameObject.FindGameObjectsWithTag("Player"))
+        {
+            player = p.GetComponent<Player>();
+            if (p.GetComponent<Player>() != null)
+            {
+                break;
+            }
+        }
         level_quit levelQuitEvent = new level_quit
         {
             level = levelName,
