@@ -32,7 +32,16 @@ public class CameraController : MonoBehaviour
 
     private IEnumerator GetCamera(CinemachineBrain brain)
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+        GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject p in playerTags)
+        {
+            if (p.GetComponent<Player>() != null)
+            {
+                player = p;
+                break;
+            }
+        }
+
         if (player == null)
         {
             Debug.LogError("Player GameObject with tag 'Player' not found.");
