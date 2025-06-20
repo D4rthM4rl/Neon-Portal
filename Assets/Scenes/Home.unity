@@ -3717,7 +3717,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1582846025}
         m_TargetAssemblyTypeName: Settings, Assembly-CSharp
         m_MethodName: SetRotateCameraWithGravity
-        m_Mode: 0
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4679,8 +4679,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1582846025}
         m_TargetAssemblyTypeName: Settings, Assembly-CSharp
-        m_MethodName: SetRotateCameraWithGravity
-        m_Mode: 0
+        m_MethodName: SetPortalsSplit
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -9541,8 +9541,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1582846025}
         m_TargetAssemblyTypeName: Settings, Assembly-CSharp
-        m_MethodName: SetRotateCameraWithGravity
-        m_Mode: 0
+        m_MethodName: SetPortalEntering
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -13182,20 +13182,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotateCameraWithGravity: 1
-  leftClickForBothPortals: 0
+  leftClickForBothPortals: 1
   needToTouchGroundToReenterPortal: 1
   showTimer: 1
   optedIn: 1
   movement: 0
   portal1Color: {r: 0, g: 1, b: 0.6627451, a: 1}
-  portal1ColorButton: {fileID: 1148707188}
   portal2Color: {r: 1, g: 0, b: 0.7137255, a: 1}
-  portal2ColorButton: {fileID: 1676392555}
   colorPicker: {fileID: 688394997}
-  playerMovementDropdown: {fileID: 1279482965}
   participateInLeaderboard: 1
   playerLeaderboardName: 
+  optButton: {fileID: 907570268}
+  playerMovementDropdown: {fileID: 1279482965}
+  portal1ColorButton: {fileID: 1148707188}
+  portal2ColorButton: {fileID: 1676392555}
   playerNameInput: {fileID: 1921947740}
+  showTimerToggle: {fileID: 2094803921}
+  portalSplitToggle: {fileID: 559592043}
+  needToTouchGroundToggle: {fileID: 1240673750}
+  rotateCameraToggle: {fileID: 423334839}
   playerNameErrorText: {fileID: 1248562597}
   platform: 1
   loaded: 0
@@ -13586,6 +13591,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1582846025}
+        m_TargetAssemblyTypeName: Settings, Assembly-CSharp
+        m_MethodName: SavePortalColors
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1647663538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13923,7 +13940,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Version 1.3
+  m_text: Version 1.4
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -18048,7 +18065,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1582846025}
         m_TargetAssemblyTypeName: Settings, Assembly-CSharp
         m_MethodName: SetTimerVisibility
-        m_Mode: 0
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

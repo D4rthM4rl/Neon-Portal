@@ -61,7 +61,6 @@ public class LevelSelect : MonoBehaviour
             Destroy(gameObject);
         // titleOrLoadingText.text = "Level Select";
 
-        //TODO: CREATE BUTTONS AT RUNTIME SO WE CAN HIDE AND SHOW THEM EASIER WHILE KEEPING THEM ACTIVE
         StartCoroutine(LoadLevelsCoroutine());
     }
 

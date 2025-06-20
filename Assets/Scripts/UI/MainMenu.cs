@@ -40,8 +40,6 @@ public class MainMenu : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-
-        StartCoroutine(LoadOptButton());
     }
 
     private IEnumerator LoadOptButton()
@@ -50,7 +48,7 @@ public class MainMenu : MonoBehaviour
         {
             yield return new WaitForSeconds(0.01f);
         }
-        optButton.GetComponentInChildren<TextMeshProUGUI>().text = !Settings.instance.optedIn ? "Opt In" : "Opt Out";
+        
     }
 
     public void ToggleOpt()
@@ -141,9 +139,7 @@ public class MainMenu : MonoBehaviour
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(true);
         title.SetActive(false);
-        Settings.instance.SetPortalButtonColors();
-        Settings.instance.playerNameInput.GetComponent<TMP_InputField>().text = Settings.instance.playerLeaderboardName;
-        Settings.instance.InitializePlayerMovementType();
+        Settings.instance.MakeSettingsUIMatchSaved();
     }
     
     public void Quit()

@@ -12,30 +12,48 @@ public class Settings : MonoBehaviour
 {
     public static Settings instance;
     public bool rotateCameraWithGravity = true;
+    public bool leftClickForBothPortals = true;
+    public bool needToTouchGroundToReenterPortal = true;
     public bool showTimer = true;
     public bool optedIn = true;
     public PlayerMovementType movement = PlayerMovementType.Normal;
 
     public Color portal1Color;
     private Color portal1SavedColor;
-    [SerializeField]
-    private Button portal1ColorButton;
     private bool settingPortal1Color = false;
 
     public Color portal2Color;
     private Color portal2SavedColor;
-    [SerializeField]
-    private Button portal2ColorButton;
     private bool settingPortal2Color = false;
     [SerializeField]
     private ColorPickerControl colorPicker;
 
-    public TMP_Dropdown playerMovementDropdown;
-
     public bool participateInLeaderboard = true;
     public string playerLeaderboardName = "";
+    #region Settings UI to Adjust
+    [Header("Settings UI Elements to Refresh")]
+
     [SerializeField]
-    public TMP_InputField playerNameInput;
+    private Button optButton;
+    [SerializeField]
+    private TMP_Dropdown playerMovementDropdown;
+    [SerializeField]
+    private Button portal1ColorButton;
+    [SerializeField]
+    private Button portal2ColorButton;
+    [SerializeField]
+    private TMP_InputField playerNameInput;
+    [SerializeField]
+    private Toggle showTimerToggle;
+    [SerializeField]
+    private Toggle portalSplitToggle;
+    [SerializeField]
+    private Toggle needToTouchGroundToggle;
+    [SerializeField]
+    private Toggle rotateCameraToggle;
+
+    #endregion
+
     [SerializeField]
     private TextMeshProUGUI playerNameErrorText;
 
@@ -71,11 +89,8 @@ public class Settings : MonoBehaviour
             Destroy(gameObject);
         }
         
-        GetOpt();
+        SetSettingsValuesToMatchSaved();
 
-        GetPlayerMovementType();
-
-        playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
         if (isMobile())
         {
             // If on mobile, set the platform type to Phone
@@ -104,7 +119,33 @@ public class Settings : MonoBehaviour
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
 
-    async private void GetOpt()
+    /// <summary>
+    /// Returns if the game is WebGL and running on a mobile device
+    /// </summary>
+    /// <returns>if the game is on WebGL on a mobile device</returns>
+    public bool isMobile()
+    {
+        return IsMobileBrowser();
+    }
+
+    #region Saved Settings Getters
+    /// <summary>
+    /// Makes the settings in the menu match what is 
+    /// </summary>
+    async private void SetSettingsValuesToMatchSaved()
+    {
+        GetSavedOpt();
+        GetSavedPortalColors();
+        playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
+        GetSavedTimerVisibility();
+        GetSavedPlayerMovementType();
+        GetSavedRotateCameraWithGravity();
+        GetSavedPortalSplit();
+        GetSavedPortalEntering();
+    }
+
+
+    async private void GetSavedOpt()
     {
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"AnalyticsOptChoice"});
         if (playerData.TryGetValue("AnalyticsOptChoice", out var analyticsOptChoice)) 
@@ -129,13 +170,35 @@ public class Settings : MonoBehaviour
         }
     }
 
-    async private void GetPlayerMovementType()
+    async private void GetSavedTimerVisibility()
+    {
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"ShowTimer"});
+        if (playerData.TryGetValue("ShowTimer", out var choice)) 
+        {
+            Debug.Log($"Timer: {choice.Value.GetAs<bool>()}");
+            if (choice.Value.GetAs<bool>())
+            {
+                showTimer = true;
+            }
+            else
+            {
+                showTimer = false;
+            }
+        }
+        else
+        {
+            // If the key doesn't exist, default to true
+            showTimer = true;
+        }
+    }
+
+    async private void GetSavedPlayerMovementType()
     {
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"PlayerMovementType"});
         if (playerData.TryGetValue("PlayerMovementType", out var playerMovementType))
         {
             movement = (PlayerMovementType)playerMovementType.Value.GetAs<int>();
-            // playerMovementDropdown.value = (int)movement;
+            playerMovementDropdown.value = (int)movement;
         }
         else
         {
@@ -143,27 +206,105 @@ public class Settings : MonoBehaviour
             movement = (PlayerMovementType)Random.Range(0, 2);
             var saveMovement = new Dictionary<string, object> { { "PlayerMovementType", (int)movement } };
             await CloudSaveService.Instance.Data.Player.SaveAsync(saveMovement);
-            // playerMovementDropdown.value = (int)movement;
+            playerMovementDropdown.value = (int)movement;
         }
     }
 
-    /// <summary>
-    /// Returns if the game is WebGL and running on a mobile device
-    /// </summary>
-    /// <returns>if the game is on WebGL on a mobile device</returns>
-    public bool isMobile()
+    async private void GetSavedRotateCameraWithGravity()
     {
-        return IsMobileBrowser();
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"RotateCameraWithGravity"});
+        if (playerData.TryGetValue("RotateCameraWithGravity", out var choice)) 
+        {
+            Debug.Log($"RotateCameraWithGravity: {choice.Value.GetAs<bool>()}");
+            if (choice.Value.GetAs<bool>())
+            {
+                rotateCameraWithGravity = true;
+            }
+            else
+            {
+                rotateCameraWithGravity = false;
+            }
+        }
+        else
+        {
+            // If the key doesn't exist, default to true
+            rotateCameraWithGravity = true;
+        }
     }
 
-    public void SetRotateCameraWithGravity(bool value)
+    async private void GetSavedPortalSplit()
     {
-        rotateCameraWithGravity = value;
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"LeftClickForBothPortals"});
+        if (playerData.TryGetValue("LeftClickForBothPortals", out var choice)) 
+        {
+            Debug.Log($"LeftClickForBothPortals: {choice.Value.GetAs<bool>()}");
+            if (choice.Value.GetAs<bool>())
+            {
+                leftClickForBothPortals = true;
+            }
+            else
+            {
+                leftClickForBothPortals = false;
+            }
+        }
+        else
+        {
+            // If the key doesn't exist, default to true
+            leftClickForBothPortals = true;
+        }
+    }
+
+    async private void GetSavedPortalEntering()
+    {
+        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"NeedToTouchGroundToReenterPortal"});
+        if (playerData.TryGetValue("NeedToTouchGroundToReenterPortal", out var choice)) 
+        {
+            Debug.Log($"NeedToTouchGroundToReenterPortal: {choice.Value.GetAs<bool>()}");
+            if (choice.Value.GetAs<bool>())
+            {
+                needToTouchGroundToReenterPortal = true;
+            }
+            else
+            {
+                needToTouchGroundToReenterPortal = false;
+            }
+        }
+        else
+        {
+            // If the key doesn't exist, default to true
+            needToTouchGroundToReenterPortal = true;
+        }
+    }
+
+    #endregion
+    #region Settings Savers
+
+    async public void SetRotateCameraWithGravity()
+    {
+        rotateCameraWithGravity = rotateCameraToggle.isOn;
+        var result = new Dictionary<string, object> { { "RotateCameraWithGravity", rotateCameraWithGravity } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(result);
+    }
+
+    async public void SetPortalsSplit()
+    {
+        leftClickForBothPortals = portalSplitToggle.isOn;
+        var result = new Dictionary<string, object> { { "LeftClickForBothPortals", leftClickForBothPortals } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(result);
+    }
+
+    async public void SetPortalEntering()
+    {
+        needToTouchGroundToReenterPortal = needToTouchGroundToggle.isOn;
+        var result = new Dictionary<string, object> { { "NeedToTouchGroundToReenterPortal", needToTouchGroundToReenterPortal } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(result);
     }
     
-    public void SetTimerVisibility(bool value)
+    async public void SetTimerVisibility()
     {
-        showTimer = value;
+        showTimer = showTimerToggle.isOn;
+        var result = new Dictionary<string, object> { { "ShowTimer", showTimer } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(result);
     }
 
     public void CompletePlayerName()
@@ -194,29 +335,42 @@ public class Settings : MonoBehaviour
         playerLeaderboardName = text;
         AuthenticationService.Instance.UpdatePlayerNameAsync(text);
     }
-
+    
     async public void SetPlayerMovement()
     {
         movement = (PlayerMovementType)playerMovementDropdown.value;
         var saveMovement = new Dictionary<string, object> { { "PlayerMovementType", playerMovementDropdown.value } };
         await CloudSaveService.Instance.Data.Player.SaveAsync(saveMovement);
-        // playerMovementDropdown.value = (int)movement;
     }
 
-    async public void SetPortalButtonColors()
+    async public void GetSavedPortalColors()
     {
         var portal1Data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"Portal1Color"});
         if (portal1Data.TryGetValue("Portal1Color", out var portal1ColorValue))
         {
-            portal1Color = portal1ColorValue.Value.GetAs<Color>();
+            string portal1ColorHex = "#" + portal1ColorValue.Value.GetAs<string>();
+            Debug.Assert(ColorUtility.TryParseHtmlString(portal1ColorHex, out portal1Color),
+                "Couldn't parse saved portal 1 color");
         }
         var portal2Data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"Portal2Color"});
         if (portal2Data.TryGetValue("Portal2Color", out var portal2ColorValue))
         {
-            portal2Color = portal1ColorValue.Value.GetAs<Color>();
+            string portal2ColorHex = "#" + portal2ColorValue.Value.GetAs<string>();
+            Debug.Assert(ColorUtility.TryParseHtmlString(portal2ColorHex, out portal2Color), 
+                "Couldn't parse saved portal 2 color");
         }
         SetButtonColor(portal1Color, portal1ColorButton);
         SetButtonColor(portal2Color, portal2ColorButton);
+    }
+
+    async public void SavePortalColors()
+    {
+        string portal1hex = ColorUtility.ToHtmlStringRGB(portal1Color);
+        string portal2hex = ColorUtility.ToHtmlStringRGB(portal2Color);
+        var savePortal1Color = new Dictionary<string, object> { { "Portal1Color", portal1hex } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(savePortal1Color);
+        var savePortal2Color = new Dictionary<string, object> { { "Portal2Color", portal2hex } };
+        await CloudSaveService.Instance.Data.Player.SaveAsync(savePortal2Color);
     }
 
     public void ChangePortal1Colors()
@@ -267,19 +421,19 @@ public class Settings : MonoBehaviour
         }
     }
 
-    // private IEnumerator SavePortalColor(string key, Color color)
-    // {
-    //     yield return new WaitForSeconds(3);
-    //     if (color != )
-    //         yield break; // If saving was cancelled, exit the coroutine
-    //     var saveColor = new Dictionary<string, object> { { key, color } };
-    //     CloudSaveService.Instance.Data.Player.SaveAsync(saveColor);
-    // }
+    #endregion
 
-    public void InitializePlayerMovementType()
+    public void MakeSettingsUIMatchSaved()
     {
-        GetPlayerMovementType();
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = !optedIn ? "Opt In" : "Opt Out";
+        GetSavedPortalColors();
+        playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
         playerMovementDropdown.value = (int)movement;
+
+        showTimerToggle.isOn = showTimer;
+        rotateCameraToggle.isOn = rotateCameraWithGravity;
+        portalSplitToggle.isOn = leftClickForBothPortals;
+        needToTouchGroundToggle.isOn = needToTouchGroundToReenterPortal;
     }
 
     private void SetButtonColor(Color c, Button button)
