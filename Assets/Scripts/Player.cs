@@ -353,7 +353,9 @@ public class Player : Teleportable
 
     void CheckForInputs()
     {
-        if (Input.GetButtonDown("Jump") || Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Jump") || Input.GetButtonDown("Horizontal") 
+            || Input.GetButtonDown("Fire1") ||
+             (Input.GetButtonDown("Fire2") && !Settings.instance.leftClickForBothPortals))
         {
             if (!PauseMenuController.instance.isPaused) Time.timeScale = 1f;
         }

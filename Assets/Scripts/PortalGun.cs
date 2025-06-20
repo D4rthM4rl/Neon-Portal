@@ -84,33 +84,43 @@ public class PortalGun : MonoBehaviour
             if (hit)
             {
                 Vector2 normal = Vector2.zero;
-                if (TryPlaceIndicator(hit, out normal) && Input.GetButtonDown("Fire1"))
+                if (TryPlaceIndicator(hit, out normal))
                 {
-                    // Spawn the portal
-                    PortalController portalController = portalsInScene[portalIndex];
-                    if (portalController != null)
+                    if (Settings.instance.leftClickForBothPortals && Input.GetButtonDown("Fire1"))
+                        ShootPortal(hit, normal, portalIndex);
+                    else if (!Settings.instance.leftClickForBothPortals)
                     {
-                        portalController.MovePortal(hit.point, normal);
-                        // portalController.transform.localScale = new Vector3(2, .1f, 1);
+                        if (Input.GetButtonDown("Fire1")) ShootPortal(hit, normal, 0);
+                        if (Input.GetButtonDown("Fire2")) ShootPortal(hit, normal, 1);
                     }
-                    else
-                    {
-                        GameObject newPortal = Instantiate(portalPrefab, hit.point, Quaternion.identity);
-                        portalController = newPortal.GetComponent<PortalController>();
-                        portalsInScene[portalIndex] = portalController;
-                        portalController.SetupPortal(currentPortalToSpawn,
-                            portalIndex, normal);
-                    }
-                    GameObject placeholder = new GameObject("PortalPlaceholder");
-                    placeholder.transform.parent = hit.transform;
-                    portalController.transform.parent = placeholder.transform;
-                    portalController.transform.up = hit.normal;
-                    portalIndex = (portalIndex + 1) % portals.Count;
-                    currentPortalToSpawn = portals[portalIndex];
-                    // TODO: Add an array for placeholders
                 }
             }
         }
+    }
+
+    public void ShootPortal(RaycastHit2D hit, Vector2 normal, int index)
+    {
+        PortalController portalController = portalsInScene[index];
+        // Spawn the portal
+        if (portalController != null)
+        {
+            portalController.MovePortal(hit.point, normal);
+        }
+        else
+        {
+            GameObject newPortal = Instantiate(portalPrefab, hit.point, Quaternion.identity);
+            portalController = newPortal.GetComponent<PortalController>();
+            portalsInScene[index] = portalController;
+            portalController.SetupPortal(currentPortalToSpawn,
+                index, normal);
+        }
+        GameObject placeholder = new GameObject("PortalPlaceholder");
+        placeholder.transform.parent = hit.transform;
+        portalController.transform.parent = placeholder.transform;
+        portalController.transform.up = hit.normal;
+        portalIndex = (index + 1) % portals.Count;
+        currentPortalToSpawn = portals[index];
+        // TODO: Add an array for placeholders
     }
 
     public void ResetPortals()
