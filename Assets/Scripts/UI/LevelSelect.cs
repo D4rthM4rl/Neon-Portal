@@ -117,7 +117,7 @@ public class LevelSelect : MonoBehaviour
 
             trophyButton.transform.localScale = Vector3.one;
             trophyButton.onClick.AddListener(() => Leaderboard.instance.ShowLeaderboard(level));
-            levelButton.onClick.AddListener(() => LoadLevel(level.ToString()));
+            levelButton.onClick.AddListener(() => StartCoroutine(LoadLevel(level.ToString())));
         }
 
         // Load all level button data in parallel
@@ -315,26 +315,22 @@ public class LevelSelect : MonoBehaviour
         }
     }
 
-    public void LoadLevel(Level level)
+    public IEnumerator LoadLevel(Level level)
     {
         if (loading)
-            return;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(level.ToString());
+            yield return null;
         if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
         else Timer.instance.timerText.enabled = false;
+
+        float fadeDuration = Transition.instance.fadeDuration;
+        yield return StartCoroutine(Transition.instance.FadeAsync(0f, 1f, fadeDuration/2)); // Fade out
+        Transition.instance.LoadLevelFromLevelSelect(level);
         gameObject.SetActive(false);
-        // StartCoroutine(WaitForRemovePlayer());
     }
 
-    public void LoadLevel(string level)
+    public IEnumerator LoadLevel(string level)
     {
-        if (loading)
-            return;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(level);
-        gameObject.SetActive(false);
-        if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
-        else Timer.instance.timerText.enabled = false;
-        // StartCoroutine(WaitForRemovePlayer());
+        yield return StartCoroutine(LoadLevel(GetLevelByName(level)));
     }
 
     public Level GetLevelByName(string name)

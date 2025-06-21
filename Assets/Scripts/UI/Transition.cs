@@ -60,20 +60,25 @@ public class Transition : MonoBehaviour
         }
     }
 
-    private IEnumerator LoadLevel(Level currLevel)
+    public void LoadLevelFromLevelSelect(Level level)
+    {
+        StartCoroutine(LoadLevelCoroutine(level));
+    }
+
+    public IEnumerator LoadLevelCoroutine(Level level)
     {
         // nextLevelText.text = "World " + world + '\n' + "Level " + level; // Update level text
         // nextLevelText.enabled = true; // Show level text
-        yield return new WaitForSecondsRealtime(fadeDuration/2); // Wait for fade in to complete
+        // yield return new WaitForSecondsRealtime(fadeDuration/2); // Wait for fade in to complete
 
         // SceneManager.LoadScene(currLevel.ToString());
-        AsyncOperation loadOp = SceneManager.LoadSceneAsync(currLevel.ToString());
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(level.ToString());
         while (!loadOp.isDone)
             yield return null;
-        StartCoroutine(FadeAllObjectsAsync(0, true));
+        StartCoroutine(FadeAllObjectsAsync(0, true)); // Unload all sprites
 
         StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
-        StartCoroutine(FadeAllObjectsAsync(0.3f, false)); // Fade in all objects
+        StartCoroutine(FadeAllObjectsAsync(0.2f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }
 
@@ -82,10 +87,11 @@ public class Transition : MonoBehaviour
     /// </summary>
     /// <param name="from">Alpha value of overlay to start with</param>
     /// <param name="to">Alpha value of overlay to end with</param>
-    IEnumerator FadeAsync(float from, float to, float duration = 1f)
+    public IEnumerator FadeAsync(float from, float to, float duration = 1f)
     {
         float timer = 0f;
         Color c = fadeImage.color;
+        fadeImage.gameObject.SetActive(true);
 
         while (timer < duration)
         {
@@ -96,6 +102,7 @@ public class Transition : MonoBehaviour
         }
 
         fadeImage.color = new Color(c.r, c.g, c.b, to);
+        if (to == 0) fadeImage.gameObject.SetActive(false);
     }
 
     private IEnumerator FadeAllObjectsAsync(float secBetweenFades = 0.3f, bool fadeOut = false)
@@ -122,28 +129,24 @@ public class Transition : MonoBehaviour
         }
         if (FadeObjects(normalGround.ToArray(), fadeOut) && secBetweenFades > 0)
         {
-            Debug.Log("Faded normal ground and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
         }
 
         // 1-Way platforms
         if (FadeObjects(platforms.ToArray(), fadeOut) && secBetweenFades > 0)
         {
-            Debug.Log("Faded platforms and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
         }
 
         // Movable blocks
         if (FadeObjects(movables.ToArray(), fadeOut) && secBetweenFades > 0)
         {
-            Debug.Log("Faded movables and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
         }
 
         // Unportalable areas
         if (FadeObjects(GameObject.FindGameObjectsWithTag("Unportalable"), fadeOut) && secBetweenFades > 0)
         {
-            Debug.Log("Faded Unportalable and waited for " + secBetweenFades + " seconds");
             yield return new WaitForSecondsRealtime(secBetweenFades);
         }
 
@@ -187,7 +190,6 @@ public class Transition : MonoBehaviour
         bool anySprites = false;
         foreach (GameObject obj in objectsToFade)
         {
-            if (!fadeOut) Debug.Log("Fading object: " + obj.name);
             SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
@@ -209,7 +211,7 @@ public class Transition : MonoBehaviour
         Debug.Assert(nextLevel != null, "Next level is null. Cannot load next level.");
         inBetweenMenu.SetActive(false);
         Timer.instance.timerText.enabled = true;
-        StartCoroutine(LoadLevel(nextLevel));
+        StartCoroutine(LoadLevelCoroutine(nextLevel));
     }
 
     /// <summary>
@@ -220,7 +222,7 @@ public class Transition : MonoBehaviour
         inBetweenMenu.SetActive(false);
         Timer.instance.ResetInactivityTimer();
         Timer.instance.timerText.enabled = true;
-        StartCoroutine(LoadLevel(prevLevel));
+        StartCoroutine(LoadLevelCoroutine(prevLevel));
     }
 
     public void GoToLevelSelect()
@@ -231,14 +233,15 @@ public class Transition : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        StartCoroutine(FadeAsync(0, 1, fadeDuration/2));
         inBetweenMenu.SetActive(false);
-        StartCoroutine(FadeAsync(1, 0, 0));
         Time.timeScale = 1f;
         MainMenu.instance.gameObject.SetActive(true);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+        MainMenu.instance.OpenMainMenu();
+        StartCoroutine(FadeAsync(1, 0, fadeDuration/2));
 
         Timer.instance.ResetInactivityTimer();
         // RecordLevelQuitEvent();
-        MainMenu.instance.gameObject.SetActive(true);
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
     }
 }
