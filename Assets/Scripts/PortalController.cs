@@ -30,7 +30,7 @@ public class PortalController : MonoBehaviour
     private PortalController receivingPortal;
     public Vector2 direction; 
 
-    private int index;
+    public int index;
 
     /// <summary>
     /// Initializes the portal from its description
@@ -72,40 +72,44 @@ public class PortalController : MonoBehaviour
     }
     
     private void OnTriggerEnter2D(Collider2D other) {
-        if (other.gameObject != null && other.GetComponent<Teleportable>())
+        Teleportable tpObj = other.GetComponent<Teleportable>();
+        if (other.gameObject == null || !tpObj) return;
+
+
+        PortalController receivingPortal = PortalGun.portalsInScene[(index + 1) % PortalGun.portalsInScene.Length];
+        if (receivingPortal != null)
         {
-            PortalController receivingPortal = PortalGun.portalsInScene[(index + 1) % PortalGun.portalsInScene.Length];
-            Teleportable tpObj = other.GetComponent<Teleportable>();
-            if (receivingPortal != null)
+            Player player = other.GetComponent<Player>();
+            if (Settings.instance.needToTouchGroundToReenterPortal && player && player.cantReenterIndex == index) return;
+            else if (player) player.cantReenterIndex = receivingPortal.index;
+
+            Vector2 incomingVelocity = GetVelocity(tpObj);
+            // Debug.Log("Incoming Velocity: " + incomingVelocity);
+
+            float angleDifference = Vector3.SignedAngle(transform.up, receivingPortal.transform.up, Vector3.forward);
+
+            // Rotate the incoming velocity by that angle
+            Vector2 rotatedVelocity = Quaternion.Euler(0, 0, angleDifference) * incomingVelocity;
+            if (rotatedVelocity.magnitude < 1) rotatedVelocity = rotatedVelocity.normalized;
+            float separation = 1;
+            if (other.GetComponent<Player>() == null)
             {
-                Vector2 incomingVelocity = GetVelocity(tpObj);
-                // Debug.Log("Incoming Velocity: " + incomingVelocity);
-
-                float angleDifference = Vector3.SignedAngle(transform.up, receivingPortal.transform.up, Vector3.forward);
-
-                // Rotate the incoming velocity by that angle
-                Vector2 rotatedVelocity = Quaternion.Euler(0, 0, angleDifference) * incomingVelocity;
-                if (rotatedVelocity.magnitude < 1) rotatedVelocity = rotatedVelocity.normalized;
-                float separation = 1;
-                if (other.GetComponent<Player>() == null)
-                {
-                    if (Mathf.Abs(receivingPortal.direction.x) >= Mathf.Abs(receivingPortal.direction.y))
-                        separation = other.transform.localScale.x / 2;
-                    else
-                        separation = other.transform.localScale.y / 2;
-                    separation += .1f;
-                }
-
-                // Teleport and set new velocity
-                other.transform.position = receivingPortal.transform.position + 
-                    (Vector3)receivingPortal.direction * separation;
-                tpObj.rb.velocity = -rotatedVelocity;
-                if (receivingPortal.description.type == PortalType.GravitySwitching)
-                {
-                    tpObj.gravityDirection = -receivingPortal.direction;
-                }
-                // Debug.Log("New Velocity: " + rb.velocity);
+                if (Mathf.Abs(receivingPortal.direction.x) >= Mathf.Abs(receivingPortal.direction.y))
+                    separation = other.transform.localScale.x / 2;
+                else
+                    separation = other.transform.localScale.y / 2;
+                separation += .1f;
             }
+
+            // Teleport and set new velocity
+            other.transform.position = receivingPortal.transform.position + 
+                (Vector3)receivingPortal.direction * separation;
+            tpObj.rb.velocity = -rotatedVelocity;
+            if (receivingPortal.description.type == PortalType.GravitySwitching)
+            {
+                tpObj.gravityDirection = -receivingPortal.direction;
+            }
+            // Debug.Log("New Velocity: " + rb.velocity);
         }
     }
 

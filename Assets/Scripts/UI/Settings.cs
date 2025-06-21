@@ -150,7 +150,6 @@ public class Settings : MonoBehaviour
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"AnalyticsOptChoice"});
         if (playerData.TryGetValue("AnalyticsOptChoice", out var analyticsOptChoice)) 
         {
-            Debug.Log($"AnalyticsOptChoice: {analyticsOptChoice.Value.GetAs<string>()}");
             if (analyticsOptChoice.Value.GetAs<string>() == "Opt Out")
             {
                 optedIn = false;
@@ -175,7 +174,6 @@ public class Settings : MonoBehaviour
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"ShowTimer"});
         if (playerData.TryGetValue("ShowTimer", out var choice)) 
         {
-            Debug.Log($"Timer: {choice.Value.GetAs<bool>()}");
             if (choice.Value.GetAs<bool>())
             {
                 showTimer = true;
@@ -215,7 +213,6 @@ public class Settings : MonoBehaviour
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"RotateCameraWithGravity"});
         if (playerData.TryGetValue("RotateCameraWithGravity", out var choice)) 
         {
-            Debug.Log($"RotateCameraWithGravity: {choice.Value.GetAs<bool>()}");
             if (choice.Value.GetAs<bool>())
             {
                 rotateCameraWithGravity = true;
@@ -237,7 +234,6 @@ public class Settings : MonoBehaviour
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"LeftClickForBothPortals"});
         if (playerData.TryGetValue("LeftClickForBothPortals", out var choice)) 
         {
-            Debug.Log($"LeftClickForBothPortals: {choice.Value.GetAs<bool>()}");
             if (choice.Value.GetAs<bool>())
             {
                 leftClickForBothPortals = true;
@@ -259,7 +255,6 @@ public class Settings : MonoBehaviour
         var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"NeedToTouchGroundToReenterPortal"});
         if (playerData.TryGetValue("NeedToTouchGroundToReenterPortal", out var choice)) 
         {
-            Debug.Log($"NeedToTouchGroundToReenterPortal: {choice.Value.GetAs<bool>()}");
             if (choice.Value.GetAs<bool>())
             {
                 needToTouchGroundToReenterPortal = true;
@@ -343,7 +338,7 @@ public class Settings : MonoBehaviour
         await CloudSaveService.Instance.Data.Player.SaveAsync(saveMovement);
     }
 
-    async public void GetSavedPortalColors()
+    async public void GetSavedPortalColors(bool setButtonColors = false)
     {
         var portal1Data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{"Portal1Color"});
         if (portal1Data.TryGetValue("Portal1Color", out var portal1ColorValue))
@@ -359,8 +354,11 @@ public class Settings : MonoBehaviour
             Debug.Assert(ColorUtility.TryParseHtmlString(portal2ColorHex, out portal2Color), 
                 "Couldn't parse saved portal 2 color");
         }
-        SetButtonColor(portal1Color, portal1ColorButton);
-        SetButtonColor(portal2Color, portal2ColorButton);
+        if (setButtonColors)
+        {
+            SetButtonColor(portal1Color, portal1ColorButton);
+            SetButtonColor(portal2Color, portal2ColorButton);
+        }
     }
 
     async public void SavePortalColors()
@@ -426,7 +424,8 @@ public class Settings : MonoBehaviour
     public void MakeSettingsUIMatchSaved()
     {
         optButton.GetComponentInChildren<TextMeshProUGUI>().text = !optedIn ? "Opt In" : "Opt Out";
-        GetSavedPortalColors();
+        Debug.Assert(portal1ColorButton != null, "Portal 1 color button is null");
+        GetSavedPortalColors(true);
         playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
         playerMovementDropdown.value = (int)movement;
 

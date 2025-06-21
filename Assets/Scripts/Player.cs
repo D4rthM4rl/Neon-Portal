@@ -7,6 +7,8 @@ public class Player : Teleportable
 {
     public PortalGun portalGun;
 
+    private GameObject cam;
+
     [SerializeField]
     private Gradient speedGradient;
     [SerializeField]
@@ -33,6 +35,7 @@ public class Player : Teleportable
 
     private int groundContactCount = 0;
     public bool isGrounded = true;
+    public int cantReenterIndex = -1;
 
     #region Movement Fields
     [SerializeField]
@@ -87,6 +90,8 @@ public class Player : Teleportable
         Time.timeScale = 0f;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
+        cam = GameObject.FindGameObjectWithTag("MainCamera");
+        cam.transform.position = transform.position;
 
         rightCurrentColor = rightSprite.color;
         leftCurrentColor = leftSprite.color;
@@ -145,8 +150,15 @@ public class Player : Teleportable
             timeHoldingR = 0;
         }
         
-        // isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
-        if (Input.GetButton("Jump"))
+        if ((Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down) && Input.GetButton("Up"))
+        {
+            Timer.instance.ResetInactivityTimer();
+            jumpQueued = true;
+        }
+        else if (Settings.instance.rotateCameraWithGravity && 
+            (Input.GetButton("Left") && gravityDirection == Vector2.right) ||
+            (Input.GetButton("Down") && gravityDirection == Vector2.up) ||
+            (Input.GetButton("Right") && gravityDirection == Vector2.left))
         {
             Timer.instance.ResetInactivityTimer();
             jumpQueued = true;
@@ -256,6 +268,7 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
+        cam.transform.position = transform.position;
         Timer.instance.levelTimer = 0;
     }
 
@@ -274,7 +287,29 @@ public class Player : Teleportable
             jumpQueued = false;
         }
         base.FixedUpdate();
-        float h = Input.GetAxisRaw("Horizontal");
+        float h = 0;
+        if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down) h = Input.GetAxisRaw("Horizontal");
+        else
+        {
+            if (gravityDirection == Vector2.left)
+            {
+                if (Input.GetButton("Up")) h = -1;
+                else if (Input.GetButton("Down")) h = 1;
+                else h = 0;
+            }
+            else if (gravityDirection == Vector2.up)
+            {
+                if (Input.GetButton("Right")) h = -1;
+                else if (Input.GetButton("Left")) h = 1;
+                else h = 0;
+            }
+            else if (gravityDirection == Vector2.right)
+            {
+                if (Input.GetButton("Down")) h = -1;
+                else if (Input.GetButton("Up")) h = 1;
+                else h = 0;
+            }
+        }
         Vector2 gravDir = gravityDirection.normalized;
         Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
         Vector2 hVel = moveAxis;
@@ -325,6 +360,7 @@ public class Player : Teleportable
         if (!isJumping && isGrounded) 
         {
             isJumping = true;
+            cantReenterIndex = -1;
             jumpTimeCounter = maxJumpDuration;
             rb.AddForce(initialJumpForce * -gravityDirection.normalized, ForceMode2D.Impulse);
             jumpBoostsGiven = 0;
@@ -353,8 +389,8 @@ public class Player : Teleportable
 
     void CheckForInputs()
     {
-        if (Input.GetButtonDown("Jump") || Input.GetButtonDown("Horizontal") 
-            || Input.GetButtonDown("Fire1") ||
+        if (Input.GetButtonDown("Left") || Input.GetButtonDown("Up") || Input.GetButtonDown("Right") || 
+            Input.GetButtonDown("Down") || Input.GetButtonDown("Fire1") ||
              (Input.GetButtonDown("Fire2") && !Settings.instance.leftClickForBothPortals))
         {
             if (!PauseMenuController.instance.isPaused) Time.timeScale = 1f;
@@ -368,7 +404,9 @@ public class Player : Teleportable
     {
         foreach (ContactPoint2D contact in col.contacts)
         {
-            if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected())
+            if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected()
+                && (!Settings.instance.needToTouchGroundToReenterPortal || 
+                col.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
             {
                 groundContactCount = 0;
                 isGrounded = false;
