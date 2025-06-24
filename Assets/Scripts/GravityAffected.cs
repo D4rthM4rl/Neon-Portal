@@ -63,7 +63,7 @@ public class GravityAffected : MonoBehaviour
 
     protected virtual void Update() {
 
-        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 10 && autoRespawning)
+        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 5 && autoRespawning)
         {
             Reset();
         }

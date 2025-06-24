@@ -167,7 +167,7 @@ public class Player : Teleportable
             jumpTimeCounter = maxJumpDuration;
         }
 
-        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 10)
+        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 5)
         {
             numDeaths++;
 
