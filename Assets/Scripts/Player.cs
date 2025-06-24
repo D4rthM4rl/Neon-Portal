@@ -152,15 +152,13 @@ public class Player : Teleportable
         
         if ((Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down) && Input.GetButton("Up"))
         {
-            Timer.instance.ResetInactivityTimer();
             jumpQueued = true;
         }
-        else if (Settings.instance.rotateCameraWithGravity && 
+        else if (!Settings.instance.rotateCameraWithGravity && 
             (Input.GetButton("Left") && gravityDirection == Vector2.right) ||
             (Input.GetButton("Down") && gravityDirection == Vector2.up) ||
             (Input.GetButton("Right") && gravityDirection == Vector2.left))
         {
-            Timer.instance.ResetInactivityTimer();
             jumpQueued = true;
         }
         else
@@ -169,7 +167,7 @@ public class Player : Teleportable
             jumpTimeCounter = maxJumpDuration;
         }
 
-        if (transform.position.y < -10f || transform.position.x < -50f || transform.position.x > 60f || transform.position.y > 50)
+        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 10)
         {
             numDeaths++;
 
@@ -282,7 +280,6 @@ public class Player : Teleportable
     {
         if (jumpQueued)
         {
-            Time.timeScale = 1f;
             Jump();
             jumpQueued = false;
         }
@@ -317,8 +314,6 @@ public class Player : Teleportable
         {
             if (h != 0) 
             {
-                Time.timeScale = 1f;
-                Timer.instance.ResetInactivityTimer();
                 if (h < 0)
                 {
                     currLeftAccel = Mathf.Clamp(currLeftAccel + accelRate * Time.deltaTime, minAccel, maxAccel);
@@ -343,11 +338,6 @@ public class Player : Teleportable
         }
         else
         {
-            if (h != 0) 
-            {
-                Timer.instance.ResetInactivityTimer();
-                Time.timeScale = 1f;
-            }
             hVel *= h * Time.deltaTime;
             if (isGrounded) hVel *= 5000;
             else hVel *= 4000;
@@ -394,6 +384,7 @@ public class Player : Teleportable
              (Input.GetButtonDown("Fire2") && !Settings.instance.leftClickForBothPortals))
         {
             if (!PauseMenuController.instance.isPaused) Time.timeScale = 1f;
+            Timer.instance.ResetInactivityTimer();
         }
     }
 

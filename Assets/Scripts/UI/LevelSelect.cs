@@ -29,22 +29,26 @@ public class LevelSelect : MonoBehaviour
         new Level(1, 2),
         new Level(1, 3),
         new Level(1, 4),
-        new Level(1, 5)},
+        new Level(1, 5),
+        new Level(1, 6)},
         {new Level(2, 1),
         new Level(2, 2),
         new Level(2, 3),
         new Level(2, 4),
-        new Level(2, 5)},
+        new Level(2, 5),
+        new Level(2, 6)},
         {new Level(3, 1),
         new Level(3, 2),
         new Level(3, 3),
         new Level(3, 4),
-        new Level(3, 5)},
+        new Level(3, 5),
+        new Level(3, 6)},
         {new Level(4, 1),
         new Level(4, 2),
         new Level(4, 3),
         new Level(4, 4),
-        new Level(4, 5)}
+        new Level(4, 5),
+        new Level(4, 6)}
     };
 
     public bool loading = false;

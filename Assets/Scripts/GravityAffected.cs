@@ -10,6 +10,8 @@ public class GravityAffected : MonoBehaviour
 
     public bool autoRespawning;
     public Vector2 respawnPosition;
+
+    public PolygonCollider2D cameraBounds;
     
     public float gravityAcceleration = 9.8f;
     public float terminalVelocity = 20f; // max falling speed
@@ -24,6 +26,9 @@ public class GravityAffected : MonoBehaviour
         rb.gravityScale = 0f;
         respawnPosition = transform.position;
         gravityDirection = defaultGravityDirection.normalized;
+        GameObject cameraBoundsGO = GameObject.Find("Camera Bounds");
+        Debug.Assert(cameraBoundsGO != null, "Camera Bounds couldn't be found with name Camera Bounds");
+        cameraBounds = cameraBoundsGO.GetComponent<PolygonCollider2D>();
     }
 
     protected virtual void FixedUpdate()
@@ -57,7 +62,8 @@ public class GravityAffected : MonoBehaviour
     }
 
     protected virtual void Update() {
-        if (transform.position.y < -10 && autoRespawning)
+
+        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 10 && autoRespawning)
         {
             Reset();
         }
