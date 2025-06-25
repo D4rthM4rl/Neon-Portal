@@ -98,17 +98,26 @@ public class Player : Teleportable
         topCurrentColor = topSprite.color;
         bottomCurrentColor = bottomSprite.color;
 
-        Timer.instance.levelTimer = 0;
-        Timer.instance.unresetLevelTimer = 0;
+        string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (LevelSelect.instance != null)
+        {
+            level = LevelSelect.instance.GetLevelByName(levelName);
+        }
+        else Debug.LogWarning("LevelSelect isn't instantiated");
+
+        if (Timer.instance != null)
+        {
+            Timer.instance.levelTimer = 0;
+            Timer.instance.unresetLevelTimer = 0;
+            Timer.instance.lastLevelPlayed = level;
+        }
+        else Debug.LogWarning("Timer isn't enabled");
         portalGun = GetComponent<PortalGun>();
         if (portalGun == null)
         {
             Debug.LogError("Player does not have a PortalGun component.");
         }
 
-        string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        level = LevelSelect.instance.GetLevelByName(levelName);
-        Timer.instance.lastLevelPlayed = level;
         RecordLevelStartEvent();
     }
 
@@ -117,7 +126,7 @@ public class Player : Teleportable
     {
         CheckForInputs();
         base.Update();
-        Timer.instance.UpdateTimer();
+        if (Timer.instance != null) Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
         {
@@ -127,7 +136,7 @@ public class Player : Teleportable
 
         if (Input.GetButton("Reset"))
         {
-            Timer.instance.ResetInactivityTimer();
+            if (Timer.instance != null) Timer.instance.ResetInactivityTimer();
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > .75)
             {
@@ -149,12 +158,16 @@ public class Player : Teleportable
             }
             timeHoldingR = 0;
         }
+
+        bool rotateCameraWithGravity;
+        if (Settings.instance != null) rotateCameraWithGravity = Settings.instance.rotateCameraWithGravity;
+        else rotateCameraWithGravity = false;
         
-        if ((Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down) && Input.GetButton("Up"))
+        if ((rotateCameraWithGravity || gravityDirection == Vector2.down) && Input.GetButton("Up"))
         {
             jumpQueued = true;
         }
-        else if (!Settings.instance.rotateCameraWithGravity && 
+        else if (!rotateCameraWithGravity && 
             (Input.GetButton("Left") && gravityDirection == Vector2.right) ||
             (Input.GetButton("Down") && gravityDirection == Vector2.up) ||
             (Input.GetButton("Right") && gravityDirection == Vector2.left))
@@ -267,7 +280,7 @@ public class Player : Teleportable
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
         cam.transform.position = transform.position;
-        Timer.instance.levelTimer = 0;
+        if (Timer.instance != null) Timer.instance.levelTimer = 0;
     }
 
     /// <summary>Resets the portals in the scene</summary>
@@ -285,7 +298,10 @@ public class Player : Teleportable
         }
         base.FixedUpdate();
         float h = 0;
-        if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down) h = Input.GetAxisRaw("Horizontal");
+        bool rotateCameraWithGravity;
+        if (Settings.instance != null) rotateCameraWithGravity = Settings.instance.rotateCameraWithGravity;
+        else rotateCameraWithGravity = false;
+        if (rotateCameraWithGravity || gravityDirection == Vector2.down) h = Input.GetAxisRaw("Horizontal");
         else
         {
             if (gravityDirection == Vector2.left)
@@ -310,7 +326,9 @@ public class Player : Teleportable
         Vector2 gravDir = gravityDirection.normalized;
         Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
         Vector2 hVel = moveAxis;
-        if (Settings.instance.movement == PlayerMovementType.Normal)
+
+
+        if (Settings.instance == null || Settings.instance.movement == PlayerMovementType.Normal)
         {
             if (h != 0) 
             {
@@ -381,10 +399,11 @@ public class Player : Teleportable
     {
         if (Input.GetButtonDown("Left") || Input.GetButtonDown("Up") || Input.GetButtonDown("Right") || 
             Input.GetButtonDown("Down") || Input.GetButtonDown("Fire1") ||
-             (Input.GetButtonDown("Fire2") && !Settings.instance.leftClickForBothPortals))
+             (Input.GetButtonDown("Fire2") && 
+             (Settings.instance == null || !Settings.instance.leftClickForBothPortals)))
         {
-            if (!PauseMenuController.instance.isPaused) Time.timeScale = 1f;
-            Timer.instance.ResetInactivityTimer();
+            if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
+            if (Timer.instance != null) Timer.instance.ResetInactivityTimer();
         }
     }
 
@@ -396,7 +415,7 @@ public class Player : Teleportable
         foreach (ContactPoint2D contact in col.contacts)
         {
             if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected()
-                && (!Settings.instance.needToTouchGroundToReenterPortal || 
+                && (Settings.instance == null || !Settings.instance.needToTouchGroundToReenterPortal || 
                 col.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
             {
                 groundContactCount = 0;
@@ -461,6 +480,8 @@ public class Player : Teleportable
     /// <summary>Sends a level_start event to Unity Analytics</summary>
     public void RecordLevelStartEvent()
     {
+        if (Settings.instance == null || Timer.instance == null) return;
+
         level_start resetEvent = new level_start
         {
             level = level.ToString(),
@@ -474,6 +495,8 @@ public class Player : Teleportable
     /// <summary>Sends a player_death event to Unity Analytics</summary>
     public void RecordDeathEvent()
     {
+        if (Timer.instance == null || Settings.instance == null) return;
+
         player_death deathEvent = new player_death
         {
             level = level.ToString(),

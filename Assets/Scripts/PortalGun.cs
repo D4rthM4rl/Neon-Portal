@@ -49,7 +49,7 @@ public class PortalGun : MonoBehaviour
 
     void Update()
     {
-        if (!PauseMenuController.instance.isPaused)
+        if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused)
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector2 direction = (mousePos - transform.position).normalized;
@@ -66,13 +66,19 @@ public class PortalGun : MonoBehaviour
             lineRenderer.SetPosition(1, endPoint);
             if (portalIndex == 0)
             {
-                lineRenderer.startColor = Settings.instance.portal1Color;
-                lineRenderer.endColor = Settings.instance.portal1Color;
+                Color c1;
+                if (Settings.instance == null) c1 = Color.magenta;
+                else c1 = Settings.instance.portal1Color;
+                lineRenderer.startColor = c1;
+                lineRenderer.endColor = c1;
             }
             else if (portalIndex == 1)
             {
-                lineRenderer.startColor = Settings.instance.portal2Color;
-                lineRenderer.endColor = Settings.instance.portal2Color;
+                Color c2;
+                if (Settings.instance == null) c2 = Color.yellow;
+                else c2 = Settings.instance.portal2Color;
+                lineRenderer.startColor = c2;
+                lineRenderer.endColor = c2;
             }
             else
             {
@@ -86,9 +92,9 @@ public class PortalGun : MonoBehaviour
                 Vector2 normal = Vector2.zero;
                 if (TryPlaceIndicator(hit, out normal))
                 {
-                    if (Settings.instance.leftClickForBothPortals && Input.GetButtonDown("Fire1"))
+                    if ((Settings.instance == null || Settings.instance.leftClickForBothPortals) && Input.GetButtonDown("Fire1"))
                         ShootPortal(hit, normal, portalIndex);
-                    else if (!Settings.instance.leftClickForBothPortals)
+                    else if (Settings.instance != null && !Settings.instance.leftClickForBothPortals)
                     {
                         if (Input.GetButtonDown("Fire1")) ShootPortal(hit, normal, 0);
                         if (Input.GetButtonDown("Fire2")) ShootPortal(hit, normal, 1);

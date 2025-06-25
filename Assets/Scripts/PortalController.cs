@@ -46,11 +46,13 @@ public class PortalController : MonoBehaviour
         Color color;
         if (index == 0)
         {
-            color = Settings.instance.portal1Color;
+            if (Settings.instance != null) color = Settings.instance.portal1Color;
+            else color = Color.magenta;
         }
         else if (index == 1)
         {
-            color = Settings.instance.portal2Color;
+            if (Settings.instance != null) color = Settings.instance.portal2Color;
+            else color = Color.yellow;
         }
         else
         {
@@ -80,7 +82,8 @@ public class PortalController : MonoBehaviour
         if (receivingPortal != null)
         {
             Player player = other.GetComponent<Player>();
-            if (Settings.instance.needToTouchGroundToReenterPortal && player && player.cantReenterIndex == index) return;
+            if ((Settings.instance == null || Settings.instance.needToTouchGroundToReenterPortal)
+                && player && player.cantReenterIndex == index) return;
             else if (player) player.cantReenterIndex = receivingPortal.index;
 
             Vector2 incomingVelocity = GetVelocity(tpObj);
