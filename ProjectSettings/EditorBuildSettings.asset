@@ -62,4 +62,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/World 5/W3L6.unity
     guid: 5a7413210cdbe42f19d0f6fb192a4e11
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L1.unity
+    guid: ba860ae52b68d4f6799e9ae62848c257
   m_configObjects: {}

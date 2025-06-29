@@ -34,6 +34,8 @@ public class Player : Teleportable
     private Color bottomCurrentColor;
 
     private int groundContactCount = 0;
+    private Collider2D col;
+    private ContactPoint2D[] contacts = new ContactPoint2D[10];
     public bool isGrounded = true;
     public int cantReenterIndex = -1;
 
@@ -87,6 +89,7 @@ public class Player : Teleportable
         //     Destroy(gameObject);
         // }
         base.Start();
+        col = GetComponent<Collider2D>();
         Time.timeScale = 0f;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
@@ -190,7 +193,6 @@ public class Player : Teleportable
             ResetPlayer();
             ResetPortals();
             ResetWorld();
-
         }
         UpdateSpriteColors();
         RotateWithGravity();
@@ -263,6 +265,14 @@ public class Player : Teleportable
                 obj.transform.position = obj.respawnPosition;
                 obj.rb.velocity = Vector2.zero;
                 obj.gravityDirection = obj.defaultGravityDirection;
+            }
+        }
+
+        foreach (MovingBlock block in FindObjectsOfType<MovingBlock>())
+        {
+            if (block != null)
+            {
+                block.Reset();
             }
         }
     }
@@ -412,7 +422,8 @@ public class Player : Teleportable
     /// </summary>
     void OnCollisionEnter2D(Collision2D col)
     {
-        foreach (ContactPoint2D contact in col.contacts)
+        this.col.GetContacts(contacts);
+        foreach (ContactPoint2D contact in contacts)
         {
             if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected()
                 && (Settings.instance == null || !Settings.instance.needToTouchGroundToReenterPortal || 
