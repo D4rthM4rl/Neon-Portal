@@ -5,8 +5,10 @@ using Unity.Services.Analytics;
 
 public class Player : Teleportable
 {
+    [HideInInspector]
     public PortalGun portalGun;
 
+    [HideInInspector]
     private GameObject cam;
 
     [SerializeField]
@@ -28,18 +30,25 @@ public class Player : Teleportable
     [SerializeField]
     private Color bottomChangeColor = Color.white;
 
+    [HideInInspector]
     private Color rightCurrentColor;
+    [HideInInspector]
     private Color leftCurrentColor;
+    [HideInInspector]
     private Color topCurrentColor;
+    [HideInInspector]
     private Color bottomCurrentColor;
 
     private int groundContactCount = 0;
+    [HideInInspector]
     private Collider2D col;
     private ContactPoint2D[] contacts = new ContactPoint2D[10];
     public bool isGrounded = true;
+    [HideInInspector]
     public int cantReenterIndex = -1;
 
     #region Movement Fields
+    [Header("Movement Settings")]
     [SerializeField]
     private float initialJumpForce = 4f; // impulse on button down
     [SerializeField]
@@ -423,23 +432,24 @@ public class Player : Teleportable
     void OnCollisionEnter2D(Collision2D col)
     {
         this.col.GetContacts(contacts);
-        foreach (ContactPoint2D contact in contacts)
+        foreach (ContactPoint2D c in contacts)
         {
-            if (col.gameObject.CompareTag("Portal") && col.gameObject.GetComponent<PortalController>().IsConnected()
+            if (!c.collider || !c.collider.gameObject) continue;
+            if (c.collider.gameObject.CompareTag("Portal") && c.collider.gameObject.GetComponent<PortalController>().IsConnected()
                 && (Settings.instance == null || !Settings.instance.needToTouchGroundToReenterPortal || 
-                col.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
+                c.collider.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
             {
                 groundContactCount = 0;
                 isGrounded = false;
                 break;
             }
-            else if (col.gameObject.CompareTag("Portal") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
+            else if (col.gameObject.CompareTag("Portal") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
                 isGrounded = true;
                 break;
             }
-            else if (col.gameObject.CompareTag("Ground") && Vector2.Dot(contact.normal, gravityDirection.normalized) < -0.5f)
+            else if (col.gameObject.CompareTag("Ground") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
                 isGrounded = true;
