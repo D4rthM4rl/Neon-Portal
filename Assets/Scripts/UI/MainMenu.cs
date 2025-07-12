@@ -102,7 +102,6 @@ public class MainMenu : MonoBehaviour
             OpenLevelSelect();
         else 
         {
-            gameObject.SetActive(false);
             StartCoroutine(LevelSelect.instance.LoadLevel(nextLevel));
         }
     }
