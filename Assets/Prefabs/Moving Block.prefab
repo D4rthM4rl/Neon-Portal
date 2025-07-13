@@ -50,7 +50,7 @@ MonoBehaviour:
   - {x: 0, y: 0}
   speed: 2
   waitAtEachPosition: 1
-  loop: 1
+  loopType: 0
 --- !u!212 &-6978255257965349343
 SpriteRenderer:
   m_ObjectHideFlags: 0
