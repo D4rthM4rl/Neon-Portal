@@ -10,8 +10,8 @@ public class MovingBlock : MonoBehaviour
     [SerializeField]
     private float waitAtEachPosition = 1.0f;
     [SerializeField]
-    [Tooltip("If true, will move toward the first position after the last one. If false, will reverse through the positions.")]
-    private bool loop = true;
+    [Tooltip("Move toward the first position after the last one, reverse through the positions, or stop at the last position")]
+    private LoopType loopType = LoopType.Loop;
 
     private int currentIndex = 0;
     private bool waiting = false;
@@ -32,9 +32,14 @@ public class MovingBlock : MonoBehaviour
             waitTimer += Time.deltaTime;
             if (waitTimer >= waitAtEachPosition)
             {
+                if (loopType == LoopType.Stop && currentIndex >= positions.Count - 1)
+                {
+                    return; // Stop moving if at the last position
+                }
                 waiting = false;
                 waitTimer = 0.0f;
-                currentIndex = loop ? (currentIndex + 1) % positions.Count : Mathf.Clamp(currentIndex + 1, 0, positions.Count - 1);
+                currentIndex = loopType == LoopType.Loop ? (currentIndex + 1) % positions.Count :
+                   Mathf.Clamp(currentIndex + 1, 0, positions.Count - 1);
             }
             return;
         }
@@ -55,4 +60,11 @@ public class MovingBlock : MonoBehaviour
         waiting = false;
         waitTimer = 0;
     }
+}
+
+public enum LoopType
+{
+    Loop,
+    Reverse,
+    Stop
 }
