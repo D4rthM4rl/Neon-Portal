@@ -12,6 +12,9 @@ public class Player : Teleportable
     private GameObject cam;
 
     [SerializeField]
+    private GameObject ground;
+
+    [SerializeField]
     private Gradient speedGradient;
     [SerializeField]
     private SpriteRenderer topSprite;
@@ -431,30 +434,35 @@ public class Player : Teleportable
     /// </summary>
     void OnCollisionEnter2D(Collision2D col)
     {
-        this.col.GetContacts(contacts);
+        rb.GetContacts(contacts);
         foreach (ContactPoint2D c in contacts)
         {
             if (!c.collider || !c.collider.gameObject) continue;
+            Debug.Log("Contact with: " + c.collider.gameObject);
             if (c.collider.gameObject.CompareTag("Portal") && c.collider.gameObject.GetComponent<PortalController>().IsConnected()
                 && (Settings.instance == null || !Settings.instance.needToTouchGroundToReenterPortal || 
                 c.collider.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
             {
+                ground = c.collider.gameObject;
                 groundContactCount = 0;
                 isGrounded = false;
                 break;
             }
-            else if (col.gameObject.CompareTag("Portal") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
+            else if (c.collider.gameObject.CompareTag("Portal") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
             {
+                ground = c.collider.gameObject;
                 groundContactCount++;
                 isGrounded = true;
                 break;
             }
-            else if (col.gameObject.CompareTag("Ground") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
+            else if (c.collider.gameObject.CompareTag("Ground") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
             {
+                ground = c.collider.gameObject;
                 groundContactCount++;
                 isGrounded = true;
                 break;
             }
+            ground = null;
         }
     }
 
@@ -477,22 +485,26 @@ public class Player : Teleportable
         int count = rb.GetContacts(contacts);
         for (int i = 0; i < count; i++)
         {
+            if (contacts[i].collider == null || contacts[i].collider.gameObject == null) continue;
             if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
+                ground = contacts[i].collider.gameObject;
             }
             else if (contacts[i].collider.CompareTag("Portal") && 
                     !contacts[i].collider.GetComponent<PortalController>().IsConnected()
                     && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
             {
                 groundContactCount++;
+                ground = contacts[i].collider.gameObject;
             }
         }
 
         isGrounded = groundContactCount > 0;
+        Debug.Log("Grounded: " + isGrounded);
 
-        // if (!isGrounded)
-        //     Debug.Log("Left Ground");
+        if (!isGrounded)
+            ground = null;
     }
 
 
