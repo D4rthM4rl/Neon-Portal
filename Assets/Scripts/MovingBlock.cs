@@ -12,13 +12,29 @@ public class MovingBlock : MonoBehaviour
     [SerializeField]
     [Tooltip("Move toward the first position after the last one, reverse through the positions, or stop at the last position")]
     private LoopType loopType = LoopType.Loop;
+    [SerializeField]
+    private bool waitForProximity = false;
 
     private int currentIndex = 0;
     private bool waiting = false;
+    private bool waitingForProximity = false;
     private float waitTimer = 0.0f;
+
+    private GameObject player;
 
     private void Start() {
         positions.Insert(0, transform.position); // Ensure the first position is the current position
+        if (waitForProximity) waitingForProximity = true;
+
+        GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject p in playerTags)
+        {
+            if (p.GetComponent<Player>() != null)
+            {
+                player = p;
+                break;
+            }
+        }
     }
 
     // Update is called once per frame
@@ -27,14 +43,30 @@ public class MovingBlock : MonoBehaviour
         if (positions.Count == 0)
             return;
 
+        if (waitForProximity && waitingForProximity)
+        {
+            if (Vector3.Distance(transform.position, player.transform.position) < 5)
+            {
+                waitingForProximity = false;
+                waiting = true;
+                waitTimer = 0.0f;
+            }
+            return;
+        }
+
         if (waiting)
         {
             waitTimer += Time.deltaTime;
             if (waitTimer >= waitAtEachPosition)
             {
-                if (loopType == LoopType.Stop && currentIndex >= positions.Count - 1)
+                if (currentIndex >= positions.Count - 1)
                 {
-                    return; // Stop moving if at the last position
+                    if (loopType == LoopType.Stop) return; // Stop moving if at the last position
+                    else if (loopType == LoopType.Restart)
+                    {
+                        Reset();
+                        return;
+                    }
                 }
                 waiting = false;
                 waitTimer = 0.0f;
@@ -66,5 +98,6 @@ public enum LoopType
 {
     Loop,
     Reverse,
-    Stop
+    Stop,
+    Restart,
 }

@@ -65,4 +65,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/World 6/W4L1.unity
     guid: ba860ae52b68d4f6799e9ae62848c257
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L2.unity
+    guid: 81c88f0c1cba04aeebc931a640511511
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L3.unity
+    guid: 1d969912a75234fd3a18aaeb5781006d
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L4.unity
+    guid: 35060a7e5e459439a832df4a7f993160
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L5.unity
+    guid: e02e07382e12b4705924b6620ef1acd9
+  - enabled: 1
+    path: Assets/Scenes/World 6/W4L6.unity
+    guid: 9f4e1ec369fec47548a217f99752f185
   m_configObjects: {}
