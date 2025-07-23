@@ -352,6 +352,7 @@ MonoBehaviour:
   speed: 8
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!4 &106076526
 Transform:
   m_ObjectHideFlags: 0
@@ -1129,6 +1130,10 @@ PrefabInstance:
     - target: {fileID: 5747506644643195363, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
+      propertyPath: currLevel
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6295945063608821645, guid: 6dc9eeafef6bc4b069e4e2cfc1534cfd, type: 3}
       propertyPath: currWorld
@@ -2203,6 +2208,7 @@ MonoBehaviour:
   speed: 8
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!4 &873918017
 Transform:
   m_ObjectHideFlags: 0
@@ -4923,6 +4929,7 @@ MonoBehaviour:
   speed: 4
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!4 &1881488198
 Transform:
   m_ObjectHideFlags: 0
@@ -5525,6 +5532,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!1001 &2105856150
 PrefabInstance:
   m_ObjectHideFlags: 0
