@@ -24,7 +24,7 @@ public class MovingBlock : MonoBehaviour
 
     private void Start() {
         positions.Insert(0, transform.position); // Ensure the first position is the current position
-        if (waitForProximity) waitingForProximity = true;
+        waitingForProximity = waitForProximity;
 
         GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
         foreach (GameObject p in playerTags)
@@ -89,6 +89,7 @@ public class MovingBlock : MonoBehaviour
     {
         transform.position = positions[0];
         currentIndex = 0;
+        waitingForProximity = waitForProximity;
         waiting = false;
         waitTimer = 0;
     }
