@@ -16,6 +16,7 @@ public class PortalGun : MonoBehaviour
     /// What prevents a portal from being placed
     /// </summary>
     public LayerMask blockLayers = ~0;
+    private GameObject[] placeholders = new GameObject[2];
 
     [Header("Visuals")]
     [SerializeField]
@@ -45,6 +46,10 @@ public class PortalGun : MonoBehaviour
         portalsInScene = new PortalController[portals.Count];
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.positionCount = 2;
+        placeholders[0] = new GameObject("PortalPlaceholder1");
+        placeholders[0].layer = LayerMask.NameToLayer("Ground");
+        placeholders[1] = new GameObject("PortalPlaceholder2");
+        placeholders[1].layer = LayerMask.NameToLayer("Ground");
     }
 
     void Update()
@@ -120,13 +125,12 @@ public class PortalGun : MonoBehaviour
             portalController.SetupPortal(currentPortalToSpawn,
                 index, normal);
         }
-        GameObject placeholder = new GameObject("PortalPlaceholder");
+        GameObject placeholder = placeholders[index];
         placeholder.transform.parent = hit.transform;
         portalController.transform.parent = placeholder.transform;
         portalController.transform.up = hit.normal;
         portalIndex = (index + 1) % portals.Count;
         currentPortalToSpawn = portals[index];
-        // TODO: Add an array for placeholders
     }
 
     public void ResetPortals()

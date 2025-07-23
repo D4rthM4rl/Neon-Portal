@@ -73,7 +73,7 @@ public class PortalController : MonoBehaviour
         return receivingPortal != null;
     }
     
-    private void OnTriggerEnter2D(Collider2D other) {
+    public void OnTriggerEnter2D(Collider2D other) {
         Teleportable tpObj = other.GetComponent<Teleportable>();
         if (other.gameObject == null || !tpObj) return;
 

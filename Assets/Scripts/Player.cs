@@ -42,7 +42,6 @@ public class Player : Teleportable
     [HideInInspector]
     private Color bottomCurrentColor;
 
-    private int groundContactCount = 0;
     [HideInInspector]
     private Collider2D col;
     [SerializeField]
@@ -142,7 +141,7 @@ public class Player : Teleportable
     {
         CheckForInputs();
         base.Update();
-        UpdateGroundedStatus();
+        // UpdateGroundedStatus();
         if (Timer.instance != null) Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
@@ -315,7 +314,7 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
-        // UpdateGroundedStatus();
+        UpdateGroundedStatus();
         if (jumpQueued)
         {
             Jump();
@@ -392,6 +391,7 @@ public class Player : Teleportable
     {
         if (!isJumping && isGrounded) 
         {
+            rb.velocity *= Vector2.right; // Zero out vertical velocity
             isJumping = true;
             cantReenterIndex = -1;
             jumpTimeCounter = maxJumpDuration;
@@ -402,13 +402,13 @@ public class Player : Teleportable
         {
             if (jumpTimeCounter > 0f && isJumping)
             {
-                // apply small extra lift each frame
-                rb.AddForce(Mathf.Max(extraJumpForce - jumpFalloffRate * jumpTimeCounter, 0f) *
-                    -gravityDirection * Time.fixedDeltaTime, ForceMode2D.Force);
+                Vector2 jumpForce = Mathf.Max(extraJumpForce - jumpFalloffRate * jumpTimeCounter, 0f) *
+                    -gravityDirection * Time.fixedDeltaTime;
+                // Apply small extra lift each frame
+                rb.AddForce(jumpForce, ForceMode2D.Force);
                 
                 jumpTimeCounter -= Time.fixedDeltaTime;
                 jumpBoostsGiven++;
-                // Debug.Log("Jump Boosts Given: " + jumpBoostsGiven);
             }
             else
             {
@@ -448,7 +448,7 @@ public class Player : Teleportable
         RaycastHit2D hitLeft = Physics2D.Raycast(originLeft, gravDir, rayLength, LayerMask.GetMask("Ground"));
         RaycastHit2D hitRight = Physics2D.Raycast(originRight, gravDir, rayLength, LayerMask.GetMask("Ground"));
 
-        RaycastHit2D wallCenter = Physics2D.Raycast(originCenter, -gravDir, width, LayerMask.GetMask("Ground"));
+        RaycastHit2D across = Physics2D.Raycast(originRight, -perp, width, LayerMask.GetMask("Ground"));
         RaycastHit2D wallLeft = Physics2D.Raycast(originLeft, -gravDir, width, LayerMask.GetMask("Ground"));
         RaycastHit2D wallRight = Physics2D.Raycast(originRight, -gravDir, width, LayerMask.GetMask("Ground"));
 
@@ -456,13 +456,50 @@ public class Player : Teleportable
         Debug.DrawRay(originLeft, gravDir * rayLength, Color.red);
         Debug.DrawRay(originRight, gravDir * rayLength, Color.red);
 
-        if ((hitCenter.collider != null && !wallCenter.collider) || 
-            (hitLeft.collider != null && !wallLeft.collider) || 
-            (hitRight.collider != null && !wallRight.collider)
-            && rb.velocity.y <= 0)
+        if (hitCenter.collider != null)
         {
-            isGrounded = true;
-            ground = hitCenter.collider?.gameObject ?? hitLeft.collider?.gameObject ?? hitRight.collider?.gameObject;
+            if (hitCenter.collider.tag == "Portal" && hitCenter.collider.GetComponent<PortalController>().IsConnected()
+            && cantReenterIndex != hitCenter.collider.GetComponent<PortalController>().index)
+            {
+                isGrounded = false;
+                ground = null;
+                hitCenter.collider.GetComponent<PortalController>().OnTriggerEnter2D(col);
+            }
+            else
+            {
+                isGrounded = true;
+                ground = hitCenter.collider?.gameObject;
+            }
+        }
+        else if (hitLeft.collider != null && !across)
+        {
+            if (hitLeft.collider.tag == "Portal" && hitLeft.collider.GetComponent<PortalController>().IsConnected()
+            && cantReenterIndex != hitLeft.collider.GetComponent<PortalController>().index)
+            {
+                isGrounded = false;
+                ground = null;
+                hitLeft.collider.GetComponent<PortalController>().OnTriggerEnter2D(col);
+            }
+            else
+            {
+                isGrounded = true;
+                ground = hitLeft.collider?.gameObject;
+            }
+        } 
+        else if (hitRight.collider != null && !across)
+        {
+            if (hitRight.collider.tag == "Portal" && hitRight.collider.GetComponent<PortalController>().IsConnected()
+            && cantReenterIndex != hitRight.collider.GetComponent<PortalController>().index)
+            {
+                isGrounded = false;
+                ground = null;
+                hitRight.collider.GetComponent<PortalController>().OnTriggerEnter2D(col);
+            }
+            else
+            {
+                isGrounded = true;
+                ground = hitRight.collider?.gameObject;
+            }
         }
         else
         {

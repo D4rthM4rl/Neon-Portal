@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 2302436385508698400}
   - component: {fileID: -8370168540289043031}
   - component: {fileID: 1110093001652099033}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Portal
   m_TagString: Portal
   m_Icon: {fileID: 0}
@@ -186,6 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: {x: 0, y: 0}
+  index: 0
 --- !u!60 &2302436385508698400
 PolygonCollider2D:
   m_ObjectHideFlags: 0
