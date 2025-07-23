@@ -136,28 +136,29 @@ public class LevelSelect : MonoBehaviour
     }
 
 
-    private async Task LoadLevelButton(Level level)
+    private Task LoadLevelButton(Level level)
     {
         string levelTitle = "W" + level.world + "L" + level.level;
-        var playerData = await CloudSaveService.Instance.Data.Player
-            .LoadAsync(new HashSet<string> { levelTitle });
 
         if (!levelButtons.TryGetValue(level, out Button levelButton))
-            return;
-
-        if (playerData.TryGetValue(levelTitle, out var levelTime))
         {
-            level.bestTime = levelTime.Value.GetAs<float>();
+            Debug.LogError($"Level button for {levelTitle} not found.");
+            return Task.CompletedTask;
+        }
+
+        if (PlayerPrefs.HasKey(levelTitle))
+        {
+            level.bestTime = PlayerPrefs.GetFloat(levelTitle);
             level.beaten = true;
+
             levelButton.GetComponentInChildren<TextMeshProUGUI>().text
                 = "Level " + level.level + Environment.NewLine
                 + Environment.NewLine + level.bestTime.ToString("F2") + "s";
         }
 
         SetButtonColors(level, levelButton);
+        return Task.CompletedTask;
     }
-
-
 
     public void ReloadLevelTime(Level level)
     {
@@ -198,8 +199,7 @@ public class LevelSelect : MonoBehaviour
         }
         else
         {
-            LeaderboardEntry worldRecord = await Leaderboard.instance.GetWorldRecord(level);
-            if (!Settings.instance.participateInLeaderboard || level.bestTime - 10 > worldRecord.Time)
+            if (!Settings.instance.online)
             {
                 buttonColorBlock.normalColor = whiteTierColorset.normalColor;
                 buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
@@ -210,59 +210,76 @@ public class LevelSelect : MonoBehaviour
                 trophyColorBlock.pressedColor = whiteTierColorset.trophyPressedColor;
                 trophyColorBlock.selectedColor = whiteTierColorset.trophySelectedColor;
                 textColor = whiteTierColorset.textColor;
-                // Debug.Log("Setting " + level.ToString() + " to white colors");
+                return;
             }
-            else if (level.bestTime - 3 > worldRecord.Time)
+            else
             {
-                buttonColorBlock.normalColor = bronzeTierColorset.normalColor;
-                buttonColorBlock.highlightedColor = bronzeTierColorset.highlightedColor;
-                buttonColorBlock.pressedColor = bronzeTierColorset.pressedColor;
-                buttonColorBlock.selectedColor = bronzeTierColorset.selectedColor;
-                trophyColorBlock.normalColor = bronzeTierColorset.trophyNormalColor;
-                trophyColorBlock.highlightedColor = bronzeTierColorset.trophyHighlightedColor;
-                trophyColorBlock.pressedColor = bronzeTierColorset.trophyPressedColor;
-                trophyColorBlock.selectedColor = bronzeTierColorset.trophySelectedColor;
-                textColor = bronzeTierColorset.textColor;
-                // Debug.Log("Setting " + level.ToString() + " to bronze colors");
-            }
-            else if (level.bestTime - 1 > worldRecord.Time)
-            {
-                buttonColorBlock.normalColor = silverTierColorset.normalColor;
-                buttonColorBlock.highlightedColor = silverTierColorset.highlightedColor;
-                buttonColorBlock.pressedColor = silverTierColorset.pressedColor;
-                buttonColorBlock.selectedColor = silverTierColorset.selectedColor;
-                trophyColorBlock.normalColor = silverTierColorset.trophyNormalColor;
-                trophyColorBlock.highlightedColor = silverTierColorset.trophyHighlightedColor;
-                trophyColorBlock.pressedColor = silverTierColorset.trophyPressedColor;
-                trophyColorBlock.selectedColor = silverTierColorset.trophySelectedColor;
-                textColor = silverTierColorset.textColor;
-                // Debug.Log("Setting " + level.ToString() + " to silver colors");
-            }
-            else if (level.bestTime > worldRecord.Time)
-            {
-                buttonColorBlock.normalColor = goldTierColorset.normalColor;
-                buttonColorBlock.highlightedColor = goldTierColorset.highlightedColor;
-                buttonColorBlock.pressedColor = goldTierColorset.pressedColor;
-                buttonColorBlock.selectedColor = goldTierColorset.selectedColor;
-                trophyColorBlock.normalColor = goldTierColorset.trophyNormalColor;
-                trophyColorBlock.highlightedColor = goldTierColorset.trophyHighlightedColor;
-                trophyColorBlock.pressedColor = goldTierColorset.trophyPressedColor;
-                trophyColorBlock.selectedColor = goldTierColorset.trophySelectedColor;
-                textColor = goldTierColorset.textColor;
-                // Debug.Log("Setting " + level.ToString() + " to gold colors");
-            }
-            else // if (level.bestTime - 0 <= worldRecord.Time)
-            {
-                buttonColorBlock.normalColor = purpleTierColorset.normalColor;
-                buttonColorBlock.highlightedColor = purpleTierColorset.highlightedColor;
-                buttonColorBlock.pressedColor = purpleTierColorset.pressedColor;
-                buttonColorBlock.selectedColor = purpleTierColorset.selectedColor;
-                trophyColorBlock.normalColor = purpleTierColorset.trophyNormalColor;
-                trophyColorBlock.highlightedColor = purpleTierColorset.trophyHighlightedColor;
-                trophyColorBlock.pressedColor = purpleTierColorset.trophyPressedColor;
-                trophyColorBlock.selectedColor = purpleTierColorset.trophySelectedColor;
-                textColor = purpleTierColorset.textColor;
-                // Debug.Log("Setting " + level.ToString() + " to purple colors");
+                LeaderboardEntry worldRecord = await Leaderboard.instance.GetWorldRecord(level);
+                if (!Settings.instance.participateInLeaderboard || level.bestTime - 10 > worldRecord.Time)
+                {
+                    buttonColorBlock.normalColor = whiteTierColorset.normalColor;
+                    buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
+                    buttonColorBlock.pressedColor = whiteTierColorset.pressedColor;
+                    buttonColorBlock.selectedColor = whiteTierColorset.selectedColor;
+                    trophyColorBlock.normalColor = whiteTierColorset.trophyNormalColor;
+                    trophyColorBlock.highlightedColor = whiteTierColorset.trophyHighlightedColor;
+                    trophyColorBlock.pressedColor = whiteTierColorset.trophyPressedColor;
+                    trophyColorBlock.selectedColor = whiteTierColorset.trophySelectedColor;
+                    textColor = whiteTierColorset.textColor;
+                    // Debug.Log("Setting " + level.ToString() + " to white colors");
+                }
+                else if (level.bestTime - 3 > worldRecord.Time)
+                {
+                    buttonColorBlock.normalColor = bronzeTierColorset.normalColor;
+                    buttonColorBlock.highlightedColor = bronzeTierColorset.highlightedColor;
+                    buttonColorBlock.pressedColor = bronzeTierColorset.pressedColor;
+                    buttonColorBlock.selectedColor = bronzeTierColorset.selectedColor;
+                    trophyColorBlock.normalColor = bronzeTierColorset.trophyNormalColor;
+                    trophyColorBlock.highlightedColor = bronzeTierColorset.trophyHighlightedColor;
+                    trophyColorBlock.pressedColor = bronzeTierColorset.trophyPressedColor;
+                    trophyColorBlock.selectedColor = bronzeTierColorset.trophySelectedColor;
+                    textColor = bronzeTierColorset.textColor;
+                    // Debug.Log("Setting " + level.ToString() + " to bronze colors");
+                }
+                else if (level.bestTime - 1 > worldRecord.Time)
+                {
+                    buttonColorBlock.normalColor = silverTierColorset.normalColor;
+                    buttonColorBlock.highlightedColor = silverTierColorset.highlightedColor;
+                    buttonColorBlock.pressedColor = silverTierColorset.pressedColor;
+                    buttonColorBlock.selectedColor = silverTierColorset.selectedColor;
+                    trophyColorBlock.normalColor = silverTierColorset.trophyNormalColor;
+                    trophyColorBlock.highlightedColor = silverTierColorset.trophyHighlightedColor;
+                    trophyColorBlock.pressedColor = silverTierColorset.trophyPressedColor;
+                    trophyColorBlock.selectedColor = silverTierColorset.trophySelectedColor;
+                    textColor = silverTierColorset.textColor;
+                    // Debug.Log("Setting " + level.ToString() + " to silver colors");
+                }
+                else if (level.bestTime > worldRecord.Time)
+                {
+                    buttonColorBlock.normalColor = goldTierColorset.normalColor;
+                    buttonColorBlock.highlightedColor = goldTierColorset.highlightedColor;
+                    buttonColorBlock.pressedColor = goldTierColorset.pressedColor;
+                    buttonColorBlock.selectedColor = goldTierColorset.selectedColor;
+                    trophyColorBlock.normalColor = goldTierColorset.trophyNormalColor;
+                    trophyColorBlock.highlightedColor = goldTierColorset.trophyHighlightedColor;
+                    trophyColorBlock.pressedColor = goldTierColorset.trophyPressedColor;
+                    trophyColorBlock.selectedColor = goldTierColorset.trophySelectedColor;
+                    textColor = goldTierColorset.textColor;
+                    // Debug.Log("Setting " + level.ToString() + " to gold colors");
+                }
+                else // if (level.bestTime - 0 <= worldRecord.Time)
+                {
+                    buttonColorBlock.normalColor = purpleTierColorset.normalColor;
+                    buttonColorBlock.highlightedColor = purpleTierColorset.highlightedColor;
+                    buttonColorBlock.pressedColor = purpleTierColorset.pressedColor;
+                    buttonColorBlock.selectedColor = purpleTierColorset.selectedColor;
+                    trophyColorBlock.normalColor = purpleTierColorset.trophyNormalColor;
+                    trophyColorBlock.highlightedColor = purpleTierColorset.trophyHighlightedColor;
+                    trophyColorBlock.pressedColor = purpleTierColorset.trophyPressedColor;
+                    trophyColorBlock.selectedColor = purpleTierColorset.trophySelectedColor;
+                    textColor = purpleTierColorset.textColor;
+                    // Debug.Log("Setting " + level.ToString() + " to purple colors");
+                }
             }
         }
         levelButton.colors = buttonColorBlock;

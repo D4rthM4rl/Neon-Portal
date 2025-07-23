@@ -43,7 +43,14 @@ public class Leaderboard : MonoBehaviour
     {
         leaderboardUI.SetActive(true);
         leaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
-        
+        if (!Settings.instance.online)
+        {
+            leaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
+                + Environment.NewLine + Environment.NewLine + "Offline";
+            leaderboardTitle.transform.localPosition = Vector3.up * 32;
+            return;
+        }
+
         List<LeaderboardEntry> entries = await GetTopPlayers(level);
         if (entries == null)
         {
@@ -130,12 +137,11 @@ public class Leaderboard : MonoBehaviour
 
     public async void SubmitTimeAsync(Level level, float time)
     {   
-        if (Settings.instance.participateInLeaderboard)
+        if (Settings.instance.participateInLeaderboard && Settings.instance.online)
         {
             try 
             {
                 await LeaderboardsService.Instance.AddPlayerScoreAsync(level.ToString(), time);
-                // Debug.Log($"Score submitted for {level.ToString()}: {time}"
             }
             catch (Exception e) 
             {
@@ -147,6 +153,11 @@ public class Leaderboard : MonoBehaviour
 
     public async Task<LeaderboardEntry> GetWorldRecord(Level level)
     {
+        if (!Settings.instance.participateInLeaderboard || !Settings.instance.online)
+        {
+            // Debug.LogWarning("Leaderboard is not enabled or not online.");
+            return new LeaderboardEntry { DisplayName = "Not Online", Time = float.PositiveInfinity };
+        }
         string levelTitle = "W" + level.world + "L" + level.level;
         try
         {
@@ -174,6 +185,14 @@ public class Leaderboard : MonoBehaviour
 
     public async Task<List<LeaderboardEntry>> GetTopPlayers(Level level, int howMany = 10)
     {
+        if (!Settings.instance.participateInLeaderboard || !Settings.instance.online)
+        {
+            Debug.LogWarning("Leaderboard is not enabled or not online.");
+            return null;
+        }
+        Debug.Assert(level != null, "Level cannot be null");
+        Debug.Assert(howMany > 0, "howMany must be greater than 0");
+
         string levelTitle = "W" + level.world + "L" + level.level;
         try
         {

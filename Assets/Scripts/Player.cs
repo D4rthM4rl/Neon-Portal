@@ -515,7 +515,7 @@ public class Player : Teleportable
     /// <summary>Sends a level_start event to Unity Analytics</summary>
     public void RecordLevelStartEvent()
     {
-        if (Settings.instance == null || Timer.instance == null) return;
+        if (Settings.instance == null || Timer.instance == null || !Settings.instance.online) return;
 
         level_start resetEvent = new level_start
         {
@@ -530,7 +530,7 @@ public class Player : Teleportable
     /// <summary>Sends a player_death event to Unity Analytics</summary>
     public void RecordDeathEvent()
     {
-        if (Timer.instance == null || Settings.instance == null) return;
+        if (Timer.instance == null || Settings.instance == null || !Settings.instance.online) return;
 
         player_death deathEvent = new player_death
         {
@@ -561,6 +561,8 @@ public class Player : Teleportable
     /// <summary>Sends a player_reset event to Unity Analytics</summary>
     public void RecordResetEvent()
     {
+        if (Settings.instance.online == false) return;
+        
         player_reset resetEvent = new player_reset
         {
             level = level.ToString(),

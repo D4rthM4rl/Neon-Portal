@@ -42,17 +42,23 @@ public class MainMenu : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    private IEnumerator LoadOptButton()
-    {
-        while (Settings.instance == null || !Settings.instance.loaded)
-        {
-            yield return new WaitForSeconds(0.01f);
-        }
+    // private IEnumerator LoadOptButton()
+    // {
+    //     while (Settings.instance == null || !Settings.instance.loaded)
+    //     {
+    //         yield return new WaitForSeconds(0.01f);
+    //     }
         
-    }
+    // }
 
     public void ToggleOpt()
     {
+        if (!Settings.instance.online)
+        {
+            Debug.Log("Offline, can't toggle Opt status");
+            return;
+        }
+
         if (optButton.GetComponentInChildren<TextMeshProUGUI>().text == "Opt In")
         {
             OptIn();
@@ -89,6 +95,11 @@ public class MainMenu : MonoBehaviour
 
     public void RequestDataDelection()
     {
+        if (!Settings.instance.online)
+        {
+            Debug.Log("Offline, can't request data deletion");
+            return;
+        }
         AnalyticsService.Instance.RequestDataDeletion();
     }
 

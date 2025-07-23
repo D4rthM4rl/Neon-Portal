@@ -24,20 +24,15 @@ public class ExitDoor : MonoBehaviour
 
     async private void BeatLevel(Player player, float levelTimer, float unresetLevelTimer)
     {
+        // TODO: Make it fine to be offlien
         Level level = LevelSelect.instance.levels[currWorld - 1, currLevel - 1];
-        // Send an event to Unity Analytics when the player completes a level
         string levelTitle = "W" + currWorld + "L" + currLevel;
         
+        // Send an event to Unity Analytics when the player completes a level
         RecordLevelCompleteEvent(level, player, levelTimer, unresetLevelTimer);
         Leaderboard.instance.SubmitTimeAsync(level, levelTimer);
 
-        var playerData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string>{levelTitle});
-        float bestTime = float.PositiveInfinity;
-        if (playerData.TryGetValue(levelTitle, out var levelTime))
-        {
-            bestTime = float.Parse(levelTime.Value.GetAs<string>());
-            Debug.Log($"Best time for {levelTitle}: {bestTime}");
-        }
+        float bestTime = PlayerPrefs.GetFloat(levelTitle, float.PositiveInfinity);
 
         if (levelTimer < bestTime)
         {
@@ -63,6 +58,7 @@ public class ExitDoor : MonoBehaviour
 
     private void RecordLevelCompleteEvent(Level level, Player player, float levelTimer, float unresetLevelTimer)
     {
+        if (Settings.instance == null || !Settings.instance.online) return;
         level_complete levelCompleteEvent = new level_complete
         {
             level = level.ToString(),
