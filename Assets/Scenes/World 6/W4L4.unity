@@ -157,6 +157,7 @@ MonoBehaviour:
   speed: 1
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &2648320
 Transform:
   m_ObjectHideFlags: 0
@@ -1341,7 +1342,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 20
+      value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4199,6 +4200,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &270627055
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5310,6 +5312,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &372896498
 Transform:
   m_ObjectHideFlags: 0
@@ -6678,7 +6681,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 270627056}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7207956897790997069, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1710222905}
   m_SourcePrefab: {fileID: 100100000, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
 --- !u!4 &448733678 stripped
 Transform:
@@ -8069,6 +8075,7 @@ MonoBehaviour:
   speed: 1
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &524267803
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9247,6 +9254,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &568033662
 Transform:
   m_ObjectHideFlags: 0
@@ -9593,7 +9601,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 30
+      value: 31
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9929,7 +9937,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 25
+      value: 26
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.z
@@ -10512,7 +10520,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 35
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 2665173186461781626, guid: 0209e548884fb4b09b8d16d4ce748324, type: 3}
       propertyPath: m_LocalPosition.z
@@ -12135,6 +12143,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &730828588
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16216,6 +16225,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &986179263
 Transform:
   m_ObjectHideFlags: 0
@@ -17821,6 +17831,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &1071865704
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20174,6 +20185,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &1244783463
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22186,6 +22198,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1383865292 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8538669038281679067, guid: 007f3235cb54a4e4f9843e0ecdb1a8a6, type: 3}
@@ -22225,6 +22238,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1384592538
 Transform:
   m_ObjectHideFlags: 0
@@ -23231,6 +23245,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &1458109531
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25428,6 +25443,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1625288656 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8538669038281679067, guid: 007f3235cb54a4e4f9843e0ecdb1a8a6, type: 3}
@@ -26440,6 +26456,38 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8538669038281679067, guid: 007f3235cb54a4e4f9843e0ecdb1a8a6, type: 3}
   m_PrefabInstance: {fileID: 1379151083}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1710222902 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7207956897790997069, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
+  m_PrefabInstance: {fileID: 448733677}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &1710222905
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710222902}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1000
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 7
 --- !u!1001 &1722957465
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27437,6 +27485,7 @@ MonoBehaviour:
   speed: 1
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1755140952
 Transform:
   m_ObjectHideFlags: 0
@@ -30615,6 +30664,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 0.1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1979354869 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}

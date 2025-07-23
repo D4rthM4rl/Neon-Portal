@@ -45,7 +45,8 @@ public class Player : Teleportable
     private int groundContactCount = 0;
     [HideInInspector]
     private Collider2D col;
-    private ContactPoint2D[] contacts = new ContactPoint2D[10];
+    [SerializeField]
+    private float rayLength = 0.1f;
     public bool isGrounded = true;
     [HideInInspector]
     public int cantReenterIndex = -1;
@@ -141,6 +142,7 @@ public class Player : Teleportable
     {
         CheckForInputs();
         base.Update();
+        UpdateGroundedStatus();
         if (Timer.instance != null) Timer.instance.UpdateTimer();
         // If escape is pressed, pause the game by stopping time
         if (Input.GetButtonDown("Pause"))
@@ -313,6 +315,7 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
+        // UpdateGroundedStatus();
         if (jumpQueued)
         {
             Jump();
@@ -429,83 +432,45 @@ public class Player : Teleportable
         }
     }
 
-    /// <summary>
-    /// Check if we hit a walkable surface (mostly flat)
-    /// </summary>
-    void OnCollisionEnter2D(Collision2D col)
+    private void UpdateGroundedStatus()
     {
-        rb.GetContacts(contacts);
-        foreach (ContactPoint2D c in contacts)
+        Vector2 gravDir = gravityDirection.normalized;
+        Vector2 perp = new Vector2(-gravDir.y, gravDir.x);
+
+        float width = col.bounds.extents.magnitude * 1.41f; // adjust for better coverage
+
+        Vector2 originCenter = (Vector2)transform.position + (gravDir * width * 0.5f);
+        Vector2 originLeft = originCenter - perp * width * 0.5f;
+        Vector2 originRight = originCenter + perp * width * 0.5f;
+        
+
+        RaycastHit2D hitCenter = Physics2D.Raycast(originCenter, gravDir, rayLength, LayerMask.GetMask("Ground"));
+        RaycastHit2D hitLeft = Physics2D.Raycast(originLeft, gravDir, rayLength, LayerMask.GetMask("Ground"));
+        RaycastHit2D hitRight = Physics2D.Raycast(originRight, gravDir, rayLength, LayerMask.GetMask("Ground"));
+
+        RaycastHit2D wallCenter = Physics2D.Raycast(originCenter, -gravDir, width, LayerMask.GetMask("Ground"));
+        RaycastHit2D wallLeft = Physics2D.Raycast(originLeft, -gravDir, width, LayerMask.GetMask("Ground"));
+        RaycastHit2D wallRight = Physics2D.Raycast(originRight, -gravDir, width, LayerMask.GetMask("Ground"));
+
+        Debug.DrawRay(originCenter, gravDir * rayLength, Color.red);
+        Debug.DrawRay(originLeft, gravDir * rayLength, Color.red);
+        Debug.DrawRay(originRight, gravDir * rayLength, Color.red);
+
+        if ((hitCenter.collider != null && !wallCenter.collider) || 
+            (hitLeft.collider != null && !wallLeft.collider) || 
+            (hitRight.collider != null && !wallRight.collider)
+            && rb.velocity.y <= 0)
         {
-            if (!c.collider || !c.collider.gameObject) continue;
-            Debug.Log("Contact with: " + c.collider.gameObject);
-            if (c.collider.gameObject.CompareTag("Portal") && c.collider.gameObject.GetComponent<PortalController>().IsConnected()
-                && (Settings.instance == null || !Settings.instance.needToTouchGroundToReenterPortal || 
-                c.collider.gameObject.GetComponent<PortalController>().index != cantReenterIndex))
-            {
-                ground = c.collider.gameObject;
-                groundContactCount = 0;
-                isGrounded = false;
-                break;
-            }
-            else if (c.collider.gameObject.CompareTag("Portal") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
-            {
-                ground = c.collider.gameObject;
-                groundContactCount++;
-                isGrounded = true;
-                break;
-            }
-            else if (c.collider.gameObject.CompareTag("Ground") && Vector2.Dot(c.normal, gravityDirection.normalized) < -0.5f)
-            {
-                ground = c.collider.gameObject;
-                groundContactCount++;
-                isGrounded = true;
-                break;
-            }
+            isGrounded = true;
+            ground = hitCenter.collider?.gameObject ?? hitLeft.collider?.gameObject ?? hitRight.collider?.gameObject;
+        }
+        else
+        {
+            isGrounded = false;
             ground = null;
         }
     }
 
-    /// <summary>
-    /// Check if we lost contact with a ground surface
-    /// </summary>
-    void OnCollisionExit2D(Collision2D col)
-    {
-        // Do a conservative re-check of all remaining collisions
-        // because Unity doesn't tell us which contact ended.
-        Invoke(nameof(RecheckGroundedState), 0f);
-    }
-
-    private void RecheckGroundedState()
-    {
-        // Reset count and check all contacts again
-        groundContactCount = 0;
-
-        ContactPoint2D[] contacts = new ContactPoint2D[10];
-        int count = rb.GetContacts(contacts);
-        for (int i = 0; i < count; i++)
-        {
-            if (contacts[i].collider == null || contacts[i].collider.gameObject == null) continue;
-            if (contacts[i].collider.CompareTag("Ground") && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
-            {
-                groundContactCount++;
-                ground = contacts[i].collider.gameObject;
-            }
-            else if (contacts[i].collider.CompareTag("Portal") && 
-                    !contacts[i].collider.GetComponent<PortalController>().IsConnected()
-                    && Vector2.Dot(contacts[i].normal, gravityDirection.normalized) < -0.5f)
-            {
-                groundContactCount++;
-                ground = contacts[i].collider.gameObject;
-            }
-        }
-
-        isGrounded = groundContactCount > 0;
-        Debug.Log("Grounded: " + isGrounded);
-
-        if (!isGrounded)
-            ground = null;
-    }
 
 
     #region Analytics Events
