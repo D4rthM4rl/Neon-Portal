@@ -42,15 +42,6 @@ public class MainMenu : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    // private IEnumerator LoadOptButton()
-    // {
-    //     while (Settings.instance == null || !Settings.instance.loaded)
-    //     {
-    //         yield return new WaitForSeconds(0.01f);
-    //     }
-        
-    // }
-
     public void ToggleOpt()
     {
         if (!Settings.instance.online)

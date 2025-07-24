@@ -17,14 +17,21 @@ public class ExitDoor : MonoBehaviour
         {
             transitioning = true;
             player.enabled = false;
-            BeatLevel(player, Timer.instance.levelTimer, Timer.instance.unresetLevelTimer);
-            Transition.instance.StartTransition(currWorld, currLevel, Timer.instance.levelTimer);
+            float bestTime = BeatLevel(player, Timer.instance.levelTimer, Timer.instance.unresetLevelTimer);
+            Transition.instance.StartTransition(currWorld, currLevel, Timer.instance.levelTimer, bestTime);
         }
     }
 
-    async private void BeatLevel(Player player, float levelTimer, float unresetLevelTimer)
+    /// <summary>
+    /// Saves the level completion data and sends an event to Unity Analytics
+    /// </summary>
+    /// <param name="player">Player who beat level</param>
+    /// <param name="levelTimer">The time they got on the level</param>
+    /// <param name="unresetLevelTimer">How long they played the level for, not 
+    /// resetting after death or reset</param>
+    /// <returns>Best time for level</returns>
+    private float BeatLevel(Player player, float levelTimer, float unresetLevelTimer)
     {
-        // TODO: Make it fine to be offlien
         Level level = LevelSelect.instance.levels[currWorld - 1, currLevel - 1];
         string levelTitle = "W" + currWorld + "L" + currLevel;
         
@@ -36,16 +43,14 @@ public class ExitDoor : MonoBehaviour
 
         if (levelTimer < bestTime)
         {
-            var saveBestTime = new Dictionary<string, object>{ { levelTitle, levelTimer } };
-            await CloudSaveService.Instance.Data.Player.SaveAsync(saveBestTime);
+            PlayerPrefs.SetFloat(levelTitle, levelTimer);
+            PlayerPrefs.Save();
+
             Debug.Log($"New best time for {levelTitle}: {levelTimer}");
-
-
-
             
             if (LevelSelect.instance == null)
             {
-                Debug.Log("LevelSelect instance is null");
+                Debug.LogWarning("LevelSelect instance is null");
             }
             else
             {
@@ -54,6 +59,7 @@ public class ExitDoor : MonoBehaviour
                 LevelSelect.instance.levelsToReload.Add(level);
             }
         }
+        return Mathf.Min(levelTimer, bestTime);
     }
 
     private void RecordLevelCompleteEvent(Level level, Player player, float levelTimer, float unresetLevelTimer)

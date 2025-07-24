@@ -11,7 +11,7 @@ using TMPro;
 public class Settings : MonoBehaviour
 {
     public static Settings instance;
-    public bool rotateCameraWithGravity = true;
+    public bool rotateCameraWithGravity = false;
     public bool leftClickForBothPortals = true;
     public bool needToTouchGroundToReenterPortal = true;
     public bool showTimer = true;
@@ -293,7 +293,7 @@ public class Settings : MonoBehaviour
 
     private void GetSavedRotateCameraWithGravity()
     {
-        rotateCameraWithGravity = PlayerPrefs.GetInt("RotateCameraWithGravity", 1) == 1;
+        rotateCameraWithGravity = PlayerPrefs.GetInt("RotateCameraWithGravity", 0) == 1;
     }
 
     private void GetSavedPortalSplit()

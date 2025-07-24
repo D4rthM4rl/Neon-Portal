@@ -140,6 +140,7 @@ public class Player : Teleportable
     protected override void Update()
     {
         CheckForInputs();
+        UpdateGroundedStatus();
         base.Update();
         // UpdateGroundedStatus();
         if (Timer.instance != null) Timer.instance.UpdateTimer();
@@ -184,9 +185,9 @@ public class Player : Teleportable
             jumpQueued = true;
         }
         else if (!rotateCameraWithGravity && 
-            (Input.GetButton("Left") && gravityDirection == Vector2.right) ||
+            ((Input.GetButton("Left") && gravityDirection == Vector2.right) ||
             (Input.GetButton("Down") && gravityDirection == Vector2.up) ||
-            (Input.GetButton("Right") && gravityDirection == Vector2.left))
+            (Input.GetButton("Right") && gravityDirection == Vector2.left)))
         {
             jumpQueued = true;
         }
@@ -314,7 +315,7 @@ public class Player : Teleportable
 
     protected override void FixedUpdate() 
     {
-        UpdateGroundedStatus();
+        // UpdateGroundedStatus();
         if (jumpQueued)
         {
             Jump();

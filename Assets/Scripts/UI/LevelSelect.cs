@@ -120,7 +120,7 @@ public class LevelSelect : MonoBehaviour
                 Quaternion.identity, levelButton.transform).GetComponent<Button>();
 
             trophyButton.transform.localScale = Vector3.one;
-            trophyButton.onClick.AddListener(() => Leaderboard.instance.ShowLeaderboard(level));
+            trophyButton.onClick.AddListener(() => Leaderboard.instance.ShowLevelSelectLeaderboard(level));
             levelButton.onClick.AddListener(() => StartCoroutine(LoadLevel(level.ToString())));
         }
 
@@ -214,6 +214,10 @@ public class LevelSelect : MonoBehaviour
             }
             else
             {
+                while (Leaderboard.instance == null)
+                {
+                    await Task.Delay(1); // Wait for Leaderboard to initialize
+                }
                 LeaderboardEntry worldRecord = await Leaderboard.instance.GetWorldRecord(level);
                 if (!Settings.instance.participateInLeaderboard || level.bestTime - 10 > worldRecord.Time)
                 {

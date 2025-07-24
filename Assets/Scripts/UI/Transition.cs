@@ -12,11 +12,21 @@ public class Transition : MonoBehaviour
 
     public float secBetweenObjectFades = 0.3f;
 
-    public TextMeshProUGUI levelCompleteText; // Text to display the current level
-    public TextMeshProUGUI nextLevelText; // Text to show the next level
+    [SerializeField]
+    private TextMeshProUGUI levelCompleteText; // Text to display the current level
+    [SerializeField]
+    private TextMeshProUGUI nextLevelText; // Text to show the next level
+
+    [SerializeField]
+    private TextMeshProUGUI timeText;
+    [SerializeField]
+    private TextMeshProUGUI bestTimeText;
+
 
     [SerializeField]
     private Button nextLevelButton;
+    [SerializeField]
+    private Button leaderboardButton;
     [SerializeField]
     private GameObject inBetweenMenu;
 
@@ -31,11 +41,11 @@ public class Transition : MonoBehaviour
         instance = this;
     }
 
-    public void StartTransition(int world, int level, float time)
+    public void StartTransition(int world, int level, float time, float best)
     {
         Timer.instance.timerText.enabled = false;
         Time.timeScale = 0f;
-        StartCoroutine(ChooseNext(world, level, time));
+        StartCoroutine(ChooseNext(world, level, time, best));
     }
 
     /// <summary>
@@ -43,13 +53,31 @@ public class Transition : MonoBehaviour
     /// </summary>
     /// <param name="world">World of level that was just completed</param>
     /// <param name="level">Level that was just completed</param>
-    private IEnumerator ChooseNext(int world, int level, float time)
+    private IEnumerator ChooseNext(int world, int level, float time, float best)
     {
         StartCoroutine(FadeAsync(0f, 1f)); // Fade out
         yield return new WaitForSecondsRealtime(fadeDuration); // Wait for fade out to complete
         inBetweenMenu.SetActive(true);
-        levelCompleteText.text = "World " + world + ", Level " + level + 
-            '\n' + "Completed in " + time.ToString("F2") + "s";
+        
+        levelCompleteText.text = "World " + world + ", Level " + level;
+        timeText.text = $"{time.ToString("F2")}s";
+        if (time == best) 
+        {
+            bestTimeText.text = "New Record!";
+            bestTimeText.color = Color.white;
+        }
+        else 
+        {   
+            bestTimeText.text = $"Best: {best.ToString("F2")}s";
+            bestTimeText.color = Color.black;
+        }
+
+        if (Settings.instance.online)
+        {
+            leaderboardButton.onClick.RemoveAllListeners();
+            Level l = LevelSelect.instance.GetLevelByName($"W{world}L{level}");
+            leaderboardButton.onClick.AddListener(() => Leaderboard.instance.ShowTransitionLeaderboard(l));
+        }
 
 
         prevLevel = LevelSelect.instance.levels[world - 1, level - 1];

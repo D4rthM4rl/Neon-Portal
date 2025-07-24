@@ -73,7 +73,7 @@ public class CameraController : MonoBehaviour
             virtualCameraTransform.rotation = Quaternion.RotateTowards(
                 virtualCameraTransform.rotation,
                 targetRotation,
-                cameraRotateSpeed * Time.deltaTime
+                cameraRotateSpeed * Time.unscaledDeltaTime
             );
             // Quaternion backgroundRotation = Quaternion.Euler(0f, 0f, -targetAngle);
             // bg.transform.rotation = backgroundRotation;

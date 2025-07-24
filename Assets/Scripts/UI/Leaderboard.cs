@@ -18,19 +18,33 @@ public class Leaderboard : MonoBehaviour
 {
     public static Leaderboard instance;
 
-    public GameObject leaderboardUI;
     [SerializeField]
-    private TextMeshProUGUI leaderboardTitle;
+    private GameObject lsLeaderboardUI;
+    [SerializeField]
+    private TextMeshProUGUI lsLeaderboardTitle;
+    [SerializeField]
+    private GameObject tLeaderboardUI;
+    [SerializeField]
+    private TextMeshProUGUI tLeaderboardTitle;
 
     [SerializeField]
-    private GameObject rankExample;
-    private List<GameObject> ranks = new List<GameObject>();
+    private GameObject lsRankExample;
     [SerializeField]
-    private GameObject usernameExample;
-    private List<GameObject> usernames = new List<GameObject>();
+    private GameObject tRankExample;
+    private List<GameObject> lsRanks = new List<GameObject>();
+    private List<GameObject> tRanks = new List<GameObject>();
     [SerializeField]
-    private GameObject timeExample;
-    private List<GameObject> times = new List<GameObject>();
+    private GameObject lsUsernameExample;
+    [SerializeField]
+    private GameObject tUsernameExample;
+    private List<GameObject> lsUsernames = new List<GameObject>();
+    private List<GameObject> tUsernames = new List<GameObject>();
+    [SerializeField]
+    private GameObject lsTimeExample;
+    [SerializeField]
+    private GameObject tTimeExample;
+    private List<GameObject> lsTimes = new List<GameObject>();
+    private List<GameObject> tTimes = new List<GameObject>();
     
 
     // Start is called before the first frame update
@@ -39,29 +53,29 @@ public class Leaderboard : MonoBehaviour
         instance = this;
     }
 
-    public async void ShowLeaderboard(Level level)
+    public async void ShowLevelSelectLeaderboard(Level level)
     {
-        leaderboardUI.SetActive(true);
-        leaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
+        lsLeaderboardUI.SetActive(true);
+        lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
         if (!Settings.instance.online)
         {
-            leaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
+            lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
                 + Environment.NewLine + Environment.NewLine + "Offline";
-            leaderboardTitle.transform.localPosition = Vector3.up * 32;
+            lsLeaderboardTitle.transform.localPosition = Vector3.up * 32;
             return;
         }
 
-        List<LeaderboardEntry> entries = await GetTopPlayers(level);
+        List<LeaderboardEntry> entries = await GetTopPlayers(level, 20);
         if (entries == null)
         {
-            leaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
+            lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
                 + Environment.NewLine + Environment.NewLine + "No entries";
-            leaderboardTitle.transform.localPosition = Vector3.up * 32;
+            lsLeaderboardTitle.transform.localPosition = Vector3.up * 32;
             return;
         }
         else 
         {
-            leaderboardTitle.transform.localPosition = Vector3.up * 53;
+            lsLeaderboardTitle.transform.localPosition = Vector3.up * 53;
         }
         // float vertOffset = 1080 / Screen.height;
         float vertOffset = 1;
@@ -74,34 +88,34 @@ public class Leaderboard : MonoBehaviour
         for (int i = 0; i < entries.Count; i++)
         {
             LeaderboardEntry entry = entries[i];
-            rank = ranks.Count > i ? ranks[i] : null;
+            rank = lsRanks.Count > i ? lsRanks[i] : null;
             if (rank == null) 
             {
-                rank = Instantiate(rankExample, rankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, rankExample.transform.parent);
-                ranks.Add(rank);
+                rank = Instantiate(lsRankExample, lsRankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, lsRankExample.transform.parent);
+                lsRanks.Add(rank);
             }
             rankText = rank.GetComponent<TextMeshProUGUI>();
             rankText.text = "#" + (i + 1);
             rankText.enabled = true;
 
-            username = usernames.Count > i ? usernames[i] : null;
+            username = lsUsernames.Count > i ? lsUsernames[i] : null;
             if (username == null)
             {
-                username = Instantiate(usernameExample, usernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, usernameExample.transform.parent);
-                usernames.Add(username);
+                username = Instantiate(lsUsernameExample, lsUsernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, lsUsernameExample.transform.parent);
+                lsUsernames.Add(username);
             }
             usernameText = username.GetComponent<TextMeshProUGUI>();
             usernameText.text = entry.DisplayName;
             usernameText.enabled = true;
 
-            time = times.Count > i ? times[i] : null;
+            time = lsTimes.Count > i ? lsTimes[i] : null;
             if (time == null)
             {
-                time = Instantiate(timeExample, timeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, timeExample.transform.parent);
-                times.Add(time);
+                time = Instantiate(lsTimeExample, lsTimeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, lsTimeExample.transform.parent);
+                lsTimes.Add(time);
             }
             timeText = time.GetComponent<TextMeshProUGUI>();
             float timeAmount = entry.Time;
@@ -113,26 +127,122 @@ public class Leaderboard : MonoBehaviour
         }
     }
 
-    public void HideLeaderboard()
+    public async void ShowTransitionLeaderboard(Level level)
     {
-        foreach (GameObject rank in ranks)
+        tLeaderboardUI.SetActive(true);
+        tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
+        if (!Settings.instance.online)
+        {
+            tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
+                + Environment.NewLine + Environment.NewLine + "Offline";
+            tLeaderboardTitle.transform.localPosition = Vector3.up * 32;
+            return;
+        }
+
+        List<LeaderboardEntry> entries = await GetTopPlayers(level, 20);
+        if (entries == null)
+        {
+            tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
+                + Environment.NewLine + Environment.NewLine + "No entries";
+            tLeaderboardTitle.transform.localPosition = Vector3.up * 32;
+            return;
+        }
+        else 
+        {
+            tLeaderboardTitle.transform.localPosition = Vector3.up * 53;
+        }
+        // float vertOffset = 1080 / Screen.height;
+        float vertOffset = 1;
+        GameObject rank;
+        TextMeshProUGUI rankText;
+        GameObject username;
+        TextMeshProUGUI usernameText;
+        GameObject time;
+        TextMeshProUGUI timeText;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            LeaderboardEntry entry = entries[i];
+            rank = tRanks.Count > i ? tRanks[i] : null;
+            if (rank == null) 
+            {
+                rank = Instantiate(tRankExample, tRankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, tRankExample.transform.parent);
+                tRanks.Add(rank);
+            }
+            rankText = rank.GetComponent<TextMeshProUGUI>();
+            rankText.text = "#" + (i + 1);
+            rankText.enabled = true;
+
+            username = tUsernames.Count > i ? tUsernames[i] : null;
+            if (username == null)
+            {
+                username = Instantiate(tUsernameExample, tUsernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, tUsernameExample.transform.parent);
+                tUsernames.Add(username);
+            }
+            usernameText = username.GetComponent<TextMeshProUGUI>();
+            usernameText.text = entry.DisplayName;
+            usernameText.enabled = true;
+
+            time = tTimes.Count > i ? tTimes[i] : null;
+            if (time == null)
+            {
+                time = Instantiate(tTimeExample, tTimeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
+                    Quaternion.identity, tTimeExample.transform.parent);
+                tTimes.Add(time);
+            }
+            timeText = time.GetComponent<TextMeshProUGUI>();
+            float timeAmount = entry.Time;
+            if (timeAmount % 60 < 10) 
+                timeText.text = (int)timeAmount / 60 + ":0" + timeAmount % 60;
+            else 
+                timeText.text = (int)timeAmount / 60 + ":" + timeAmount % 60;
+            timeText.enabled = true;
+        }
+    }
+
+    public void HideLevelSelectLeaderboard()
+    {
+        foreach (GameObject rank in lsRanks)
         {
             if (rank != null)
                 rank.GetComponent<TextMeshProUGUI>().enabled = false;
         }
 
-        foreach (GameObject username in usernames)
+        foreach (GameObject username in lsUsernames)
         {
             if (username != null)
                 username.GetComponent<TextMeshProUGUI>().enabled = false;
         }
 
-        foreach (GameObject time in times)
+        foreach (GameObject time in lsTimes)
         {
             if (time != null)
                 time.GetComponent<TextMeshProUGUI>().enabled = false;
         }
-        leaderboardUI.SetActive(false);
+        lsLeaderboardUI.SetActive(false);
+    }
+
+    public void HideTransitionLeaderboard()
+    {
+        foreach (GameObject rank in tRanks)
+        {
+            if (rank != null)
+                rank.GetComponent<TextMeshProUGUI>().enabled = false;
+        }
+
+        foreach (GameObject username in tUsernames)
+        {
+            if (username != null)
+                username.GetComponent<TextMeshProUGUI>().enabled = false;
+        }
+
+        foreach (GameObject time in tTimes)
+        {
+            if (time != null)
+                time.GetComponent<TextMeshProUGUI>().enabled = false;
+        }
+        tLeaderboardUI.SetActive(false);
     }
 
     public async void SubmitTimeAsync(Level level, float time)
