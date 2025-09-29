@@ -1,12 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.Core;
-using Unity.Services.Analytics;
-using Unity.Services.Authentication;
-using Unity.Services.CloudSave;
 using UnityEngine.UI;
 using TMPro;
+
 
 public class Settings : MonoBehaviour
 {
@@ -18,8 +15,6 @@ public class Settings : MonoBehaviour
     public bool optedIn = true;
     public PlayerMovementType movement = PlayerMovementType.Normal;
 
-    public bool online;
-
     public Color portal1Color;
     private Color portal1SavedColor;
     private bool settingPortal1Color = false;
@@ -27,32 +22,23 @@ public class Settings : MonoBehaviour
     public Color portal2Color;
     private Color portal2SavedColor;
     private bool settingPortal2Color = false;
-    [SerializeField]
-    private ColorPickerControl colorPicker;
+    [SerializeField] private ColorPickerControl colorPicker;
 
     public bool participateInLeaderboard = true;
     public string playerLeaderboardName = "";
     #region Settings UI to Adjust
     [Header("Settings UI Elements to Refresh")]
-
-    [SerializeField]
-    private Button optButton;
-    [SerializeField]
-    private TMP_Dropdown playerMovementDropdown;
-    [SerializeField]
-    private Button portal1ColorButton;
-    [SerializeField]
-    private Button portal2ColorButton;
-    [SerializeField]
-    private TMP_InputField playerNameInput;
-    [SerializeField]
-    private Toggle showTimerToggle;
-    [SerializeField]
-    private Toggle portalSplitToggle;
-    [SerializeField]
-    private Toggle needToTouchGroundToggle;
-    [SerializeField]
-    private Toggle rotateCameraToggle;
+    
+    [SerializeField] private Button optButton;
+    [SerializeField] private TMP_Dropdown playerMovementDropdown;
+    [SerializeField] private Button portal1ColorButton;
+    [SerializeField] private Button portal2ColorButton;
+    [SerializeField] private TMP_InputField playerNameInput;
+    [SerializeField] private Toggle showTimerToggle;
+    [SerializeField] private Toggle portalSplitToggle;
+    [SerializeField] private Toggle needToTouchGroundToggle;
+    [SerializeField] private Toggle rotateCameraToggle;
+    [SerializeField] private Toggle onlineToggle;
 
     #endregion
 
@@ -62,6 +48,7 @@ public class Settings : MonoBehaviour
     public PlatformType platform = PlatformType.Computer;
     public bool loaded = false;
 
+    /// <summary>A list of bad words that are not allowed in the player name</summary>
     private List<string> badWords = new List<string>
     {
         "nigger",
@@ -83,16 +70,7 @@ public class Settings : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-            try
-            {
-                await UnityServices.InitializeAsync();
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                online = true;
-            }
-            catch
-            {
-                online = false;
-            }
+            OnlineServices.online = await OnlineServices.TryToGoOnline();
         }
         else
         {
@@ -129,10 +107,8 @@ public class Settings : MonoBehaviour
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
 
-    /// <summary>
-    /// Returns if the game is WebGL and running on a mobile device
-    /// </summary>
-    /// <returns>if the game is on WebGL on a mobile device</returns>
+    /// <summary>Returns if the game is WebGL and running on a mobile device.</summary>
+    /// <returns>True if the game is on WebGL on a mobile device.</returns>
     public bool isMobile()
     {
         return IsMobileBrowser();
@@ -140,18 +116,16 @@ public class Settings : MonoBehaviour
 
     #region Saving Helpers
 
-    /// <summary>
-    /// Makes the settings values in the menu match what is saved
-    /// </summary>
+    /// <summary>Makes the settings values in the menu match what is saved.</summary>
     async private void SetSettingsValuesToMatchSaved()
     {
         GetSavedOpt();
         GetSavedPortalColors();
         
-        if (online) playerLeaderboardName = await AuthenticationService.Instance.GetPlayerNameAsync();
+        if (OnlineServices.online) playerLeaderboardName = await OnlineServices.GetPlayerName();
         else 
         {
-            // TODO: Disable leaderboard stuff if offline
+            // TODO: Disable leaderboard stuff if offline?
         }
         GetSavedTimerVisibility();
         GetSavedPlayerMovementType();
@@ -160,12 +134,10 @@ public class Settings : MonoBehaviour
         GetSavedPortalEntering();
     }
 
-    /// <summary>
-    /// Makes the settings visually match what is saved
-    /// </summary>
+    /// <summary>Makes the settings visually match what is saved</summary>
     public void MakeSettingsUIMatchSaved()
     {
-        if (online)
+        if (OnlineServices.online)
         {
             optButton.GetComponentInChildren<TextMeshProUGUI>().text = !optedIn ? "Opt In" : "Opt Out";
 
@@ -181,14 +153,16 @@ public class Settings : MonoBehaviour
 
         showTimerToggle.isOn = showTimer;
         rotateCameraToggle.isOn = rotateCameraWithGravity;
+        onlineToggle.isOn = OnlineServices.online;
         portalSplitToggle.isOn = leftClickForBothPortals;
         needToTouchGroundToggle.isOn = needToTouchGroundToReenterPortal;
     }
-
+    
+    /// <summary>Submits the player name from the textbox.</summary>
     public void CompletePlayerName()
     {
         string text = playerNameInput.GetComponent<TMP_InputField>().text;
-        if (!online)
+        if (!OnlineServices.online)
         {
             playerNameErrorText.enabled = true;
             playerNameErrorText.text = "Offline, leaderboard is disabled";
@@ -217,9 +191,10 @@ public class Settings : MonoBehaviour
         }
         playerNameErrorText.enabled = false;
         playerLeaderboardName = text;
-        AuthenticationService.Instance.UpdatePlayerNameAsync(text);
+        OnlineServices.UpdatePlayerName(text);
     }
 
+    /// <summary>Sets the color for Portal 1 to what was chosen in the color picker.</summary>
     public void ChangePortal1Colors()
     {
         settingPortal1Color = true;
@@ -230,6 +205,10 @@ public class Settings : MonoBehaviour
         StartCoroutine(ChangePortal1ColorsAsync());
     }
 
+    /// <summary>
+    /// Waits until it can change the Portal 1 color then sets the color picker button
+    /// to correspond to picked color.
+    /// </summary>
     private IEnumerator ChangePortal1ColorsAsync()
     {
         while (colorPicker.gameObject.activeInHierarchy == true && !settingPortal2Color)
@@ -244,6 +223,7 @@ public class Settings : MonoBehaviour
         }
     }
 
+    /// <summary>Sets the color for Portal 2 to what was chosen in the color picker.</summary>
     public void ChangePortal2Colors()
     {
         settingPortal2Color = true;
@@ -254,6 +234,10 @@ public class Settings : MonoBehaviour
         StartCoroutine(ChangePortal2ColorsAsync());
     }
 
+    /// <summary>
+    /// Waits until it can change the Portal 2 color then sets the color picker button
+    /// to correspond to picked color.
+    /// </summary>
     private IEnumerator ChangePortal2ColorsAsync()
     {
         while (colorPicker.gameObject.activeInHierarchy == true && !settingPortal1Color)
@@ -272,11 +256,13 @@ public class Settings : MonoBehaviour
 
     #region Settings Getters (PlayerPrefs)
 
+    /// <summary>
+    /// Sets the data collection based on what is saved.
+    /// </summary>
     private void GetSavedOpt()
     {
         optedIn = PlayerPrefs.GetInt("AnalyticsOptChoice", 1) == 1;
-        if (optedIn) AnalyticsService.Instance.StartDataCollection();
-        else AnalyticsService.Instance.StopDataCollection();
+        OnlineServices.ChangeDataCollection(optedIn);
     }
 
     private void GetSavedTimerVisibility()
@@ -455,6 +441,36 @@ public class Settings : MonoBehaviour
 
     #region Settings Savers (PlayerPrefs)
 
+    public async void ToggleOnline()
+    {
+        if (!onlineToggle.isOn)
+        {
+            OnlineServices.online = false;
+        }
+        else
+        {
+            await OnlineServices.TryToGoOnline();
+            if (!OnlineServices.online) ErrorOnline();
+            onlineToggle.isOn = OnlineServices.online;
+        }
+    }
+
+    public void ErrorOnline()
+    {
+        StartCoroutine(ErrorOnlineCoroutine());
+    }
+
+    private IEnumerator ErrorOnlineCoroutine()
+    {
+        onlineToggle.isOn = false;
+        TextMeshProUGUI onlineText = onlineToggle.GetComponentInChildren<TextMeshProUGUI>();
+        onlineText.text = "Error Going Online";
+        onlineText.color = new Color(.6f, 0, 0);
+        yield return new WaitForSeconds(3);
+        onlineText.text = "Online";
+        onlineText.color = Color.black;
+    }
+
     public void SetRotateCameraWithGravity()
     {
         rotateCameraWithGravity = rotateCameraToggle.isOn;
@@ -573,12 +589,22 @@ public class Settings : MonoBehaviour
     }
 }
 
+/// <summary>
+/// What movement type to use for the player. <br/>
+/// Quick: Original movement which has quicker acceleration. <br/>
+/// Normal: Later added movement which has slower acceleration.
+/// </summary>
 public enum PlayerMovementType
 {
     Quick,
     Normal,
 }
 
+/// <summary>
+/// What platform the user is on. <br/>
+/// Phone: any mobile device including iPad. <br/>
+/// Computer: any kind of laptop/desktop.
+/// </summary>
 public enum PlatformType
 {
     Phone,

@@ -2,20 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Services.CloudSave;
-using Unity.Services.Leaderboards;
 using TMPro;
 using System;
 using System.Threading.Tasks;
 
 public class LevelSelect : MonoBehaviour
 {
+    /// <summary>Singleton instance of the LevelSelect.</summary>
     public static LevelSelect instance;
+    /// <summary>The level select menu GameObject which contains all the level buttons.</summary>
     public GameObject levelSelectMenu;
+    /// <summary>Which levels to reload the times for when returning to level select menu.</summary>
     public List<Level> levelsToReload = new List<Level>();
+    /// <summary>Text element to show "Level Select" or loading.</summary>
     public TextMeshProUGUI titleOrLoadingText;
-    [SerializeField]
-    private GameObject leaderboardEnableButton;
+    /// <summary>The button gameObject to show the leaderboard</summary>
+    [SerializeField] private GameObject leaderboardEnableButton;
+    /// <summary>Colorset for the unbeaten tier.</summary>
     public LeaderboardTierColorset unbeatenColorset;
     public LeaderboardTierColorset whiteTierColorset;
     public LeaderboardTierColorset bronzeTierColorset;
@@ -23,7 +26,7 @@ public class LevelSelect : MonoBehaviour
     public LeaderboardTierColorset goldTierColorset;
     public LeaderboardTierColorset purpleTierColorset;
     
-
+    /// <summary>All levels in the game, indexed by [world-1, level-1].</summary>
     public Level[,] levels = {
         {new Level(1, 1),
         new Level(1, 2),
@@ -50,24 +53,33 @@ public class LevelSelect : MonoBehaviour
         new Level(4, 5),
         new Level(4, 6)}
     };
-
+    /// <summary>Whether the level select is still loading data.</summary>
     public bool loading = false;
-
+    /// <summary>Mapping of levels to their corresponding buttons for easy access.</summary>
     public Dictionary<Level, Button> levelButtons = new Dictionary<Level, Button>();
 
-    private void Start() {
+    private void Awake()
+    {
         if (instance == null)
         {
             loading = true;
             instance = this;
         }
         else
+        {
+            Debug.Log("LevelSelect instance already exists, destroying duplicate.");
             Destroy(gameObject);
+        }
+    }
+
+    private void Start() {
+        
         // titleOrLoadingText.text = "Level Select";
 
         StartCoroutine(LoadLevelsCoroutine());
     }
 
+    /// <summary>Enables the buttons in the level select menu.</summary>
     public void ShowButtons()
     {
         foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
@@ -78,6 +90,7 @@ public class LevelSelect : MonoBehaviour
         }
     }
 
+    /// <summary>Disables/hides the buttons in the level select menu.</summary>
     public void HideButtons()
     {
         foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
@@ -88,6 +101,7 @@ public class LevelSelect : MonoBehaviour
         }
     }
 
+    /// <summary>Coroutine to load levels after settings have been loaded.</summary>
     private IEnumerator LoadLevelsCoroutine()
     {
         while (Settings.instance == null || !Settings.instance.loaded)
@@ -98,6 +112,7 @@ public class LevelSelect : MonoBehaviour
         // titleOrLoadingText.text = "Level Select";
     }
 
+    /// <summary>Loads all levels' data and updates their buttons accordingly.</summary>
     private async void LoadLevels()
     {
         loading = true;
@@ -135,7 +150,20 @@ public class LevelSelect : MonoBehaviour
         loading = false;
     }
 
+    public async void ReloadAllLevels()
+    {
+        // Load all level button data in parallel
+        List<Task> loadTasks = new List<Task>();
+        foreach (Level level in levels)
+        {
+            loadTasks.Add(LoadLevelButton(level));
+        }
 
+        await Task.WhenAll(loadTasks); // Wait for all level data to load
+    }
+
+    /// <summary>Sets up a button (color and time) for a level.</summary>
+    /// <param name="level">Level of the button to set up.</param>
     private Task LoadLevelButton(Level level)
     {
         string levelTitle = "W" + level.world + "L" + level.level;
@@ -160,6 +188,8 @@ public class LevelSelect : MonoBehaviour
         return Task.CompletedTask;
     }
 
+    /// <summary>Reload a time on the menu for a level because the best time has changed.</summary>
+    /// <param name="level">Level to have the time reloaded for.</param>
     public void ReloadLevelTime(Level level)
     {
         loading = true;
@@ -177,6 +207,12 @@ public class LevelSelect : MonoBehaviour
         loading = false;
     }
 
+    /// <summary>
+    /// Sets the colors of the button for each level in the menu based on the
+    /// user's completion times compared to the best.
+    /// </summary>
+    /// <param name="level">Level to look at.</param>
+    /// <param name="levelButton">The button to change the color of.</param>
     private async void SetButtonColors(Level level, Button levelButton)
     {
         ColorBlock buttonColorBlock = new ColorBlock();
@@ -199,7 +235,7 @@ public class LevelSelect : MonoBehaviour
         }
         else
         {
-            if (!Settings.instance.online)
+            if (!OnlineServices.online)
             {
                 buttonColorBlock.normalColor = whiteTierColorset.normalColor;
                 buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
@@ -219,7 +255,9 @@ public class LevelSelect : MonoBehaviour
                     await Task.Delay(1); // Wait for Leaderboard to initialize
                 }
                 LeaderboardEntry worldRecord = await Leaderboard.instance.GetWorldRecord(level);
-                if (!Settings.instance.participateInLeaderboard || level.bestTime - 10 > worldRecord.Time)
+                if (!Settings.instance.participateInLeaderboard 
+                    || level.bestTime - 10 > worldRecord.Time
+                    || !OnlineServices.online)
                 {
                     buttonColorBlock.normalColor = whiteTierColorset.normalColor;
                     buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
@@ -296,7 +334,7 @@ public class LevelSelect : MonoBehaviour
     /// <summary>
     /// Gets the first level that has not been beaten yet or returns null if all levels have been beaten.
     /// </summary>
-    /// <returns>Earliest unbeaten level or null if all beaten</returns>
+    /// <returns>Earliest unbeaten level or null if all beaten.</returns>
     public Level GetNextUnbeatenLevel()
     {
         foreach (Level level in levels)
@@ -313,12 +351,8 @@ public class LevelSelect : MonoBehaviour
     /// Gets the next level in the current world or the first level of the next world.
     /// If the current level is the last level of the last world, returns null.
     /// </summary>
-    /// <param name="currentLevel">What level you want the level after</param>
-    /// <returns>The level after the given level or null if there is no next level</returns>
-    /// <summary>
-    /// Gets either the next level in current world or first level of the next world
-    /// </summary>
-    /// <returns>Next level</returns>
+    /// <param name="currentLevel">What level you want the level after.</param>
+    /// <returns>The level after the given level or null if there is no next level.</returns>
     public Level GetNextLevel(Level currentLevel)
     {
         int currWorld = currentLevel.world;
@@ -340,24 +374,31 @@ public class LevelSelect : MonoBehaviour
         }
     }
 
+    /// <summary>Loads a level to be played.</summary>
+    /// <param name="level">Level to be played.</param>
     public IEnumerator LoadLevel(Level level)
     {
         if (loading)
             yield return null;
-        if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
-        else Timer.instance.timerText.enabled = false;
 
         float fadeDuration = Transition.instance.fadeDuration;
         yield return StartCoroutine(Transition.instance.FadeAsync(0f, 1f, fadeDuration/2)); // Fade out
         Transition.instance.LoadLevelFromLevelSelect(level);
+        if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
+        else Timer.instance.timerText.enabled = false;
         gameObject.SetActive(false);
     }
 
+    /// <summary>Loads a level to be played.</summary>
+    /// <param name="level">Name of the level to be played.</param>
     public IEnumerator LoadLevel(string level)
     {
         yield return StartCoroutine(LoadLevel(GetLevelByName(level)));
     }
 
+    /// <summary>Gets a level by its name in L1W1 form.</summary>
+    /// <param name="name">Name of the level.</param>
+    /// <returns>Level which was named.</returns>
     public Level GetLevelByName(string name)
     {
         int lIndex = name.IndexOf('L');

@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Unity.Services.Analytics;
-using Unity.Services.CloudSave;
 
 public class ExitDoor : MonoBehaviour
 {
@@ -37,7 +35,7 @@ public class ExitDoor : MonoBehaviour
         
         // Send an event to Unity Analytics when the player completes a level
         RecordLevelCompleteEvent(level, player, levelTimer, unresetLevelTimer);
-        Leaderboard.instance.SubmitTimeAsync(level, levelTimer);
+        Leaderboard.instance.SubmitTime(level, levelTimer);
 
         float bestTime = PlayerPrefs.GetFloat(levelTitle, float.PositiveInfinity);
 
@@ -62,9 +60,16 @@ public class ExitDoor : MonoBehaviour
         return Mathf.Min(levelTimer, bestTime);
     }
 
+    /// <summary>
+    /// Record an event in unity analytis to show that a level has been beaten.
+    /// </summary>
+    /// <param name="level">Level which was beaten.</param>
+    /// <param name="player">Player who beat the level.</param>
+    /// <param name="levelTimer">Timer when the player beat the level.</param>
+    /// <param name="unresetLevelTimer">How long the player was playing the level regardless of deaths/resets.</param>
     private void RecordLevelCompleteEvent(Level level, Player player, float levelTimer, float unresetLevelTimer)
     {
-        if (Settings.instance == null || !Settings.instance.online) return;
+        if (Settings.instance == null || !OnlineServices.online) return;
         level_complete levelCompleteEvent = new level_complete
         {
             level = level.ToString(),
@@ -89,6 +94,6 @@ public class ExitDoor : MonoBehaviour
             levelCompleteEvent.portal2_y = portalPos.y;
         }
 
-        AnalyticsService.Instance.RecordEvent(levelCompleteEvent);
+        OnlineServices.RecordEvent(levelCompleteEvent);
     }
 }

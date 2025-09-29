@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.CloudSave;
-using Unity.Services.Leaderboards;
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using TMPro;
 
+/// <summary>
+/// Entry in the leaderboard containing their display name and completion time for a level
+/// </summary>
 public record LeaderboardEntry
 {
     public string DisplayName { get; set; }
@@ -18,46 +19,44 @@ public class Leaderboard : MonoBehaviour
 {
     public static Leaderboard instance;
 
-    [SerializeField]
-    private GameObject lsLeaderboardUI;
-    [SerializeField]
-    private TextMeshProUGUI lsLeaderboardTitle;
-    [SerializeField]
-    private GameObject tLeaderboardUI;
-    [SerializeField]
-    private TextMeshProUGUI tLeaderboardTitle;
+    [SerializeField] private GameObject lsLeaderboardUI;
+    [SerializeField] private GameObject lsLeaderboardPrefab;
+    [SerializeField] private TextMeshProUGUI lsLeaderboardTitle;
+    [SerializeField] private GameObject tLeaderboardUI;
+    [SerializeField] private GameObject tLeaderboardPrefab;
+    [SerializeField] private TextMeshProUGUI tLeaderboardTitle;
 
-    [SerializeField]
-    private GameObject lsRankExample;
-    [SerializeField]
-    private GameObject tRankExample;
+    [SerializeField] private GameObject lsRankExample;
+    [SerializeField] private GameObject tRankExample;
     private List<GameObject> lsRanks = new List<GameObject>();
     private List<GameObject> tRanks = new List<GameObject>();
-    [SerializeField]
-    private GameObject lsUsernameExample;
-    [SerializeField]
-    private GameObject tUsernameExample;
+    [SerializeField] private GameObject lsUsernameExample;
+    [SerializeField] private GameObject tUsernameExample;
     private List<GameObject> lsUsernames = new List<GameObject>();
     private List<GameObject> tUsernames = new List<GameObject>();
-    [SerializeField]
-    private GameObject lsTimeExample;
-    [SerializeField]
-    private GameObject tTimeExample;
+    [SerializeField] private GameObject lsTimeExample;
+    [SerializeField] private GameObject tTimeExample;
     private List<GameObject> lsTimes = new List<GameObject>();
     private List<GameObject> tTimes = new List<GameObject>();
     
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         instance = this;
     }
 
+    /// <summary>Makes the leaderboard show up on the level select menu.</summary>
+    /// <param name="level">What level to show the leaderboard for.</param>
     public async void ShowLevelSelectLeaderboard(Level level)
     {
-        lsLeaderboardUI.SetActive(true);
+        if (lsLeaderboardUI) lsLeaderboardUI.SetActive(true);
+        else 
+        {
+            lsLeaderboardUI = Instantiate(lsLeaderboardPrefab);
+            lsLeaderboardTitle = lsLeaderboardUI.GetComponentsInChildren<TextMeshProUGUI>()[0];
+        }
         lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
-        if (!Settings.instance.online)
+        if (!OnlineServices.online)
         {
             lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
                 + Environment.NewLine + Environment.NewLine + "Offline";
@@ -127,11 +126,14 @@ public class Leaderboard : MonoBehaviour
         }
     }
 
+    /// <summary>Makes the leaderboard show up on the transition menu in between levels.</summary>
+    /// <param name="level">What level to show the leaderboard for.</param>
     public async void ShowTransitionLeaderboard(Level level)
     {
-        tLeaderboardUI.SetActive(true);
+        if (tLeaderboardUI) tLeaderboardUI.SetActive(true);
+        else tLeaderboardUI = Instantiate(tLeaderboardPrefab);
         tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
-        if (!Settings.instance.online)
+        if (!OnlineServices.online)
         {
             tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
                 + Environment.NewLine + Environment.NewLine + "Offline";
@@ -201,6 +203,7 @@ public class Leaderboard : MonoBehaviour
         }
     }
 
+    /// <summary>Hides the leaderboard in the level select menu.</summary>
     public void HideLevelSelectLeaderboard()
     {
         foreach (GameObject rank in lsRanks)
@@ -223,6 +226,7 @@ public class Leaderboard : MonoBehaviour
         lsLeaderboardUI.SetActive(false);
     }
 
+    /// <summary>Hides the leaderboard in the transition menu between levels.</summary>
     public void HideTransitionLeaderboard()
     {
         foreach (GameObject rank in tRanks)
@@ -245,25 +249,33 @@ public class Leaderboard : MonoBehaviour
         tLeaderboardUI.SetActive(false);
     }
 
-    public async void SubmitTimeAsync(Level level, float time)
+    /// <summary>
+    /// Submits a completion time to the leaderboard.
+    /// </summary>
+    /// <param name="level">What level to submit the time for.</param>
+    /// <param name="time">Time the level was beaten in.</param>
+    public void SubmitTime(Level level, float time)
     {   
-        if (Settings.instance.participateInLeaderboard && Settings.instance.online)
+        if (Settings.instance.participateInLeaderboard && OnlineServices.online)
         {
             try 
             {
-                await LeaderboardsService.Instance.AddPlayerScoreAsync(level.ToString(), time);
+                OnlineServices.AddPlayerScore(level.ToString(), time);
             }
             catch (Exception e) 
             {
-                Debug.LogError($"Failed to submit score: {e}");
+                Debug.LogWarning($"Failed to submit score: {e}");
                 throw;
             }
         }
     }
 
+    /// <summary>Gets the top Leaderboard entry (fastest time) for a level.</summary>
+    /// <param name="level">What level to get the top score for.</param>
+    /// <returns>Leaderboard entry containing </returns>
     public async Task<LeaderboardEntry> GetWorldRecord(Level level)
     {
-        if (!Settings.instance.participateInLeaderboard || !Settings.instance.online)
+        if (!Settings.instance.participateInLeaderboard || !OnlineServices.online)
         {
             // Debug.LogWarning("Leaderboard is not enabled or not online.");
             return new LeaderboardEntry { DisplayName = "Not Online", Time = float.PositiveInfinity };
@@ -271,8 +283,11 @@ public class Leaderboard : MonoBehaviour
         string levelTitle = "W" + level.world + "L" + level.level;
         try
         {
-            var leaderboardResponse = await LeaderboardsService.Instance.GetScoresByTierAsync(levelTitle, "Purple");
-            string response = JsonConvert.SerializeObject(leaderboardResponse.Results);
+            string response = await OnlineServices.GetScoresByTier(levelTitle, "Purple");
+            if (!OnlineServices.online) return new LeaderboardEntry {
+                                                DisplayName = "Offline",
+                                                Time = float.PositiveInfinity
+                                                };
             string name = "";
             string score = "";
             if (response == "[]")
@@ -288,14 +303,20 @@ public class Leaderboard : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Failed to retrieve leaderboard: " + e.Message);
+            Debug.LogWarning("Failed to retrieve leaderboard: " + e.Message);
             return new LeaderboardEntry { DisplayName = "No scores", Time = float.PositiveInfinity };
         }
     }
 
+    /// <summary>
+    /// Gets the top leaderboard entries for a level.
+    /// </summary>
+    /// <param name="level">Level to get the entries for.</param>
+    /// <param name="howMany">How many of the top entries to get.</param>
+    /// <returns>List of the top (fastest) n Leaderboard entries.</returns>
     public async Task<List<LeaderboardEntry>> GetTopPlayers(Level level, int howMany = 10)
     {
-        if (!Settings.instance.participateInLeaderboard || !Settings.instance.online)
+        if (!Settings.instance.participateInLeaderboard || !OnlineServices.online)
         {
             Debug.LogWarning("Leaderboard is not enabled or not online.");
             return null;
@@ -306,13 +327,12 @@ public class Leaderboard : MonoBehaviour
         string levelTitle = "W" + level.world + "L" + level.level;
         try
         {
-            var leaderboardResponse = await LeaderboardsService.Instance.GetScoresAsync(levelTitle,
-                new GetScoresOptions
+            string response = await OnlineServices.GetScores(levelTitle,
+                new Unity.Services.Leaderboards.GetScoresOptions
                 {
                     Offset = 0, Limit = howMany
                 });
-            string response = JsonConvert.SerializeObject(leaderboardResponse.Results);
-            if (response == "[]")
+            if (response == "[]" || response == null)
             {
                 Debug.Log("No scores found for this level.");
                 return null;
@@ -374,8 +394,8 @@ public class Leaderboard : MonoBehaviour
 
 }
 
-[System.Serializable]
-public class LeaderboardTierColorset
+/// <summary>Colors for a level button's parts based on the leaderboard tier.</summary>
+[System.Serializable] public class LeaderboardTierColorset
 {
     public Color normalColor = Color.white;
     public Color highlightedColor = Color.white;

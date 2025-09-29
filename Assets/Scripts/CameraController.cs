@@ -5,12 +5,19 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    /// <summary>Whether the camera should rotate to match the player's gravity direction.</summary>
     public bool rotateWithGravity = true;
-    [SerializeField]
-    private GameObject player;
+    /// <summary>The player GameObject the camera should follow.</summary>
+    [SerializeField] private GameObject player;
+    /// <summary>The currently active Cinemachine virtual camera.</summary>
     private ICinemachineCamera virtualCamera;
-
+    /// <summary>The background GameObject, assumed to be a child with a SpriteRenderer.</summary>
     private GameObject bg;
+    /// <summary>
+    /// The speed at which the camera rotates to match the player's gravity direction
+    /// in degrees per second.
+    /// </summary>
+    public float cameraRotateSpeed = 360f;
 
     void Start()
     {
@@ -30,6 +37,10 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Sets the virtual camera to follow the player once the player and camera are available.
+    /// </summary>
+    /// <param name="brain">The Cinemachine Brain which controls the camera.</param>
     private IEnumerator GetCamera(CinemachineBrain brain)
     {
         GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
@@ -58,8 +69,6 @@ public class CameraController : MonoBehaviour
         virtualCamera.Follow = player.transform;
     }
 
-    public float cameraRotateSpeed = 360f; // Degrees per second
-
     void Update()
     {
         if (player != null && virtualCamera != null && Settings.instance != null && Settings.instance.rotateCameraWithGravity)
@@ -79,5 +88,4 @@ public class CameraController : MonoBehaviour
             // bg.transform.rotation = backgroundRotation;
         }
     }
-
 }

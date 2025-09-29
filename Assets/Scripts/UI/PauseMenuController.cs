@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using Unity.Services.Analytics;
 using TMPro;
 
 public class PauseMenuController : MonoBehaviour
@@ -26,6 +25,7 @@ public class PauseMenuController : MonoBehaviour
         }
         else
         {
+            Debug.Log("PauseMenuController instance already exists, destroying duplicate.");
             Destroy(gameObject);
         }
         
@@ -35,6 +35,7 @@ public class PauseMenuController : MonoBehaviour
             pauseMenuUI.SetActive(false);
     }
 
+    /// <summary>Toggle (turn off if on/on if off) the pause menu.</summary>
     public void ToggleMenu()
     {
         Timer.instance.ResetInactivityTimer();
@@ -48,7 +49,7 @@ public class PauseMenuController : MonoBehaviour
         }
     }
 
-    /// <summary>Resumes game (sets timeScale back) </summary>
+    /// <summary>Resumes game (sets timeScale back).</summary>
     public void Resume()
     {
         Timer.instance.ResetInactivityTimer();
@@ -69,6 +70,7 @@ public class PauseMenuController : MonoBehaviour
         isPaused = false;
     }
 
+    /// <summary>Pause the game (set timeScale to 0) and open the pause menu.</summary>
     public void Pause()
     {
         Timer.instance.ResetInactivityTimer();
@@ -83,6 +85,7 @@ public class PauseMenuController : MonoBehaviour
         isPaused = true;
     }
 
+    /// <summary>Exit the level to the main menu.</summary>
     public void Exit()
     {
         Timer.instance.ResetInactivityTimer();
@@ -91,16 +94,17 @@ public class PauseMenuController : MonoBehaviour
         MainMenu.instance.gameObject.SetActive(true);
         isPaused = false;
         Time.timeScale = 1f;
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("After");
     }
 
+    /// <summary>Exit the level and open the level select menu.</summary>
     public void OpenLevelSelect()
     {
         Exit();
         MainMenu.instance.OpenLevelSelect();
     }
 
-    // Call this from the Options button
+    // Call this from the Options button. TODO: make an options button?
     public void OpenOptions()
     {
         Timer.instance.ResetInactivityTimer();
@@ -108,6 +112,9 @@ public class PauseMenuController : MonoBehaviour
         Debug.Log("Options menu requested");
     }
 
+    /// <summary>
+    /// Records an event to Unity analytics that a level was quit.
+    /// </summary>
     private void RecordLevelQuitEvent()
     {
         string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -145,6 +152,6 @@ public class PauseMenuController : MonoBehaviour
             levelQuitEvent.portal2_x = portalPos.x;
             levelQuitEvent.portal2_y = portalPos.y;
         }
-        AnalyticsService.Instance.RecordEvent(levelQuitEvent);
+        OnlineServices.RecordEvent(levelQuitEvent);
     }
 }

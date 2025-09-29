@@ -1,3 +1,7 @@
+/// <summary>
+/// A game level, identified by world and level numbers. Also tracks best time
+/// and whether it's been beaten.
+/// </summary>
 [System.Serializable]
 public class Level
 {

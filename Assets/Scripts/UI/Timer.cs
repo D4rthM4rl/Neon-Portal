@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.Analytics;
 using TMPro;
 
 public class Timer : MonoBehaviour
@@ -45,18 +44,19 @@ public class Timer : MonoBehaviour
         }
     }
 
+    /// <summary>Reset the inactivity timer because the user did something.</summary>
     public void ResetInactivityTimer()
     {
         inactivityTimer = 0;
         recordedInactivityEvent = false;
     }
 
+    /// <summary>
+    /// Update the text of the timer to show the current time in the level.
+    /// </summary>
     public void UpdateTimer()
     {
-        if (gameObject.activeSelf == false)
-        {
-            return;
-        }
+        if (gameObject.activeSelf == false) return;
 		levelTimer += Time.deltaTime;
         int minutes = (int)levelTimer / 60;
         int seconds = (int)levelTimer % 60;
@@ -70,6 +70,9 @@ public class Timer : MonoBehaviour
         }
 	}
 
+    /// <summary>
+    /// Record an event for inactivity because the user hasn't done anything in a while.
+    /// </summary>
     private void RecordInactivityEvent()
     {
         inactive inactiveEvent;
@@ -126,7 +129,7 @@ public class Timer : MonoBehaviour
                 inactiveEvent.portal2_x = portalPos.x;
                 inactiveEvent.portal2_y = portalPos.y;
             }
-            AnalyticsService.Instance.RecordEvent(inactiveEvent);
+            OnlineServices.RecordEvent(inactiveEvent);
         }
         
     }

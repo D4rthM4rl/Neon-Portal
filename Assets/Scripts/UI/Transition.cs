@@ -72,11 +72,16 @@ public class Transition : MonoBehaviour
             bestTimeText.color = Color.black;
         }
 
-        if (Settings.instance.online)
+        if (OnlineServices.online)
         {
+            leaderboardButton.gameObject.SetActive(true);
             leaderboardButton.onClick.RemoveAllListeners();
             Level l = LevelSelect.instance.GetLevelByName($"W{world}L{level}");
             leaderboardButton.onClick.AddListener(() => Leaderboard.instance.ShowTransitionLeaderboard(l));
+        }
+        else
+        {
+            leaderboardButton.gameObject.SetActive(false);
         }
 
 
@@ -106,6 +111,7 @@ public class Transition : MonoBehaviour
         StartCoroutine(FadeAllObjectsAsync(0, true)); // Unload all sprites
 
         StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
+        Timer.instance.timerText.enabled = true;
         StartCoroutine(FadeAllObjectsAsync(0.2f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }
@@ -238,7 +244,6 @@ public class Transition : MonoBehaviour
     {
         Debug.Assert(nextLevel != null, "Next level is null. Cannot load next level.");
         inBetweenMenu.SetActive(false);
-        Timer.instance.timerText.enabled = true;
         StartCoroutine(LoadLevelCoroutine(nextLevel));
     }
 
@@ -249,7 +254,6 @@ public class Transition : MonoBehaviour
     {
         inBetweenMenu.SetActive(false);
         Timer.instance.ResetInactivityTimer();
-        Timer.instance.timerText.enabled = true;
         StartCoroutine(LoadLevelCoroutine(prevLevel));
     }
 
@@ -265,7 +269,9 @@ public class Transition : MonoBehaviour
         inBetweenMenu.SetActive(false);
         Time.timeScale = 1f;
         MainMenu.instance.gameObject.SetActive(true);
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+        // Load an empty scene to clear out the level and because the home scene
+        // creates objects that we don't need to remake.
+        UnityEngine.SceneManagement.SceneManager.LoadScene("After");
         MainMenu.instance.OpenMainMenu();
         StartCoroutine(FadeAsync(1, 0, fadeDuration/2));
 

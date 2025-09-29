@@ -1,28 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.Core;
-using Unity.Services.Analytics;
-using Unity.Services.Authentication;
-using Unity.Services.CloudSave;
 using TMPro;
 
 public class MainMenu : MonoBehaviour
 {
-    public Sprite sunrise1;
-    [SerializeField]
-    private GameObject background;
-    [SerializeField]
-    private GameObject title;
-    [SerializeField]
-    private GameObject mainMenuUI;
-    [SerializeField]
-    private GameObject levelSelectUI;
-    [SerializeField]
-    private GameObject optionsUI;
-    [SerializeField]
-    private GameObject optButton;
-
+    /// <summary>The GameObject that contains the background image.</summary>
+    [SerializeField] private GameObject background;
+    /// <summary>The GameObject that contains the title text.</summary>
+    [SerializeField] private GameObject title;
+    /// <summary>The GameObject parent for the UI for the main menu.</summary>
+    [SerializeField] private GameObject mainMenuUI;
+    /// <summary>The GameObject parent for the UI for the level select menu.</summary>
+    [SerializeField] private GameObject levelSelectUI;
+    /// <summary>The GameObject parent for the UI for the options menu.</summary>
+    [SerializeField] private GameObject optionsUI;
+    /// <summary>The GameObject that contains the opt in/out button.</summary>
+    [SerializeField] private GameObject optButton;
+    /// <summary>Singleton instance for the Main menu</summary>
     public static MainMenu instance;
 
 
@@ -42,9 +37,13 @@ public class MainMenu : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    /// <summary>
+    /// Toggles what the opt button says and does based on whether currently
+    /// opted in or out.
+    /// </summary>
     public void ToggleOpt()
     {
-        if (!Settings.instance.online)
+        if (!OnlineServices.online)
         {
             Debug.Log("Offline, can't toggle Opt status");
             return;
@@ -59,41 +58,51 @@ public class MainMenu : MonoBehaviour
             OptOut();
         }
     }
-
-    async public void OptOut()
+    
+    /// <summary>Opt out of game data collection.</summary>
+    public void OptOut()
     {
         Settings.instance.optedIn = false;
         Debug.Log("Opted out of analytics");
 
-        var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt Out" } };
-        await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
-        AnalyticsService.Instance.StopDataCollection();
-
-        optButton.GetComponentInChildren<TextMeshProUGUI>().text = "Opt In";
+        // var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt Out" } };
+        // await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
+        OnlineServices.ChangeDataCollection(false);
+        string optLabel;
+        if (OnlineServices.online) optLabel = "Opt In";
+        else optLabel = "Opted in (Offline)";
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = optLabel;
     }
 
-    async public void OptIn()
+    /// <summary>Opt into game data collection.</summary>
+    public void OptIn()
     {
         Settings.instance.optedIn = true;
         Debug.Log("Opted in to analytics");
 
-        var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt In" } };
-        await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
-        AnalyticsService.Instance.StartDataCollection();
-
-        optButton.GetComponentInChildren<TextMeshProUGUI>().text = "Opt Out";
+        // var choice = new Dictionary<string, object>{ { "AnalyticsOptChoice", "Opt In" } };
+        // await CloudSaveService.Instance.Data.Player.SaveAsync(choice);
+        OnlineServices.ChangeDataCollection(true);
+        string optLabel;
+        if (OnlineServices.online) optLabel = "Opt Out";
+        else optLabel = "Opted out (Offline)";
+        optButton.GetComponentInChildren<TextMeshProUGUI>().text = optLabel;
     }
 
+    /// <summary>
+    /// Request your data be deleted.
+    /// </summary>
     public void RequestDataDelection()
     {
-        if (!Settings.instance.online)
+        if (!OnlineServices.online)
         {
             Debug.Log("Offline, can't request data deletion");
             return;
         }
-        AnalyticsService.Instance.RequestDataDeletion();
+        OnlineServices.RequestDataDeletion();
     }
 
+    /// <summary>Start the unbeaten level or open level select if nothing unbeaten.</summary>
     public void Play()
     {
         Timer.instance.ResetInactivityTimer();
@@ -133,6 +142,7 @@ public class MainMenu : MonoBehaviour
         LevelSelect.instance.levelsToReload.Clear();
     }
 
+    /// <summary>Open the Options menu.</summary>
     public void OpenOptions()
     {
         Timer.instance.ResetInactivityTimer();
@@ -143,6 +153,7 @@ public class MainMenu : MonoBehaviour
         Settings.instance.MakeSettingsUIMatchSaved();
     }
     
+    /// <summary>Tries to quit/close the game.</summary>
     public void Quit()
     {
         Application.Quit();

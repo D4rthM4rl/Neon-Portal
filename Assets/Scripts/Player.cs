@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Services.Analytics;
 
 public class Player : Teleportable
 {
@@ -516,7 +515,7 @@ public class Player : Teleportable
     /// <summary>Sends a level_start event to Unity Analytics</summary>
     public void RecordLevelStartEvent()
     {
-        if (Settings.instance == null || Timer.instance == null || !Settings.instance.online) return;
+        if (Settings.instance == null || Timer.instance == null || !OnlineServices.online) return;
 
         level_start resetEvent = new level_start
         {
@@ -525,13 +524,13 @@ public class Player : Teleportable
             session_time = Mathf.RoundToInt(Timer.instance.sessionTimer),
             movement_type = (int)Settings.instance.movement,
         };
-        AnalyticsService.Instance.RecordEvent(resetEvent);
+        OnlineServices.RecordEvent(resetEvent);
     }
 
     /// <summary>Sends a player_death event to Unity Analytics</summary>
     public void RecordDeathEvent()
     {
-        if (Timer.instance == null || Settings.instance == null || !Settings.instance.online) return;
+        if (Timer.instance == null || Settings.instance == null || !OnlineServices.online) return;
 
         player_death deathEvent = new player_death
         {
@@ -556,13 +555,13 @@ public class Player : Teleportable
             deathEvent.portal2_y = portalPos.y;
         }
 
-        AnalyticsService.Instance.RecordEvent(deathEvent);
+        OnlineServices.RecordEvent(deathEvent);
     }
 
     /// <summary>Sends a player_reset event to Unity Analytics</summary>
     public void RecordResetEvent()
     {
-        if (Settings.instance.online == false) return;
+        if (OnlineServices.online == false) return;
         
         player_reset resetEvent = new player_reset
         {
@@ -586,7 +585,7 @@ public class Player : Teleportable
             resetEvent.portal2_x = portalPos.x;
             resetEvent.portal2_y = portalPos.y;
         }
-        AnalyticsService.Instance.RecordEvent(resetEvent);
+        OnlineServices.RecordEvent(resetEvent);
     }
     #endregion
 }
