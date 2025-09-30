@@ -19,8 +19,7 @@ public class GravityAffected : MonoBehaviour
     public Vector2 gravityDirection = Vector2.down;
     public Vector2 defaultGravityDirection = Vector2.down;
 
-    // Start is called before the first frame update
-    void Awake()
+    protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
@@ -61,8 +60,8 @@ public class GravityAffected : MonoBehaviour
         // TryStepUp(vSideways); // TODO: Reimplement and uncomment
     }
 
-    protected virtual void Update() {
-
+    protected virtual void Update() 
+    {
         if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 5 && autoRespawning)
         {
             Reset();

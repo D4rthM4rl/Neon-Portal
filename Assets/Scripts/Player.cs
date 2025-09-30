@@ -1,105 +1,77 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class Player : Teleportable
 {
-    [HideInInspector]
-    public PortalGun portalGun;
+    [HideInInspector] public PortalGun portalGun;
 
-    [HideInInspector]
-    private GameObject cam;
+    [HideInInspector] private GameObject cam;
 
-    [SerializeField]
-    private GameObject ground;
+    [SerializeField] private GameObject ground;
 
-    [SerializeField]
-    private Gradient speedGradient;
-    [SerializeField]
-    private SpriteRenderer topSprite;
-    [SerializeField]
-    private Color topChangeColor = Color.white;
-    [SerializeField]
-    private SpriteRenderer rightSprite;
-    [SerializeField]
-    private Color rightChangeColor = Color.white;
-    [SerializeField]
-    private SpriteRenderer leftSprite;
-    [SerializeField]
-    private Color leftChangeColor = Color.white;
-    [SerializeField]
-    private SpriteRenderer bottomSprite;
-    [SerializeField]
-    private Color bottomChangeColor = Color.white;
+    [SerializeField] private Gradient speedGradient;
+    private Light2D speedLight;
+    [SerializeField] private SpriteRenderer topSprite;
+    [SerializeField] private Color topChangeColor = Color.white;
+    [SerializeField] private SpriteRenderer rightSprite;
+    [SerializeField] private Color rightChangeColor = Color.white;
+    [SerializeField] private SpriteRenderer leftSprite;
+    [SerializeField] private Color leftChangeColor = Color.white;
+    [SerializeField] private SpriteRenderer bottomSprite;
+    [SerializeField] private Color bottomChangeColor = Color.white;
 
-    [HideInInspector]
-    private Color rightCurrentColor;
-    [HideInInspector]
-    private Color leftCurrentColor;
-    [HideInInspector]
-    private Color topCurrentColor;
-    [HideInInspector]
-    private Color bottomCurrentColor;
+    [HideInInspector] private Color rightCurrentColor;
+    [HideInInspector] private Color leftCurrentColor;
+    [HideInInspector] private Color topCurrentColor;
+    [HideInInspector] private Color bottomCurrentColor;
 
-    [HideInInspector]
-    private Collider2D col;
-    [SerializeField]
-    private float rayLength = 0.1f;
+    [HideInInspector] private Collider2D col;
+    /// <summary>How long to check for ground beneath me.</summary>
+    [SerializeField] private float rayLength = 0.1f;
     public bool isGrounded = true;
-    [HideInInspector]
-    public int cantReenterIndex = -1;
+    /// <summary>Index of the portal which I can't reenter because I just came out.</summary>
+    [HideInInspector] public int cantReenterIndex = -1;
 
     #region Movement Fields
+    /// <summary>How much force is given on initial button down.</summary>
     [Header("Movement Settings")]
-    [SerializeField]
-    private float initialJumpForce = 4f; // impulse on button down
-    [SerializeField]
-    private float extraJumpForce = 7f; // continuous “hold” force
-    [SerializeField]
-    private float jumpFalloffRate = 0.5f;
-    [SerializeField]
-    private float maxJumpDuration = 0.3f; // how long you can hold
+    [SerializeField] private float initialJumpForce = 4f;
+    /// <summary>How much force is added while continuously holding jump.</summary>
+    [SerializeField] private float extraJumpForce = 7f;
+    /// <summary>How much less force is added per.</summary>
+    [SerializeField] private float jumpFalloffRate = 0.5f;
+    /// <summary>How long can jump be held for maximum height.</summary>
+    [SerializeField] private float maxJumpDuration = 0.3f;
 
     private bool isJumping; // are we in the “hold” phase?
     private float jumpTimeCounter; // how much “hold time” left
     private int jumpBoostsGiven = 0;
     private bool jumpQueued = false;
 
-    [SerializeField]
-    private float maxAccel = 20f; // your horizontal speed
-    [SerializeField]
-    private float minAccel = 1f;
-    [SerializeField]
-    private float accelRate = 5f;
-    [SerializeField]
-    private float accelFalloffRate = 5f;
+    [SerializeField] private float maxAccel = 20f; // your horizontal speed
+    [SerializeField] private float minAccel = 1f;
+    [SerializeField] private float accelRate = 5f;
+    [SerializeField] private float accelFalloffRate = 5f;
     private float currLeftAccel = 0f;
     private float currRightAccel = 0f;
     #endregion
 
+    /// <summary>How long I've been holding R to reset.</summary>
     private float timeHoldingR = 0;
-    [SerializeField]
-    private Gradient resetGradient;
+    /// <summary>The gradient that it goes through when resetting.</summary>
+    [SerializeField] private Gradient resetGradient;
 
     public int numResets = 0;
     public int numDeaths = 0;
 
+    /// <summary>Current Level I'm on.</summary>
     private Level level;
 
-    protected override void Start()
+    protected override void Awake()
     {
-        // if (instance == null)
-        // {
-        //     instance = this;
-        //     DontDestroyOnLoad(gameObject);
-        // }
-        // else
-        // {
-        //     instance.GetComponent<PortalGun>().portals = GetComponent<PortalGun>().portals;
-        //     instance.GetComponent<PortalGun>().ResetPortals();
-        //     Destroy(gameObject);
-        // }
-        base.Start();
+        base.Awake();
         col = GetComponent<Collider2D>();
         Time.timeScale = 0f;
         currLeftAccel = minAccel;
@@ -107,11 +79,21 @@ public class Player : Teleportable
         cam = GameObject.FindGameObjectWithTag("MainCamera");
         cam.transform.position = transform.position;
 
+        speedLight = GetComponent<Light2D>();
         rightCurrentColor = rightSprite.color;
         leftCurrentColor = leftSprite.color;
         topCurrentColor = topSprite.color;
         bottomCurrentColor = bottomSprite.color;
 
+        portalGun = GetComponent<PortalGun>();
+        if (portalGun == null)
+        {
+            Debug.LogError("Player does not have a PortalGun component.");
+        }
+    }
+
+    protected void Start()
+    {
         string levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         if (LevelSelect.instance != null)
         {
@@ -126,11 +108,6 @@ public class Player : Teleportable
             Timer.instance.lastLevelPlayed = level;
         }
         else Debug.LogWarning("Timer isn't enabled");
-        portalGun = GetComponent<PortalGun>();
-        if (portalGun == null)
-        {
-            Debug.LogError("Player does not have a PortalGun component.");
-        }
 
         RecordLevelStartEvent();
     }
@@ -215,11 +192,15 @@ public class Player : Teleportable
     {
         if (timeHoldingR > 0)
         {
-            Color c = resetGradient.Evaluate(timeHoldingR / .75f);
+            float percentReset = timeHoldingR / .75f;
+            Color c = resetGradient.Evaluate(percentReset);
             rightSprite.color = c;
             leftSprite.color = c;
             bottomSprite.color = c;
             topSprite.color = c;
+            speedLight.color = Color.red;
+            speedLight.intensity = percentReset * 10;
+            speedLight.pointLightOuterRadius = percentReset * 10f * percentReset;
             return;
         }
         Vector2 velocity = rb.velocity; // You can tweak or dynamically compute this if needed
@@ -227,19 +208,19 @@ public class Player : Teleportable
         float lerpSpeed = Time.deltaTime * 2f; // speed of color smoothing
 
         // RIGHT
-        float rightSpeed = Mathf.Clamp01(velocity.x / terminalVelocity);
+        float rightSpeed = Mathf.Clamp01(velocity.x / (terminalVelocity * .75f));
         Color rightTarget = speedGradient.Evaluate(rightSpeed);
         rightCurrentColor = Color.Lerp(rightCurrentColor, rightTarget, lerpSpeed);
         rightSprite.color = rightCurrentColor;
 
         // LEFT
-        float leftSpeed = Mathf.Clamp01(-velocity.x / terminalVelocity);
+        float leftSpeed = Mathf.Clamp01(-velocity.x / (terminalVelocity * .75f));
         Color leftTarget = speedGradient.Evaluate(leftSpeed);
         leftCurrentColor = Color.Lerp(leftCurrentColor, leftTarget, lerpSpeed);
         leftSprite.color = leftCurrentColor;
 
         // TOP
-        float upSpeed = Mathf.Clamp01(velocity.y / terminalVelocity);
+        float upSpeed = Mathf.Clamp01(velocity.y / (terminalVelocity / 2));
         Color topTarget = speedGradient.Evaluate(upSpeed);
         topCurrentColor = Color.Lerp(topCurrentColor, topTarget, lerpSpeed);
         topSprite.color = topCurrentColor;
@@ -249,9 +230,16 @@ public class Player : Teleportable
         Color bottomTarget = speedGradient.Evaluate(downSpeed);
         bottomCurrentColor = Color.Lerp(bottomCurrentColor, bottomTarget, lerpSpeed);
         bottomSprite.color = bottomCurrentColor;
+
+        // LIGHT
+        Color speedColorTarget = speedGradient.Evaluate(Mathf.Clamp01(velocity.magnitude / (terminalVelocity * .8f)));
+        speedLight.color = Color.Lerp(speedLight.color, speedColorTarget, lerpSpeed);
+        float percentTerminal = (velocity.magnitude / terminalVelocity);
+        speedLight.intensity = percentTerminal + 1f;
+        speedLight.pointLightOuterRadius = 1.2f + percentTerminal;
     }
 
-
+    /// <summary>Rotates the player to align with the current gravity direction.</summary>
     public void RotateWithGravity()
     {
         Vector2 gravDir = gravityDirection.normalized;
@@ -265,6 +253,7 @@ public class Player : Teleportable
         );
     }
 
+    /// <summary>Resets the entire level except for the player.</summary>
     public void ResetWorld()
     {
         // Reset the world state
@@ -290,7 +279,7 @@ public class Player : Teleportable
         }
     }
 
-    /// <summary>Sends player back to start</summary>
+    /// <summary>Sends player back to start.</summary>
     public void ResetPlayer()
     {
         Time.timeScale = 0f;
@@ -306,7 +295,7 @@ public class Player : Teleportable
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
     }
 
-    /// <summary>Resets the portals in the scene</summary>
+    /// <summary>Resets the portals in the scene.</summary>
     public void ResetPortals()
     {
         portalGun.ResetPortals();

@@ -6,9 +6,10 @@ public class Teleportable : GravityAffected
 {
     public Vector2[] previousVelocities = new Vector2[3];
 
-    protected virtual void Start()
+    protected override void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        base.Awake();
     }
 
     // Update is called once per frame
