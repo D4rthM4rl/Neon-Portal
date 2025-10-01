@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class MainMenu : MonoBehaviour
@@ -11,6 +12,10 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private GameObject title;
     /// <summary>The GameObject parent for the UI for the main menu.</summary>
     [SerializeField] private GameObject mainMenuUI;
+    /// <summary>The GameObject for Play/every level completed button.</summary>
+    [SerializeField] private Button playButton;
+    /// <summary>The GameObject for Play/every level completed button.</summary>
+    [SerializeField] private TextMeshProUGUI playButtonText;
     /// <summary>The GameObject parent for the UI for the level select menu.</summary>
     [SerializeField] private GameObject levelSelectUI;
     /// <summary>The GameObject parent for the UI for the options menu.</summary>
@@ -34,6 +39,7 @@ public class MainMenu : MonoBehaviour
             return;
         }
 
+        StartCoroutine(SetPlayButton());
         DontDestroyOnLoad(gameObject);
     }
 
@@ -121,9 +127,28 @@ public class MainMenu : MonoBehaviour
     {
         Timer.instance.ResetInactivityTimer();
         mainMenuUI.SetActive(true);
+        StartCoroutine(SetPlayButton());
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(false);
-        title.SetActive(true);
+    }
+
+    public IEnumerator SetPlayButton()
+    {
+        while (!LevelSelect.instance || LevelSelect.instance.loading) yield return null;
+        Level nextLevel = LevelSelect.instance.GetNextUnbeatenLevel();
+
+        if (nextLevel != null)
+        {
+            playButton.interactable = true;
+            playButtonText.text = "Play";   
+            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(700, 250);
+        }
+        else
+        {
+            playButton.interactable = false;
+            playButtonText.text = "All Levels Completed";
+            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(1850, 250);
+        }
     }
 
     public void OpenLevelSelect()
@@ -132,7 +157,6 @@ public class MainMenu : MonoBehaviour
         mainMenuUI.SetActive(false);
         levelSelectUI.SetActive(true);
         optionsUI.SetActive(false);
-        title.SetActive(false);
         // LevelSelect.instance.titleOrLoadingText.text = "Loading Level Times...";
         foreach (Level level in LevelSelect.instance.levelsToReload)
         {
@@ -149,7 +173,6 @@ public class MainMenu : MonoBehaviour
         mainMenuUI.SetActive(false);
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(true);
-        title.SetActive(false);
         Settings.instance.MakeSettingsUIMatchSaved();
     }
     
