@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using TMPro;
 
 [RequireComponent(typeof(Light2D))]
 public class LightOscillator : MonoBehaviour
@@ -18,7 +19,8 @@ public class LightOscillator : MonoBehaviour
 
     private void Awake()
     {
-        light2D = GetComponent<Light2D>();
+        if (!TryGetComponent<TextMeshProUGUI>(out TextMeshProUGUI text)) light2D = GetComponent<Light2D>();
+        // text.material.
         baseTime = Random.Range(0f, Mathf.PI * 2f); // randomize start phase
     }
 

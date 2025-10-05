@@ -1116,6 +1116,7 @@ MonoBehaviour:
   speed: 5
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &441676955
 Transform:
   m_ObjectHideFlags: 0
@@ -3320,6 +3321,7 @@ MonoBehaviour:
   speed: 5
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1240169740
 Transform:
   m_ObjectHideFlags: 0
@@ -5227,11 +5229,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.5071297
+      value: 4.7665863
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8
+      value: 7.9737096
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -5313,6 +5315,7 @@ MonoBehaviour:
   speed: 5
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!4 &1833099388
 Transform:
   m_ObjectHideFlags: 0
@@ -6356,6 +6359,7 @@ MonoBehaviour:
   speed: 5
   waitAtEachPosition: 1
   loopType: 2
+  waitForProximity: 0
 --- !u!1001 &2128667750
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6533,9 +6537,9 @@ PolygonCollider2D:
       - {x: -7.2693853, y: 79.674416}
       - {x: -9.113657, y: 39.29901}
       - {x: -14.612741, y: 28.496445}
-      - {x: -16.5, y: 20}
-      - {x: -16.5, y: -2}
-      - {x: 15.522444, y: -2.0017905}
+      - {x: -17.454426, y: 20.159071}
+      - {x: -18.727, y: -2.2386074}
+      - {x: 17.113157, y: -2.0017905}
       - {x: 17.387392, y: 11.588849}
   m_UseDelaunayMesh: 0
 --- !u!4 &883514833681675074

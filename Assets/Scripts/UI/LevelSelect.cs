@@ -12,19 +12,35 @@ public class LevelSelect : MonoBehaviour
     public static LevelSelect instance;
     /// <summary>The level select menu GameObject which contains all the level buttons.</summary>
     public GameObject levelSelectMenu;
+    /// <summary>The parent GameObject that contains all the level buttons.</summary>
+    [SerializeField] private GameObject levelButtonsParent;
+    /// <summary>Prefab for 1 star decoration on a level button</summary>
+    [SerializeField] private GameObject star1Decoration;
+    /// <summary>Prefab for 2 star decoration on a level button</summary>
+    [SerializeField] private GameObject star2Decoration;
+    /// <summary>Prefab for 3 star decoration on a level button</summary>
+    [SerializeField] private GameObject star3Decoration;
+    /// <summary>The menu that appears when a level is selected, showing the leaderboard and play button.</summary>
+    [SerializeField] private GameObject levelSelectedMenu;
     /// <summary>Which levels to reload the times for when returning to level select menu.</summary>
     public List<Level> levelsToReload = new List<Level>();
-    /// <summary>Text element to show "Level Select" or loading.</summary>
-    public TextMeshProUGUI titleOrLoadingText;
-    /// <summary>The button gameObject to show the leaderboard</summary>
-    [SerializeField] private GameObject leaderboardEnableButton;
-    /// <summary>Colorset for the unbeaten tier.</summary>
-    public LeaderboardTierColorset unbeatenColorset;
-    public LeaderboardTierColorset whiteTierColorset;
-    public LeaderboardTierColorset bronzeTierColorset;
-    public LeaderboardTierColorset silverTierColorset;
-    public LeaderboardTierColorset goldTierColorset;
-    public LeaderboardTierColorset purpleTierColorset;
+    /// <summary>Text element to show "Level Select" or current Level selected.</summary>
+    public TextMeshProUGUI titleText;
+    /// <summary>Button to start playing selected level.</summary>
+    [SerializeField] private Button playButton;
+    [SerializeField] private Button myRanksButton;
+    [SerializeField] private Button starsButton;
+    [SerializeField] private Button top20Button;
+
+    [SerializeField] private TextMeshProUGUI totalDeaths;
+    [SerializeField] private TextMeshProUGUI totalResets;
+    [SerializeField] private TextMeshProUGUI totalTime;
+    /// <summary>Color for the outline of an unbeaten level.</summary>
+    public Color unbeatenColor;
+    public Color grayTierColor;
+    public Color purpleTierColor;
+    public Color blueTierColor;
+    public Color greenTierColor;
     
     /// <summary>All levels in the game, indexed by [world-1, level-1].</summary>
     public Level[,] levels = {
@@ -56,7 +72,7 @@ public class LevelSelect : MonoBehaviour
     /// <summary>Whether the level select is still loading data.</summary>
     public bool loading = false;
     /// <summary>Mapping of levels to their corresponding buttons for easy access.</summary>
-    public Dictionary<Level, Button> levelButtons = new Dictionary<Level, Button>();
+    public Dictionary<Level, LevelButton> levelButtons = new Dictionary<Level, LevelButton>();
 
     private void Awake()
     {
@@ -72,33 +88,42 @@ public class LevelSelect : MonoBehaviour
         }
     }
 
-    private void Start() {
-        
-        // titleOrLoadingText.text = "Level Select";
-
+    private void Start() 
+    {
         StartCoroutine(LoadLevelsCoroutine());
     }
 
-    /// <summary>Enables the buttons in the level select menu.</summary>
-    public void ShowButtons()
+    /// <summary>Displays the level screen with leaderboard and play button for a selected level</summary>
+    private void SelectLevel(Level level)
     {
-        foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
-        {
-            button.enabled = true;
-            button.GetComponent<Image>().enabled = true;
-            button.GetComponentInChildren<TextMeshProUGUI>().enabled = true;
-        }
+        titleText.text = "World " + level.world + " Level " + level.level;
+        totalDeaths.text = "Deaths: " + level.totalDeaths;
+        totalResets.text = "Resets: " + level.totalResets;
+        float time = level.totalTime;
+        if (time % 60 < 10) // For stuff like 1:05 instead of 1:5
+            totalTime.text = $"Time Played: \n" + (int)time / 60 + ":0" + (time % 60).ToString("F2");
+        else 
+            totalTime.text = $"Time Played: \n" + (int)time / 60 + ":" + (time % 60).ToString("F2");
+        levelSelectedMenu.SetActive(true);
+        levelButtonsParent.SetActive(false);
+        playButton.onClick.RemoveAllListeners();
+        playButton.onClick.AddListener(() => StartCoroutine(LoadLevel(level)));
+        myRanksButton.onClick.RemoveAllListeners();
+        myRanksButton.onClick.AddListener(() => Leaderboard.instance.ShowLevelSelectMyRanks(level));
+        starsButton.onClick.RemoveAllListeners();
+        starsButton.onClick.AddListener(() => Leaderboard.instance.ShowLevelSelectStars(level, level.bestTime));
+        top20Button.onClick.RemoveAllListeners();
+        top20Button.onClick.AddListener(() => Leaderboard.instance.ShowLevelSelectTop20(level));
+
+        Leaderboard.instance.ShowLevelSelectStars(level, level.bestTime);
     }
 
-    /// <summary>Disables/hides the buttons in the level select menu.</summary>
-    public void HideButtons()
+    /// <summary>Takes us off the level selected menu for the current selected level.</summary>
+    public void UnselectLevel()
     {
-        foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
-        {
-            button.enabled = false;
-            button.GetComponent<Image>().enabled = false;
-            button.GetComponentInChildren<TextMeshProUGUI>().enabled = false;
-        }
+        titleText.text = "Level SelecT";
+        levelSelectedMenu.SetActive(false);
+        levelButtonsParent.SetActive(true);
     }
 
     /// <summary>Coroutine to load levels after settings have been loaded.</summary>
@@ -109,7 +134,6 @@ public class LevelSelect : MonoBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         LoadLevels();
-        // titleOrLoadingText.text = "Level Select";
     }
 
     /// <summary>Loads all levels' data and updates their buttons accordingly.</summary>
@@ -117,33 +141,31 @@ public class LevelSelect : MonoBehaviour
     {
         loading = true;
 
-        foreach (Button levelButton in levelSelectMenu.GetComponentsInChildren<Button>())
+        foreach (Button button in levelSelectMenu.GetComponentsInChildren<Button>())
         {
-            float trophyVertOffset = 1;
-            float trophyHorzOffset = 1;
-            if (levelButton.gameObject == null || !levelButton.name.Contains("Level"))
+            if (button.gameObject == null || !button.name.Contains("Level"))
                 continue;
 
-            int world = int.Parse(levelButton.transform.parent.name.Substring(6, 1));
-            int levelNum = int.Parse(levelButton.name.Substring(6, 1));
+            int world = int.Parse(button.transform.parent.name.Substring(6, 1));
+            int levelNum = int.Parse(button.name.Substring(6, 1));
+
+            if (!button.TryGetComponent<Outline>(out Outline outline)) outline = button.gameObject.AddComponent<Outline>();
 
             Level level = levels[world - 1, levelNum - 1];
-            levelButtons.Add(level, levelButton);
-
-            Button trophyButton = Instantiate(leaderboardEnableButton,
-                levelButton.transform.position + new Vector3(67 * trophyHorzOffset, 67 * trophyVertOffset, 0),
-                Quaternion.identity, levelButton.transform).GetComponent<Button>();
-
-            trophyButton.transform.localScale = Vector3.one;
-            trophyButton.onClick.AddListener(() => Leaderboard.instance.ShowLevelSelectLeaderboard(level));
-            levelButton.onClick.AddListener(() => StartCoroutine(LoadLevel(level.ToString())));
+            GameObject star1 = Instantiate(star1Decoration, button.transform);
+            GameObject star2 = Instantiate(star2Decoration, button.transform);
+            GameObject star3 = Instantiate(star3Decoration, button.transform);
+            
+            LevelButton lb = new LevelButton(button, level, star1, star2, star3, outline);
+            levelButtons.Add(level, lb);
+            button.onClick.AddListener(() => LevelSelect.instance.SelectLevel(level));
         }
 
         // Load all level button data in parallel
         List<Task> loadTasks = new List<Task>();
         foreach (Level level in levels)
         {
-            loadTasks.Add(LoadLevelButton(level));
+            loadTasks.Add(LoadLevelTimes(level));
         }
 
         await Task.WhenAll(loadTasks); // Wait for all level data to load
@@ -156,36 +178,27 @@ public class LevelSelect : MonoBehaviour
         List<Task> loadTasks = new List<Task>();
         foreach (Level level in levels)
         {
-            loadTasks.Add(LoadLevelButton(level));
+            loadTasks.Add(LoadLevelTimes(level));
         }
 
         await Task.WhenAll(loadTasks); // Wait for all level data to load
     }
 
     /// <summary>Sets up a button (color and time) for a level.</summary>
-    /// <param name="level">Level of the button to set up.</param>
-    private Task LoadLevelButton(Level level)
+    /// <param name="level">Level to get the info/times of.</param>
+    private async Task LoadLevelTimes(Level level)
     {
         string levelTitle = "W" + level.world + "L" + level.level;
 
-        if (!levelButtons.TryGetValue(level, out Button levelButton))
+        if (!levelButtons.TryGetValue(level, out LevelButton levelButton))
         {
             Debug.LogError($"Level button for {levelTitle} not found.");
-            return Task.CompletedTask;
+            return;
         }
 
-        if (PlayerPrefs.HasKey(levelTitle))
-        {
-            level.bestTime = PlayerPrefs.GetFloat(levelTitle);
-            level.beaten = true;
+        await level.GetSavedValues();
 
-            levelButton.GetComponentInChildren<TextMeshProUGUI>().text
-                = "Level " + level.level + Environment.NewLine
-                + Environment.NewLine + level.bestTime.ToString("F2") + "s";
-        }
-
-        SetButtonColors(level, levelButton);
-        return Task.CompletedTask;
+        SetButtonColors(levelButton);
     }
 
     /// <summary>Reload a time on the menu for a level because the best time has changed.</summary>
@@ -199,10 +212,7 @@ public class LevelSelect : MonoBehaviour
         Debug.Log("Adjusting level time for " + level.world + " " + level.level);
         if (levelButtons.ContainsKey(level))
         {
-            Button levelButton = levelButtons[level];
-            levelButton.GetComponentInChildren<TextMeshProUGUI>().text = "Level " + level.level + Environment.NewLine
-            + Environment.NewLine + time.ToString("F2") + "s";
-            SetButtonColors(level, levelButton);
+            SetButtonColors(levelButtons[level]);
         }
         loading = false;
     }
@@ -211,124 +221,57 @@ public class LevelSelect : MonoBehaviour
     /// Sets the colors of the button for each level in the menu based on the
     /// user's completion times compared to the best.
     /// </summary>
-    /// <param name="level">Level to look at.</param>
-    /// <param name="levelButton">The button to change the color of.</param>
-    private async void SetButtonColors(Level level, Button levelButton)
+    /// <param name="lb">The button to change the color of.</param>
+    private void SetButtonColors(LevelButton lb)
     {
-        ColorBlock buttonColorBlock = new ColorBlock();
+        // ColorBlock buttonColorBlock = new ColorBlock();
         ColorBlock trophyColorBlock = new ColorBlock();
-        buttonColorBlock.colorMultiplier = 1;
+        // buttonColorBlock.colorMultiplier = 1;
         trophyColorBlock.colorMultiplier = 1;
         Color textColor = Color.black;
-        if (!level.beaten)
-        {
-            buttonColorBlock.normalColor = unbeatenColorset.normalColor;
-            buttonColorBlock.highlightedColor = unbeatenColorset.highlightedColor;
-            buttonColorBlock.pressedColor = unbeatenColorset.pressedColor;
-            buttonColorBlock.selectedColor = unbeatenColorset.selectedColor;
-            trophyColorBlock.normalColor = unbeatenColorset.trophyNormalColor;
-            trophyColorBlock.highlightedColor = unbeatenColorset.trophyHighlightedColor;
-            trophyColorBlock.pressedColor = unbeatenColorset.trophyPressedColor;
-            trophyColorBlock.selectedColor = unbeatenColorset.trophySelectedColor;
-            textColor = unbeatenColorset.textColor;
-            // Debug.Log("Setting " + level.ToString() + " to unbeaten colors");
-        }
-        else
-        {
-            if (!OnlineServices.online)
+        Level l = lb.level;
+        Button b = lb.button;
+        // if unbeaten
+        // set outline to white
+        // else
+        // set outline to color respective to how many stars
+        // Also, call this method whenever levelSelect is opened
+            switch (StarTiers.GetStarTier(l, l.bestTime))
             {
-                buttonColorBlock.normalColor = whiteTierColorset.normalColor;
-                buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
-                buttonColorBlock.pressedColor = whiteTierColorset.pressedColor;
-                buttonColorBlock.selectedColor = whiteTierColorset.selectedColor;
-                trophyColorBlock.normalColor = whiteTierColorset.trophyNormalColor;
-                trophyColorBlock.highlightedColor = whiteTierColorset.trophyHighlightedColor;
-                trophyColorBlock.pressedColor = whiteTierColorset.trophyPressedColor;
-                trophyColorBlock.selectedColor = whiteTierColorset.trophySelectedColor;
-                textColor = whiteTierColorset.textColor;
-                return;
-            }
-            else
-            {
-                while (Leaderboard.instance == null)
-                {
-                    await Task.Delay(1); // Wait for Leaderboard to initialize
-                }
-                LeaderboardEntry worldRecord = await Leaderboard.instance.GetWorldRecord(level);
-                if (!Settings.instance.participateInLeaderboard 
-                    || level.bestTime - 10 > worldRecord.Time
-                    || !OnlineServices.online)
-                {
-                    buttonColorBlock.normalColor = whiteTierColorset.normalColor;
-                    buttonColorBlock.highlightedColor = whiteTierColorset.highlightedColor;
-                    buttonColorBlock.pressedColor = whiteTierColorset.pressedColor;
-                    buttonColorBlock.selectedColor = whiteTierColorset.selectedColor;
-                    trophyColorBlock.normalColor = whiteTierColorset.trophyNormalColor;
-                    trophyColorBlock.highlightedColor = whiteTierColorset.trophyHighlightedColor;
-                    trophyColorBlock.pressedColor = whiteTierColorset.trophyPressedColor;
-                    trophyColorBlock.selectedColor = whiteTierColorset.trophySelectedColor;
-                    textColor = whiteTierColorset.textColor;
-                    // Debug.Log("Setting " + level.ToString() + " to white colors");
-                }
-                else if (level.bestTime - 3 > worldRecord.Time)
-                {
-                    buttonColorBlock.normalColor = bronzeTierColorset.normalColor;
-                    buttonColorBlock.highlightedColor = bronzeTierColorset.highlightedColor;
-                    buttonColorBlock.pressedColor = bronzeTierColorset.pressedColor;
-                    buttonColorBlock.selectedColor = bronzeTierColorset.selectedColor;
-                    trophyColorBlock.normalColor = bronzeTierColorset.trophyNormalColor;
-                    trophyColorBlock.highlightedColor = bronzeTierColorset.trophyHighlightedColor;
-                    trophyColorBlock.pressedColor = bronzeTierColorset.trophyPressedColor;
-                    trophyColorBlock.selectedColor = bronzeTierColorset.trophySelectedColor;
-                    textColor = bronzeTierColorset.textColor;
-                    // Debug.Log("Setting " + level.ToString() + " to bronze colors");
-                }
-                else if (level.bestTime - 1 > worldRecord.Time)
-                {
-                    buttonColorBlock.normalColor = silverTierColorset.normalColor;
-                    buttonColorBlock.highlightedColor = silverTierColorset.highlightedColor;
-                    buttonColorBlock.pressedColor = silverTierColorset.pressedColor;
-                    buttonColorBlock.selectedColor = silverTierColorset.selectedColor;
-                    trophyColorBlock.normalColor = silverTierColorset.trophyNormalColor;
-                    trophyColorBlock.highlightedColor = silverTierColorset.trophyHighlightedColor;
-                    trophyColorBlock.pressedColor = silverTierColorset.trophyPressedColor;
-                    trophyColorBlock.selectedColor = silverTierColorset.trophySelectedColor;
-                    textColor = silverTierColorset.textColor;
-                    // Debug.Log("Setting " + level.ToString() + " to silver colors");
-                }
-                else if (level.bestTime > worldRecord.Time)
-                {
-                    buttonColorBlock.normalColor = goldTierColorset.normalColor;
-                    buttonColorBlock.highlightedColor = goldTierColorset.highlightedColor;
-                    buttonColorBlock.pressedColor = goldTierColorset.pressedColor;
-                    buttonColorBlock.selectedColor = goldTierColorset.selectedColor;
-                    trophyColorBlock.normalColor = goldTierColorset.trophyNormalColor;
-                    trophyColorBlock.highlightedColor = goldTierColorset.trophyHighlightedColor;
-                    trophyColorBlock.pressedColor = goldTierColorset.trophyPressedColor;
-                    trophyColorBlock.selectedColor = goldTierColorset.trophySelectedColor;
-                    textColor = goldTierColorset.textColor;
-                    // Debug.Log("Setting " + level.ToString() + " to gold colors");
-                }
-                else // if (level.bestTime - 0 <= worldRecord.Time)
-                {
-                    buttonColorBlock.normalColor = purpleTierColorset.normalColor;
-                    buttonColorBlock.highlightedColor = purpleTierColorset.highlightedColor;
-                    buttonColorBlock.pressedColor = purpleTierColorset.pressedColor;
-                    buttonColorBlock.selectedColor = purpleTierColorset.selectedColor;
-                    trophyColorBlock.normalColor = purpleTierColorset.trophyNormalColor;
-                    trophyColorBlock.highlightedColor = purpleTierColorset.trophyHighlightedColor;
-                    trophyColorBlock.pressedColor = purpleTierColorset.trophyPressedColor;
-                    trophyColorBlock.selectedColor = purpleTierColorset.trophySelectedColor;
-                    textColor = purpleTierColorset.textColor;
-                    // Debug.Log("Setting " + level.ToString() + " to purple colors");
-                }
-            }
+                case -1:
+                    lb.outline.effectColor = unbeatenColor;
+                    lb.star1.SetActive(false);
+                    lb.star2.SetActive(false);
+                    lb.star3.SetActive(false);
+                    break;
+                case 0:
+                    lb.outline.effectColor = grayTierColor;
+                    lb.star1.SetActive(false);
+                    lb.star2.SetActive(false);
+                    lb.star3.SetActive(false);
+                    break;
+                case 1:
+                    lb.outline.effectColor = purpleTierColor;
+                    lb.star1.SetActive(true);
+                    lb.star2.SetActive(false);
+                    lb.star3.SetActive(false);
+                    break;
+                case 2:
+                    lb.outline.effectColor = blueTierColor;
+                    lb.star1.SetActive(false);
+                    lb.star2.SetActive(true);
+                    lb.star3.SetActive(false);
+                    break;
+                case 3:
+                    lb.outline.effectColor = greenTierColor;
+                    lb.star1.SetActive(false);
+                    lb.star2.SetActive(false);
+                    lb.star3.SetActive(true);
+                    break;
+                default:
+                    lb.outline.effectColor = Color.black;
+                    break;
         }
-        levelButton.colors = buttonColorBlock;
-        levelButton.GetComponentInChildren<TextMeshProUGUI>().color = textColor;
-        Button trophyButton = levelButton.GetComponentsInChildren<Button>()[1];
-        trophyButton.colors = trophyColorBlock;
-
     }
 
     /// <summary>
@@ -406,5 +349,28 @@ public class LevelSelect : MonoBehaviour
         int worldNum = int.Parse(name.Substring(1, lIndex - 1));
         int levelNum = int.Parse(name.Substring(lIndex + 1, name.Length - 1 - lIndex));
         return levels[worldNum - 1, levelNum - 1];
+    }
+}
+
+public class LevelButton
+{
+    public Button button;
+    public Outline outline;
+
+    public Level level;
+
+    public GameObject star1;
+    public GameObject star2;
+    public GameObject star3;
+
+    public LevelButton(Button button, Level level, GameObject star1Decoration,
+                       GameObject star2Decoration, GameObject star3Decoration, Outline outline)
+    {
+        this.button = button;
+        this.level = level;
+        this.star1 = star1Decoration;
+        this.star2 = star2Decoration;
+        this.star3 = star3Decoration;
+        this.outline = outline;
     }
 }

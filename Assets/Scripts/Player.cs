@@ -135,6 +135,7 @@ public class Player : Teleportable
             {
                 timeHoldingR = 0;
 
+                level.SaveReset(Timer.instance.levelTimer);
                 RecordResetEvent();
 
                 numResets++;
@@ -177,6 +178,7 @@ public class Player : Teleportable
         {
             numDeaths++;
 
+            level.SaveDeath(Timer.instance.levelTimer);
             RecordDeathEvent();
 
             // Reset the player position if they fall off the screen

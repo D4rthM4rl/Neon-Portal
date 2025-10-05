@@ -8,6 +8,10 @@ using Unity.Services.Leaderboards;
 using Newtonsoft.Json;
 using Unity.Services.Analytics;
 
+/// <summary>
+/// Custom class of methods which need internet to work. If these methods fail,
+/// then it disables online functionality attempts.
+/// </summary>
 public class OnlineServices : MonoBehaviour
 {
     /// <summary>
@@ -120,6 +124,31 @@ public class OnlineServices : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogWarning("Failed to retrieve scores: " + e.Message + " Going offline.");
+            online = false;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets some amount of scores from the leaderboard around the player.
+    /// Sets online to false if it fails.
+    /// </summary>
+    /// <param name="leaderboardID">The ID (from Unity website)of the leaderboard to get.</param>
+    /// <param name="options">GetPlayerRangeOptions to modify what scores to get from the leaderboard.</param>
+    /// <returns>String serialized from the leaderboard results.</returns>
+    public async static Task<string> GetPlayerRangeAsync(string leaderboardID, GetPlayerRangeOptions options = null)
+    {
+        try
+        {
+            var leaderboardResponse = await LeaderboardsService.Instance.GetPlayerRangeAsync(leaderboardID, options);
+            return JsonConvert.SerializeObject(leaderboardResponse.Results);
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("Level: " + leaderboardID);
+            if (e.Message.Contains("Leaderboard entry could not be found"))
+            return "Unbeaten online";
+            Debug.LogWarning("Failed to retrieve scores around player: " + e.Message + " Going offline." + e.Data);
             online = false;
             return null;
         }

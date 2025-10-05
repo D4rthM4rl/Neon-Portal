@@ -12,23 +12,21 @@ public class Transition : MonoBehaviour
 
     public float secBetweenObjectFades = 0.3f;
 
-    [SerializeField]
-    private TextMeshProUGUI levelCompleteText; // Text to display the current level
-    [SerializeField]
-    private TextMeshProUGUI nextLevelText; // Text to show the next level
+    /// <summary>Text to display the current level.</summary>
+    [SerializeField] private TextMeshProUGUI levelCompleteText; 
+    /// <summary>Text to show the next level option.</summary>
+    [SerializeField] private TextMeshProUGUI nextLevelText;
 
-    [SerializeField]
-    private TextMeshProUGUI timeText;
-    [SerializeField]
-    private TextMeshProUGUI bestTimeText;
+    [SerializeField] private TextMeshProUGUI timeText;
+    [SerializeField] private TextMeshProUGUI bestTimeText;
 
 
-    [SerializeField]
-    private Button nextLevelButton;
-    [SerializeField]
-    private Button leaderboardButton;
-    [SerializeField]
-    private GameObject inBetweenMenu;
+    [SerializeField] private Button nextLevelButton;
+    [SerializeField] private Button starsButton;
+    [SerializeField] private Button myRanksButton;
+    [SerializeField] private Button top20Button;
+
+    [SerializeField] private GameObject inBetweenMenu;
 
 
     private Level prevLevel;
@@ -36,57 +34,44 @@ public class Transition : MonoBehaviour
 
     public static Transition instance;
 
-    void Start()
+    void Awake()
     {
         instance = this;
     }
 
-    public void StartTransition(int world, int level, float time, float best)
+    public void StartTransition(int world, int level, float time, float prevBest)
     {
         Timer.instance.timerText.enabled = false;
         Time.timeScale = 0f;
-        StartCoroutine(ChooseNext(world, level, time, best));
+        StartCoroutine(ChooseNext(world, level, time, prevBest));
     }
 
-    /// <summary>
-    /// Give the option to replay, next level, or return to main menu.
-    /// </summary>
-    /// <param name="world">World of level that was just completed</param>
-    /// <param name="level">Level that was just completed</param>
-    private IEnumerator ChooseNext(int world, int level, float time, float best)
+    /// <summary>Give the option to replay, next level, or return to main menu.</summary>
+    /// <param name="world">World of level that was just completed.</param>
+    /// <param name="level">Level that was just completed.</param>
+    /// <param name="time">Time in seconds the level was just beaten in.</param>
+    /// <param name="prevBest">Best time in seconds the level was beaten in before this.</param>
+    private IEnumerator ChooseNext(int world, int level, float time, float prevBest)
     {
         StartCoroutine(FadeAsync(0f, 1f)); // Fade out
         yield return new WaitForSecondsRealtime(fadeDuration); // Wait for fade out to complete
         inBetweenMenu.SetActive(true);
         
         levelCompleteText.text = "World " + world + ", Level " + level;
-        timeText.text = $"{time.ToString("F2")}s";
-        if (time == best) 
-        {
-            bestTimeText.text = "New Record!";
-            bestTimeText.color = Color.white;
-        }
-        else 
-        {   
-            bestTimeText.text = $"Best: {best.ToString("F2")}s";
-            bestTimeText.color = Color.black;
-        }
-
-        if (OnlineServices.online)
-        {
-            leaderboardButton.gameObject.SetActive(true);
-            leaderboardButton.onClick.RemoveAllListeners();
-            Level l = LevelSelect.instance.GetLevelByName($"W{world}L{level}");
-            leaderboardButton.onClick.AddListener(() => Leaderboard.instance.ShowTransitionLeaderboard(l));
-        }
-        else
-        {
-            leaderboardButton.gameObject.SetActive(false);
-        }
-
 
         prevLevel = LevelSelect.instance.levels[world - 1, level - 1];
         nextLevel = LevelSelect.instance.GetNextLevel(prevLevel);
+
+        Leaderboard.instance.ShowTransitionStars(prevLevel, time, prevBest);
+        myRanksButton.onClick.RemoveAllListeners();
+        myRanksButton.onClick.AddListener(() => Leaderboard.instance.ShowTransitionLeaderboardMyRanks(prevLevel));
+        starsButton.onClick.RemoveAllListeners();
+        starsButton.onClick.AddListener(() => Leaderboard.instance.ShowTransitionStars(prevLevel, time, prevBest));
+        top20Button.onClick.RemoveAllListeners();
+        top20Button.onClick.AddListener(() => Leaderboard.instance.ShowTransitionLeaderboardTop20(prevLevel));
+        Leaderboard.instance.ShowTransitionStars(prevLevel, time, prevBest);
+
+
         if (nextLevel == null)
         {
             nextLevelButton.gameObject.SetActive(false); // Hide next level button if no next level

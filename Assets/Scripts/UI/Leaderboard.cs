@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -11,6 +12,7 @@ using TMPro;
 /// </summary>
 public record LeaderboardEntry
 {
+    public int Rank { get; set; }
     public string DisplayName { get; set; }
     public float Time { get; set; }
 }
@@ -19,25 +21,27 @@ public class Leaderboard : MonoBehaviour
 {
     public static Leaderboard instance;
 
-    [SerializeField] private GameObject lsLeaderboardUI;
-    [SerializeField] private GameObject lsLeaderboardPrefab;
-    [SerializeField] private TextMeshProUGUI lsLeaderboardTitle;
-    [SerializeField] private GameObject tLeaderboardUI;
-    [SerializeField] private GameObject tLeaderboardPrefab;
-    [SerializeField] private TextMeshProUGUI tLeaderboardTitle;
+    /// <summary>StarTiers to assign in the inspector.</summary>
+    [SerializeField] private List<StarTiers> tiers;
 
-    [SerializeField] private GameObject lsRankExample;
-    [SerializeField] private GameObject tRankExample;
-    private List<GameObject> lsRanks = new List<GameObject>();
-    private List<GameObject> tRanks = new List<GameObject>();
-    [SerializeField] private GameObject lsUsernameExample;
-    [SerializeField] private GameObject tUsernameExample;
-    private List<GameObject> lsUsernames = new List<GameObject>();
-    private List<GameObject> tUsernames = new List<GameObject>();
-    [SerializeField] private GameObject lsTimeExample;
-    [SerializeField] private GameObject tTimeExample;
-    private List<GameObject> lsTimes = new List<GameObject>();
-    private List<GameObject> tTimes = new List<GameObject>();
+    [SerializeField] private Color evenRowColor = new Color(0.95f, 0.95f, 0.95f);
+    [SerializeField] private Color oddRowColor = new Color(0.85f, 0.85f, 0.85f);
+    [SerializeField] private Color playerHighlightColor = Color.yellow;
+
+    [SerializeField] private Color firstPlaceColor = Color.yellow;
+    [SerializeField] private Color secondPlaceColor = Color.gray;
+    [SerializeField] private Color thirdPlaceColor = new Color(0.8f, 0.5f, 0f); // bronze
+    [SerializeField] private Color defaultRankColor = Color.white;
+
+
+    [SerializeField] private LeaderboardUI levelSelectLeaderboard;
+    [SerializeField] private LeaderboardUI transitionLeaderboard;
+    // private List<LeaderboardRow> lsLeaderboardRows = new List<LeaderboardRow>();
+    // [SerializeField] private GameObject tRowExample;
+    // [SerializeField] private GameObject tRowParent;
+    // [SerializeField] private Button tMyRankButton;
+    // [SerializeField] private Button tTop20Button;
+    // private List<LeaderboardRow> tLeaderboardRows = new List<LeaderboardRow>();
     
 
     void Awake()
@@ -45,208 +49,226 @@ public class Leaderboard : MonoBehaviour
         instance = this;
     }
 
+    private void Start() 
+    {
+        foreach (StarTiers t in tiers) // Assign tiers to each level
+        {
+            LevelSelect.instance.levels[t.level.world - 1, t.level.level - 1].stars = t;
+        }
+    }
+
     /// <summary>Makes the leaderboard show up on the level select menu.</summary>
     /// <param name="level">What level to show the leaderboard for.</param>
-    public async void ShowLevelSelectLeaderboard(Level level)
-    {
-        if (lsLeaderboardUI) lsLeaderboardUI.SetActive(true);
-        else 
-        {
-            lsLeaderboardUI = Instantiate(lsLeaderboardPrefab);
-            lsLeaderboardTitle = lsLeaderboardUI.GetComponentsInChildren<TextMeshProUGUI>()[0];
-        }
-        lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
-        if (!OnlineServices.online)
-        {
-            lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
-                + Environment.NewLine + Environment.NewLine + "Offline";
-            lsLeaderboardTitle.transform.localPosition = Vector3.up * 32;
-            return;
-        }
-
-        List<LeaderboardEntry> entries = await GetTopPlayers(level, 20);
-        if (entries == null)
-        {
-            lsLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
-                + Environment.NewLine + Environment.NewLine + "No entries";
-            lsLeaderboardTitle.transform.localPosition = Vector3.up * 32;
-            return;
-        }
-        else 
-        {
-            lsLeaderboardTitle.transform.localPosition = Vector3.up * 53;
-        }
-        // float vertOffset = 1080 / Screen.height;
-        float vertOffset = 1;
-        GameObject rank;
-        TextMeshProUGUI rankText;
-        GameObject username;
-        TextMeshProUGUI usernameText;
-        GameObject time;
-        TextMeshProUGUI timeText;
-        for (int i = 0; i < entries.Count; i++)
-        {
-            LeaderboardEntry entry = entries[i];
-            rank = lsRanks.Count > i ? lsRanks[i] : null;
-            if (rank == null) 
-            {
-                rank = Instantiate(lsRankExample, lsRankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, lsRankExample.transform.parent);
-                lsRanks.Add(rank);
-            }
-            rankText = rank.GetComponent<TextMeshProUGUI>();
-            rankText.text = "#" + (i + 1);
-            rankText.enabled = true;
-
-            username = lsUsernames.Count > i ? lsUsernames[i] : null;
-            if (username == null)
-            {
-                username = Instantiate(lsUsernameExample, lsUsernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, lsUsernameExample.transform.parent);
-                lsUsernames.Add(username);
-            }
-            usernameText = username.GetComponent<TextMeshProUGUI>();
-            usernameText.text = entry.DisplayName;
-            usernameText.enabled = true;
-
-            time = lsTimes.Count > i ? lsTimes[i] : null;
-            if (time == null)
-            {
-                time = Instantiate(lsTimeExample, lsTimeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, lsTimeExample.transform.parent);
-                lsTimes.Add(time);
-            }
-            timeText = time.GetComponent<TextMeshProUGUI>();
-            float timeAmount = entry.Time;
-            if (timeAmount % 60 < 10) 
-                timeText.text = (int)timeAmount / 60 + ":0" + timeAmount % 60;
-            else 
-                timeText.text = (int)timeAmount / 60 + ":" + timeAmount % 60;
-            timeText.enabled = true;
-        }
+    public void ShowLevelSelectTop20(Level level) 
+    { 
+        levelSelectLeaderboard.title.text = "Top 20 Leaderboard";
+        levelSelectLeaderboard.headers.SetActive(true);
+        levelSelectLeaderboard.myRanksButton.interactable = true;
+        levelSelectLeaderboard.top20Button.interactable = false;
+        levelSelectLeaderboard.starsButton.interactable = true;
+        levelSelectLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = true;
+        levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.refresh.onClick.RemoveAllListeners();
+        levelSelectLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, levelSelectLeaderboard, level.top20));
+        ShowLeaderboard(level, levelSelectLeaderboard, level.top20);
     }
 
-    /// <summary>Makes the leaderboard show up on the transition menu in between levels.</summary>
+    /// <summary>Makes the leaderboard show up on the level select menu.</summary>
     /// <param name="level">What level to show the leaderboard for.</param>
-    public async void ShowTransitionLeaderboard(Level level)
+    public void ShowLevelSelectMyRanks(Level level)
+    { 
+        if (level.myRanks == null)
+        {
+            ShowLevelSelectTop20(level);
+            return;
+        }
+        levelSelectLeaderboard.headers.SetActive(true);
+        levelSelectLeaderboard.title.text = "My Rank in Leaderboard";
+        levelSelectLeaderboard.myRanksButton.interactable = false;
+        levelSelectLeaderboard.top20Button.interactable = true;
+        levelSelectLeaderboard.starsButton.interactable = true;
+        levelSelectLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = true;
+        levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.refresh.onClick.RemoveAllListeners();
+        levelSelectLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, levelSelectLeaderboard, level.myRanks));
+        ShowLeaderboard(level, levelSelectLeaderboard, level.myRanks);
+    }
+
+    /// <summary>Makes the leaderboard show up on the transition menu.</summary>
+    /// <param name="level">What level to show the leaderboard for.</param>
+    public void ShowTransitionLeaderboardTop20(Level level) 
+    { 
+        transitionLeaderboard.title.text = "Top 20 Leaderboard";
+        transitionLeaderboard.headers.SetActive(true);
+        transitionLeaderboard.myRanksButton.interactable = true;
+        transitionLeaderboard.top20Button.interactable = false;
+        transitionLeaderboard.starsButton.interactable = true;
+        transitionLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = true;
+        transitionLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.refresh.onClick.RemoveAllListeners();
+        transitionLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, transitionLeaderboard, level.top20));
+        ShowLeaderboard(level, transitionLeaderboard, level.top20);
+    }
+
+    /// <summary>Makes the leaderboard show up on the transition menu.</summary>
+    /// <param name="level">What level to show the leaderboard for.</param>
+    public void ShowTransitionLeaderboardMyRanks(Level level) 
     {
-        if (tLeaderboardUI) tLeaderboardUI.SetActive(true);
-        else tLeaderboardUI = Instantiate(tLeaderboardPrefab);
-        tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard";
+        transitionLeaderboard.title.text = "My Rank in Leaderboard";
+        transitionLeaderboard.headers.SetActive(true);
+        transitionLeaderboard.myRanksButton.interactable = false;
+        transitionLeaderboard.top20Button.interactable = true;
+        transitionLeaderboard.starsButton.interactable = true;
+        transitionLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = true;
+        transitionLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.refresh.onClick.RemoveAllListeners();
+        transitionLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, transitionLeaderboard, level.myRanks));
+        ShowLeaderboard(level, transitionLeaderboard, level.myRanks);
+    }
+
+    /// <summary>Shows the stars menu on the transition leaderboard.</summary>
+    /// <param name="level">Level that was just beaten.</param>
+    /// <param name="time">Time the level was just completed in.</param>
+    /// <param name="prevBest">Best time on this level before this run.</param>
+    public void ShowTransitionStars(Level level, float time, float prevBest)
+    {
+        LeaderboardUI ui = transitionLeaderboard;
+        transitionLeaderboard.myRanksButton.interactable = true;
+        transitionLeaderboard.top20Button.interactable = true;
+        transitionLeaderboard.starsButton.interactable = false;
+        transitionLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
+        transitionLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = true;
+        if (time < prevBest)
+        {
+            ui.title.text = "New Personal Best!";
+            ui.bestTimeText.text = $"Previous Best: {prevBest.ToString("F4")}s";
+        }
+        else
+        {
+            ui.bestTimeText.text = $"Best: {prevBest.ToString("F4")}s";
+        }
+        ui.timeText.text = $"{time.ToString("F4")}s";
+
+        ShowStars(level, time, ui, StarTiers.GetStarTier(level, prevBest));
+    }
+
+    /// <summary>Shows the stars menu on the transition leaderboard.</summary>
+    /// <param name="level">Level that was just beaten.</param>
+    /// <param name="best">Best time on this level.</param>
+    public void ShowLevelSelectStars(Level level, float best)
+    {
+        levelSelectLeaderboard.myRanksButton.interactable = true;
+        levelSelectLeaderboard.top20Button.interactable = true;
+        levelSelectLeaderboard.starsButton.interactable = false;
+        levelSelectLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
+        levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = true;
+        levelSelectLeaderboard.timeText.text = $"Personal Best: {best.ToString("F4")}s";
+        ShowStars(level, best, levelSelectLeaderboard);
+    }
+
+    /// <summary>Shows any type of leaderboard.</summary>
+    /// <param name="level">Level to show the leaderboard for.</param>
+    /// <param name="ui">Which leaderboard to show.</param>
+    /// <param name="entries">Which entries to show on the leaderboard.</param>
+    public void ShowLeaderboard(Level level, LeaderboardUI ui, List<LeaderboardEntry> entries)
+    {
+        ui.container.SetActive(true);
+        ui.scrollView.SetActive(true);
+        ui.starUI.container.SetActive(false);
         if (!OnlineServices.online)
         {
-            tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
-                + Environment.NewLine + Environment.NewLine + "Offline";
-            tLeaderboardTitle.transform.localPosition = Vector3.up * 32;
+            ui.title.text = "Leaderboard" + Environment.NewLine + Environment.NewLine + "Offline";
+            ui.title.transform.localPosition = Vector3.up * 32;
             return;
         }
 
-        List<LeaderboardEntry> entries = await GetTopPlayers(level, 20);
+        if (!OnlineServices.online)
+        {
+            ui.title.text = "Leaderboard" + Environment.NewLine + Environment.NewLine + "Offline";
+            ui.title.transform.localPosition = Vector3.up * 32;
+            return;
+        }
+
         if (entries == null)
         {
-            tLeaderboardTitle.text = "World " + level.world + " Level " + level.level + Environment.NewLine + "Leaderboard"
-                + Environment.NewLine + Environment.NewLine + "No entries";
-            tLeaderboardTitle.transform.localPosition = Vector3.up * 32;
+            ui.title.text = "Leaderboard" + Environment.NewLine + Environment.NewLine + "No Entries";
+            ui.title.transform.localPosition = Vector3.up * 32;
             return;
         }
         else 
         {
-            tLeaderboardTitle.transform.localPosition = Vector3.up * 53;
+            ui.title.transform.localPosition = Vector3.up * 53;
         }
-        // float vertOffset = 1080 / Screen.height;
-        float vertOffset = 1;
-        GameObject rank;
-        TextMeshProUGUI rankText;
-        GameObject username;
-        TextMeshProUGUI usernameText;
-        GameObject time;
-        TextMeshProUGUI timeText;
-        for (int i = 0; i < entries.Count; i++)
-        {
-            LeaderboardEntry entry = entries[i];
-            rank = tRanks.Count > i ? tRanks[i] : null;
-            if (rank == null) 
-            {
-                rank = Instantiate(tRankExample, tRankExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, tRankExample.transform.parent);
-                tRanks.Add(rank);
-            }
-            rankText = rank.GetComponent<TextMeshProUGUI>();
-            rankText.text = "#" + (i + 1);
-            rankText.enabled = true;
-
-            username = tUsernames.Count > i ? tUsernames[i] : null;
-            if (username == null)
-            {
-                username = Instantiate(tUsernameExample, tUsernameExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, tUsernameExample.transform.parent);
-                tUsernames.Add(username);
-            }
-            usernameText = username.GetComponent<TextMeshProUGUI>();
-            usernameText.text = entry.DisplayName;
-            usernameText.enabled = true;
-
-            time = tTimes.Count > i ? tTimes[i] : null;
-            if (time == null)
-            {
-                time = Instantiate(tTimeExample, tTimeExample.transform.position + (Vector3.down * i * 43 * vertOffset),
-                    Quaternion.identity, tTimeExample.transform.parent);
-                tTimes.Add(time);
-            }
-            timeText = time.GetComponent<TextMeshProUGUI>();
-            float timeAmount = entry.Time;
-            if (timeAmount % 60 < 10) 
-                timeText.text = (int)timeAmount / 60 + ":0" + timeAmount % 60;
-            else 
-                timeText.text = (int)timeAmount / 60 + ":" + timeAmount % 60;
-            timeText.enabled = true;
-        }
+        
+        EnterLeaderboardData(entries, ui);
     }
 
-    /// <summary>Hides the leaderboard in the level select menu.</summary>
-    public void HideLevelSelectLeaderboard()
+    /// <summary>
+    /// Puts the correct data into the given leaderboard.
+    /// </summary>
+    /// <param name="entries">Which entries to put in.</param>
+    /// <param name="ui">Which leaderboard ot use.</param>
+    private void EnterLeaderboardData(List<LeaderboardEntry> entries, LeaderboardUI ui)
     {
-        foreach (GameObject rank in lsRanks)
+        for (int i = 0; i < 20; i++) // Leaderboard will only display 20 at once
         {
-            if (rank != null)
-                rank.GetComponent<TextMeshProUGUI>().enabled = false;
+            LeaderboardEntry entry = i < entries.Count ? entries[i] : null;
+            if (entry == null && i >= ui.leaderboardRows.Count) break; // No more entries and no more rows
+            if (entry == null && i < ui.leaderboardRows.Count) // No more entries but still have rows
+            {
+                ui.leaderboardRows[i].gameObject.SetActive(false);
+                continue;
+            }
+            Color c = Color.black;
+            if (entry.DisplayName == Settings.instance.playerLeaderboardName)
+            {
+                c = Color.magenta;
+            }
+            if (i >= ui.leaderboardRows.Count) // More entries than rows, need to make more rows
+            {
+                LeaderboardRow row = Instantiate(ui.rowExample,
+                                                 ui.rowParent.transform
+                                                ).GetComponent<LeaderboardRow>();
+                row.Change(entry, c);
+                ui.leaderboardRows.Add(row);
+            }
+            else // Just change the existing row
+            {
+                ui.leaderboardRows[i].Change(entry, c);
+                ui.leaderboardRows[i].gameObject.SetActive(true);
+            }
         }
-
-        foreach (GameObject username in lsUsernames)
-        {
-            if (username != null)
-                username.GetComponent<TextMeshProUGUI>().enabled = false;
-        }
-
-        foreach (GameObject time in lsTimes)
-        {
-            if (time != null)
-                time.GetComponent<TextMeshProUGUI>().enabled = false;
-        }
-        lsLeaderboardUI.SetActive(false);
+        
     }
 
-    /// <summary>Hides the leaderboard in the transition menu between levels.</summary>
-    public void HideTransitionLeaderboard()
+    /// <summary>Shows the stars menu on the given leaderboard.</summary>
+    /// <param name="level">Which level to show the stars for.</param>
+    /// <param name="bestTime">Best time on this level.</param>
+    /// <param name="ui">Which leaderboard UI to use.</param>
+    /// <param name="prevStars">If transition, how many stars were gotten before this attempt.</param>
+    private void ShowStars(Level level, float bestTime, LeaderboardUI ui, int prevStars = 0)
     {
-        foreach (GameObject rank in tRanks)
-        {
-            if (rank != null)
-                rank.GetComponent<TextMeshProUGUI>().enabled = false;
-        }
+        ui.refresh.onClick.RemoveAllListeners();
+        ui.refresh.onClick.AddListener(() => ShowStars(level, bestTime, ui, prevStars));
+        ui.starUI.container.SetActive(true);
+        ui.title.text = "Personal Best";
+        ui.headers.SetActive(false);
+        ui.scrollView.SetActive(false);
+        
+        int newStars = StarTiers.GetStarTier(level, bestTime);
+        StarUI starUI = ui.starUI;
+        starUI.star1Time.text = level.stars.purpleTime.ToString("F2") + "s";
+        starUI.star2Time.text = level.stars.blueTime.ToString("F2") + "s";
+        starUI.star3Time.text = level.stars.greenTime.ToString("F2") + "s";
+        int numStars = Mathf.Max(newStars, prevStars);
 
-        foreach (GameObject username in tUsernames)
-        {
-            if (username != null)
-                username.GetComponent<TextMeshProUGUI>().enabled = false;
-        }
-
-        foreach (GameObject time in tTimes)
-        {
-            if (time != null)
-                time.GetComponent<TextMeshProUGUI>().enabled = false;
-        }
-        tLeaderboardUI.SetActive(false);
+        starUI.ColorUI(numStars, numStars <= prevStars);
     }
 
     /// <summary>
@@ -254,13 +276,14 @@ public class Leaderboard : MonoBehaviour
     /// </summary>
     /// <param name="level">What level to submit the time for.</param>
     /// <param name="time">Time the level was beaten in.</param>
-    public void SubmitTime(Level level, float time)
+    public async void SubmitTime(Level level, float time)
     {   
         if (Settings.instance.participateInLeaderboard && OnlineServices.online)
         {
             try 
             {
                 OnlineServices.AddPlayerScore(level.ToString(), time);
+                await GetMyRanks(level);
             }
             catch (Exception e) 
             {
@@ -327,10 +350,11 @@ public class Leaderboard : MonoBehaviour
         string levelTitle = "W" + level.world + "L" + level.level;
         try
         {
+            int offset = 0;
             string response = await OnlineServices.GetScores(levelTitle,
                 new Unity.Services.Leaderboards.GetScoresOptions
                 {
-                    Offset = 0, Limit = howMany
+                    Offset = offset, Limit = howMany
                 });
             if (response == "[]" || response == null)
             {
@@ -342,13 +366,21 @@ public class Leaderboard : MonoBehaviour
                 List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
                 string name = "";
                 string score = "";
-                foreach (string entry in response.Split('{'))
+                string[] entries = response.Split(new string[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
+                int rank = offset + 1;
+                for (int i = 0; i < entries.Length; i++)
                 {
+                    string entry = entries[i];
                     if (!entry.Contains(',') || !entry.Contains(':'))
                         continue;
                     name = entry.Split(',')[1].Split(':')[1].Replace("\"", "");
                     score = entry.Split(',')[3].Split(':')[1];
-                    leaderboardEntries.Add(new LeaderboardEntry { DisplayName = name, Time = float.Parse(score) });
+                    leaderboardEntries.Add(new LeaderboardEntry { 
+                        DisplayName = name,
+                        Time = float.Parse(score),
+                        Rank = rank
+                    });
+                    rank++;
                 }
                 return leaderboardEntries;
             }
@@ -360,50 +392,164 @@ public class Leaderboard : MonoBehaviour
         }
     }
 
-    // public async void GetPlayerRank(Level level, string playerName)
-    // {
-    //     string levelTitle = "W" + level.world + "L" + level.level;
-    //     try
-    //     {
-    //         var leaderboardEntries = await LeaderboardsService.Instance.GetPlayerRangeAsync(levelTitle, 100); // Get top 100 players
+    /// <summary>Gets 5 entries on each side of the player.</summary>
+    /// <param name="level">Which level to get entries for.</param>
+    /// <returns>List of entries around and including the player.</returns>
+    public async Task<List<LeaderboardEntry>> GetMyRanks(Level level)
+    {
+        if (!Settings.instance.participateInLeaderboard || !OnlineServices.online)
+        {
+            Debug.LogWarning("Leaderboard is not enabled or not online.");
+            return null;
+        }
+        Debug.Assert(level != null, "Level cannot be null");
+        string levelTitle = "W" + level.world + "L" + level.level;
 
-    //         int rank = -1;
-    //         for (int i = 0; i < leaderboardEntries.Count; i++)
-    //         {
-    //             if (leaderboardEntries[i].DisplayName == playerName)
-    //             {
-    //                 rank = i + 1; // Rank is index + 1 (because rank starts at 1)
-    //                 break;
-    //             }
-    //         }
-
-    //         if (rank > 0)
-    //         {
-    //             Debug.Log($"{playerName} is ranked #{rank} on the leaderboard.");
-    //         }
-    //         else
-    //         {
-    //             Debug.Log($"{playerName} is not in the top 100.");
-    //         }
-    //     }
-    //     catch (System.Exception e)
-    //     {
-    //         Debug.LogError("Failed to get player rank: " + e.Message);
-    //     }
-    // }
-
+        try
+        {
+            // int offset = 0;
+            string response = await OnlineServices.GetPlayerRangeAsync(levelTitle);
+            if (response == "[]" || response == null)
+            {
+                Debug.Log("No scores found for this level.");
+                return null;
+            }
+            else
+            {
+                List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
+                string name = "";
+                string score = "";
+                string[] entries = response.Split(new string[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
+                string rank = "";
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    string entry = entries[i];
+                    if (!entry.Contains(',') || !entry.Contains(':'))
+                        continue;
+                    name = entry.Split(',')[1].Split(':')[1].Replace("\"", "");
+                    rank = entry.Split(',')[2].Split(':')[1].Replace("\"", "");
+                    score = entry.Split(',')[3].Split(':')[1];
+                    leaderboardEntries.Add(new LeaderboardEntry { 
+                        DisplayName = name,
+                        Time = float.Parse(score),
+                        Rank = (int.Parse(rank) + 1)
+                    });
+                }
+                return leaderboardEntries;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Failed to retrieve leaderboard: " + e.Message);
+            return null;
+        }
+    }
 }
 
-/// <summary>Colors for a level button's parts based on the leaderboard tier.</summary>
-[System.Serializable] public class LeaderboardTierColorset
+[System.Serializable]
+public class LeaderboardUI
 {
-    public Color normalColor = Color.white;
-    public Color highlightedColor = Color.white;
-    public Color pressedColor = Color.white;
-    public Color selectedColor = Color.white;
-    public Color trophyNormalColor = Color.white;
-    public Color trophyHighlightedColor = Color.white;
-    public Color trophyPressedColor = Color.white;
-    public Color trophySelectedColor = Color.white;
-    public Color textColor = Color.black;
+    public TextMeshProUGUI title;
+    public GameObject container;
+    public GameObject rowExample;
+    public GameObject rowParent;
+    public Button myRanksButton;
+    public Button top20Button;
+    public Button starsButton;
+    public StarUI starUI;
+    public Button refresh;
+    public GameObject scrollView;
+
+    /// <summary>Only used on transition leaderboard for most recent time.</summary>
+    public TextMeshProUGUI timeText;
+    /// <summary>Best time on this level (before current completion if transition leaderboard).</summary>
+    public TextMeshProUGUI bestTimeText;
+    
+    /// <summary>Rank, username, time headers and the line beneath.</summary>
+    public GameObject headers;
+
+    [HideInInspector] public List<LeaderboardRow> leaderboardRows = new List<LeaderboardRow>();
+}
+
+/// <summary>UI Objects for the star menu</summary>
+[System.Serializable] public class StarUI
+{
+    public GameObject container;
+
+    public GameObject star1BG;
+    public GameObject star2BG;
+    public GameObject star3BG;
+
+    public TextMeshProUGUI star1Time;
+    public TextMeshProUGUI star2Time;
+    public TextMeshProUGUI star3Time;
+
+    public Image star1Icon;
+    public List<Image> star2Icons;
+    public List<Image> star3Icons;
+
+    public Color newStarBG;
+    public Color oldStarBG;
+    public Color oldStarColor;
+    public Color newStar1Color;
+    public Color newStar2Color;
+    public Color newStar3Color;
+
+    /// <summary>Colors this UI with the correct colors.</summary>
+    /// <param name="num">How many stars have been obtained.</param>
+    /// <param name="old">Whether the stars are newly or previously obtained/</param>
+    public void ColorUI(int num, bool old)
+    {
+        Color star1Color;
+        Color star2Color;
+        Color star3Color;
+        Color bgColor;
+        if (old)
+        {
+            star1Color = oldStarColor;
+            star2Color = oldStarColor;
+            star3Color = oldStarColor;
+            bgColor = oldStarBG;
+        }
+        else
+        {
+            star1Color = newStar1Color;
+            star2Color = newStar2Color;
+            star3Color = newStar3Color;
+            bgColor = newStarBG;
+        }
+
+        if (num == 3)
+        {
+            star3BG.GetComponent<Image>().color = bgColor;
+            foreach (Image i in star3Icons) i.color = star3Color;
+        }
+        else
+        {
+            star3BG.GetComponent<Image>().color = Color.white;
+            foreach (Image i in star3Icons) i.color = newStar3Color;
+        }
+
+        if (num >= 2)
+        {
+            star2BG.GetComponent<Image>().color = bgColor;
+            foreach (Image i in star2Icons) i.color = star2Color;
+        }
+        else
+        {
+            star2BG.GetComponent<Image>().color = Color.white;
+            foreach (Image i in star2Icons) i.color = newStar2Color;
+        }
+
+        if (num >= 1)
+        {
+            star1BG.GetComponent<Image>().color = bgColor;
+            star1Icon.color = star1Color;
+        }
+        else
+        {
+            star1BG.GetComponent<Image>().color = Color.white;
+            star1Icon.color = newStar1Color;
+        }
+    }
 }

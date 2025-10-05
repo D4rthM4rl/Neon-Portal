@@ -156,13 +156,12 @@ public class MainMenu : MonoBehaviour
         Timer.instance.ResetInactivityTimer();
         mainMenuUI.SetActive(false);
         levelSelectUI.SetActive(true);
+        LevelSelect.instance.UnselectLevel();
         optionsUI.SetActive(false);
-        // LevelSelect.instance.titleOrLoadingText.text = "Loading Level Times...";
         foreach (Level level in LevelSelect.instance.levelsToReload)
         {
             LevelSelect.instance.ReloadLevelTime(level);
         }
-        // LevelSelect.instance.titleOrLoadingText.text = "Level Select";
         LevelSelect.instance.levelsToReload.Clear();
     }
 
