@@ -7,7 +7,7 @@ using TMPro;
 
 public class Transition : MonoBehaviour
 {
-    public Image fadeImage; // Drag the fullscreen black Image here
+    public Image fadeImage;
     public float fadeDuration = 1f;
 
     public float secBetweenObjectFades = 0.3f;
@@ -261,6 +261,5 @@ public class Transition : MonoBehaviour
         StartCoroutine(FadeAsync(1, 0, fadeDuration/2));
 
         Timer.instance.ResetInactivityTimer();
-        // RecordLevelQuitEvent();
     }
 }
