@@ -141,7 +141,6 @@ public class Level
     public static int GetStarTier(Level level, float time)
     {
         level = LevelSelect.instance.levels[level.world - 1, level.level - 1];
-        Debug.Log("Time for " + level + ": " + time);
         Debug.Assert(level.stars != null, level + " has no star tiers set");
         if (time < level.stars.greenTime)
         { return 3; }

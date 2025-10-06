@@ -23,6 +23,7 @@ public class Settings : MonoBehaviour
     private Color portal2SavedColor;
     private bool settingPortal2Color = false;
     [SerializeField] private ColorPickerControl colorPicker;
+    [SerializeField] private Image blackOverlay;
 
     public bool participateInLeaderboard = true;
     public string playerLeaderboardName = "";

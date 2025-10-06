@@ -146,10 +146,13 @@ public class Leaderboard : MonoBehaviour
         if (time < prevBest)
         {
             ui.title.text = "New Personal Best!";
+            ui.title.color = Color.magenta;
             ui.bestTimeText.text = $"Previous Best: {prevBest.ToString("F4")}s";
         }
         else
         {
+            ui.title.text = "Personal Best";
+            ui.title.color = Color.black;
             ui.bestTimeText.text = $"Best: {prevBest.ToString("F4")}s";
         }
         ui.timeText.text = $"{time.ToString("F4")}s";
@@ -168,7 +171,9 @@ public class Leaderboard : MonoBehaviour
         levelSelectLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = true;
-        levelSelectLeaderboard.timeText.text = $"Personal Best: {best.ToString("F4")}s";
+        levelSelectLeaderboard.timeText.text = $"Best: {best.ToString("F4")}s";
+        levelSelectLeaderboard.title.text = "Personal Best";
+        levelSelectLeaderboard.title.color = Color.black;
         ShowStars(level, best, levelSelectLeaderboard);
     }
 
@@ -181,12 +186,6 @@ public class Leaderboard : MonoBehaviour
         ui.container.SetActive(true);
         ui.scrollView.SetActive(true);
         ui.starUI.container.SetActive(false);
-        if (!OnlineServices.online)
-        {
-            ui.title.text = "Leaderboard" + Environment.NewLine + Environment.NewLine + "Offline";
-            ui.title.transform.localPosition = Vector3.up * 32;
-            return;
-        }
 
         if (!OnlineServices.online)
         {
@@ -203,7 +202,7 @@ public class Leaderboard : MonoBehaviour
         }
         else 
         {
-            ui.title.transform.localPosition = Vector3.up * 53;
+            ui.title.transform.localPosition = Vector3.up * 50;
         }
         
         EnterLeaderboardData(entries, ui);
@@ -257,7 +256,6 @@ public class Leaderboard : MonoBehaviour
         ui.refresh.onClick.RemoveAllListeners();
         ui.refresh.onClick.AddListener(() => ShowStars(level, bestTime, ui, prevStars));
         ui.starUI.container.SetActive(true);
-        ui.title.text = "Personal Best";
         ui.headers.SetActive(false);
         ui.scrollView.SetActive(false);
         

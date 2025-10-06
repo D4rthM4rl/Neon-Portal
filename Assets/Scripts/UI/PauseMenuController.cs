@@ -88,13 +88,11 @@ public class PauseMenuController : MonoBehaviour
     /// <summary>Exit the level to the main menu.</summary>
     public void Exit()
     {
-        Timer.instance.ResetInactivityTimer();
         RecordLevelQuitEvent();
-        pauseMenuUI.SetActive(false);
-        MainMenu.instance.gameObject.SetActive(true);
-        isPaused = false;
-        Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene("After");
+        pauseMenuUI.SetActive(false);
+        isPaused = false;
+        Transition.instance.GoToMainMenu();
     }
 
     /// <summary>Exit the level and open the level select menu.</summary>
