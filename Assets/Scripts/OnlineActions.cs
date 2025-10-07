@@ -7,6 +7,7 @@ using Unity.Services.Core;
 using Unity.Services.Leaderboards;
 using Newtonsoft.Json;
 using Unity.Services.Analytics;
+using UnityEngine.UnityConsent;
 
 /// <summary>
 /// Custom class of methods which need internet to work. If these methods fail,
@@ -200,8 +201,18 @@ public class OnlineServices : MonoBehaviour
     {
         try
         {
-            if (collect) AnalyticsService.Instance.StartDataCollection();
-            else AnalyticsService.Instance.StopDataCollection();
+            ConsentState cs = new ConsentState();
+            if (collect)
+            {
+                // cs.AdsIntent = ConsentStatus.Denied;
+                cs.AnalyticsIntent = ConsentStatus.Granted;
+            }
+            else
+            {
+                // cs.AdsIntent = ConsentStatus.Denied;
+                cs.AnalyticsIntent = ConsentStatus.Denied;
+            }
+            EndUserConsent.SetConsentState(cs);
         }
         catch (System.Exception ex)
         {

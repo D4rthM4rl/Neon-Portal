@@ -93,7 +93,7 @@ public class PortalController : MonoBehaviour
 
             // Rotate the incoming velocity by that angle
             Vector2 rotatedVelocity = Quaternion.Euler(0, 0, angleDifference) * incomingVelocity;
-            if (rotatedVelocity.magnitude < 1) rotatedVelocity = rotatedVelocity.normalized;
+            if (rotatedVelocity.magnitude < 5) rotatedVelocity = rotatedVelocity.normalized * 5; // Minimum exit speed
             float separation = 1;
             if (other.GetComponent<Player>() == null)
             {
@@ -107,7 +107,7 @@ public class PortalController : MonoBehaviour
             // Teleport and set new velocity
             other.transform.position = receivingPortal.transform.position + 
                 (Vector3)receivingPortal.direction * separation;
-            tpObj.rb.velocity = -rotatedVelocity;
+            tpObj.rb.linearVelocity = -rotatedVelocity;
             if (receivingPortal.description.type == PortalType.GravitySwitching)
             {
                 tpObj.gravityDirection = -receivingPortal.direction;

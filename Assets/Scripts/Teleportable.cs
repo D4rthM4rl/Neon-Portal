@@ -21,6 +21,6 @@ public class Teleportable : GravityAffected
         {
             previousVelocities[i] = previousVelocities[i - 1];
         }
-        previousVelocities[0] = rb.velocity;
+        previousVelocities[0] = rb.linearVelocity;
     }
 }

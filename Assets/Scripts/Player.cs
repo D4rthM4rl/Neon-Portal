@@ -182,9 +182,9 @@ public class Player : Teleportable
             RecordDeathEvent();
 
             // Reset the player position if they fall off the screen
-            ResetPlayer();
-            ResetPortals();
             ResetWorld();
+            ResetPortals();
+            ResetPlayer();
         }
         UpdateSpriteColors();
         RotateWithGravity();
@@ -205,7 +205,7 @@ public class Player : Teleportable
             speedLight.pointLightOuterRadius = percentReset * 10f * percentReset;
             return;
         }
-        Vector2 velocity = rb.velocity; // You can tweak or dynamically compute this if needed
+        Vector2 velocity = rb.linearVelocity; // You can tweak or dynamically compute this if needed
 
         float lerpSpeed = Time.deltaTime * 2f; // speed of color smoothing
 
@@ -262,17 +262,17 @@ public class Player : Teleportable
         // This can be used to reset any other game objects or states as needed
         // reset enemies, collectibles, etc.
 
-        foreach (GravityAffected obj in FindObjectsOfType<GravityAffected>())
+        foreach (GravityAffected obj in FindObjectsByType<GravityAffected>(FindObjectsSortMode.None))
         {
             if (obj != null && obj.GetComponent<Player>() == null)
             {
                 obj.transform.position = obj.respawnPosition;
-                obj.rb.velocity = Vector2.zero;
+                obj.rb.linearVelocity = Vector2.zero;
                 obj.gravityDirection = obj.defaultGravityDirection;
             }
         }
 
-        foreach (MovingBlock block in FindObjectsOfType<MovingBlock>())
+        foreach (MovingBlock block in FindObjectsByType<MovingBlock>(FindObjectsSortMode.None))
         {
             if (block != null)
             {
@@ -288,7 +288,7 @@ public class Player : Teleportable
         jumpQueued = false;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         transform.position = Vector3.up;
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
@@ -382,7 +382,7 @@ public class Player : Teleportable
     {
         if (!isJumping && isGrounded) 
         {
-            rb.velocity *= Vector2.right; // Zero out vertical velocity
+            rb.linearVelocity *= Vector2.right; // Zero out vertical velocity
             isJumping = true;
             cantReenterIndex = -1;
             jumpTimeCounter = maxJumpDuration;
