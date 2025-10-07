@@ -1178,7 +1178,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.5
+  m_Intensity: 0.05
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
   m_ApplyToSortingLayers: 0000000003eeeb9a7715c536
@@ -2349,6 +2349,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!4 &1499939873
 Transform:
   m_ObjectHideFlags: 0
@@ -2848,7 +2849,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.507067
+      value: 8.503569
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3578,6 +3579,7 @@ MonoBehaviour:
   speed: 3
   waitAtEachPosition: 1
   loopType: 0
+  waitForProximity: 0
 --- !u!1001 &2104184825
 PrefabInstance:
   m_ObjectHideFlags: 0
