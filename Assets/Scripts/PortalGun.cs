@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(LineRenderer))]
 public class PortalGun : MonoBehaviour
 {
     [Header("Aim & Raycast")]
@@ -19,13 +18,12 @@ public class PortalGun : MonoBehaviour
     private GameObject[] placeholders = new GameObject[2];
 
     [Header("Visuals")]
-    [SerializeField]
-    private GameObject validIndicatorPrefab;
+    [SerializeField] private GameObject validIndicatorPrefab;
     private GameObject validIndicator;
-    [SerializeField]
-    private GameObject invalidIndicatorPrefab;
+    [SerializeField] private LineRenderer validLineRenderer;
+    [SerializeField] private GameObject invalidIndicatorPrefab;
     private GameObject invalidIndicator;
-    protected LineRenderer lineRenderer;
+    [SerializeField] private LineRenderer invalidLineRenderer;
 
     private GameObject currentIndicator;
 
@@ -36,7 +34,7 @@ public class PortalGun : MonoBehaviour
     public static PortalController[] portalsInScene;
     private int portalIndex = 0;
 
-    void Start()
+    void Awake()
     {
         if (validIndicator == null) validIndicator = Instantiate(validIndicatorPrefab);
         validIndicator.SetActive(false);
@@ -44,8 +42,8 @@ public class PortalGun : MonoBehaviour
         invalidIndicator.SetActive(false);
         currentPortalToSpawn = portals[portalIndex];
         portalsInScene = new PortalController[portals.Count];
-        lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.positionCount = 2;
+        validLineRenderer.positionCount = 2;
+        invalidLineRenderer.positionCount = 2;
         placeholders[0] = new GameObject("PortalPlaceholder1");
         placeholders[0].layer = LayerMask.NameToLayer("Ground");
         placeholders[1] = new GameObject("PortalPlaceholder2");
@@ -67,23 +65,29 @@ public class PortalGun : MonoBehaviour
                 : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
 
             // 2) Draw the line
-            lineRenderer.SetPosition(0, transform.position);
-            lineRenderer.SetPosition(1, endPoint);
+            invalidLineRenderer.SetPosition(0, transform.position);
+            validLineRenderer.SetPosition(0, transform.position);
+            invalidLineRenderer.SetPosition(1, endPoint);
+            validLineRenderer.SetPosition(1, endPoint);
             if (portalIndex == 0)
             {
                 Color c1;
                 if (Settings.instance == null) c1 = Color.magenta;
                 else c1 = Settings.instance.portal1Color;
-                lineRenderer.startColor = c1;
-                lineRenderer.endColor = c1;
+                invalidLineRenderer.startColor = c1;
+                invalidLineRenderer.endColor = c1;
+                validLineRenderer.startColor = c1;
+                validLineRenderer.endColor = c1;
             }
             else if (portalIndex == 1)
             {
                 Color c2;
                 if (Settings.instance == null) c2 = Color.yellow;
                 else c2 = Settings.instance.portal2Color;
-                lineRenderer.startColor = c2;
-                lineRenderer.endColor = c2;
+                invalidLineRenderer.startColor = c2;
+                invalidLineRenderer.endColor = c2;
+                validLineRenderer.startColor = c2;
+                validLineRenderer.endColor = c2;
             }
             else
             {
@@ -166,6 +170,9 @@ public class PortalGun : MonoBehaviour
             indicator = invalidIndicator;
             indicator.SetActive(true);
             indicator.transform.position = hit.point;
+            
+            invalidLineRenderer.enabled = true;
+            validLineRenderer.enabled = false;
 
             return false;
         }
@@ -225,6 +232,9 @@ public class PortalGun : MonoBehaviour
         indicator = canPlace ? validIndicator : invalidIndicator;
         indicator.SetActive(true);
         indicator.transform.position = hit.point;
+
+        invalidLineRenderer.enabled = !canPlace;
+        validLineRenderer.enabled = canPlace;
 
         return canPlace;
     }
