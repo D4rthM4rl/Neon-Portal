@@ -39,8 +39,11 @@ public class MainMenu : MonoBehaviour
             return;
         }
 
-        StartCoroutine(SetPlayButton());
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start() {
+        StartCoroutine(SetPlayButton());
     }
 
     /// <summary>

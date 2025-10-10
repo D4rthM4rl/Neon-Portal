@@ -21,9 +21,6 @@ public class Leaderboard : MonoBehaviour
 {
     public static Leaderboard instance;
 
-    /// <summary>StarTiers to assign in the inspector.</summary>
-    [SerializeField] private List<StarTiers> tiers;
-
     [SerializeField] private Color evenRowColor = new Color(0.95f, 0.95f, 0.95f);
     [SerializeField] private Color oddRowColor = new Color(0.85f, 0.85f, 0.85f);
     [SerializeField] private Color playerHighlightColor = Color.yellow;
@@ -47,14 +44,6 @@ public class Leaderboard : MonoBehaviour
     void Awake()
     {
         instance = this;
-    }
-
-    private void Start() 
-    {
-        foreach (StarTiers t in tiers) // Assign tiers to each level
-        {
-            LevelSelect.instance.levels[t.level.world - 1, t.level.level - 1].stars = t;
-        }
     }
 
     /// <summary>Makes the leaderboard show up on the level select menu.</summary>

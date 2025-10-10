@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Threading.Tasks;
 /// <summary>
 /// A game level, identified by world and level numbers. Also tracks best time
 /// and whether it's been beaten.
@@ -40,14 +41,12 @@ public class Level
         myRanks = new List<LeaderboardEntry>();
     }
 
-    public async System.Threading.Tasks.Task GetSavedValues()
+    public void GetSavedValues()
     {
         // Make sure we have the correct reference
         Level l = LevelSelect.instance.levels[this.world - 1, this.level - 1];
 
         string title = ToString();
-        l.top20 = await Leaderboard.instance.GetTopPlayers(l, 20);
-        l.myRanks = await Leaderboard.instance.GetMyRanks(l);
 
         // Load saved values if they exist, aka if the level has been beaten
         if (PlayerPrefs.HasKey(title))
@@ -58,7 +57,24 @@ public class Level
             l.totalDeaths = PlayerPrefs.GetInt(title + "Deaths", 0);
             l.totalResets = PlayerPrefs.GetInt(title + "Resets", 0);
         }
+        
     }
+
+    public async void AwaitLeaderboardData(Level l)
+    {
+        int numTries = 0;
+        while (numTries < 10 && !OnlineServices.online)
+        {
+            await Task.Delay(10);
+            numTries++;
+        }
+        if (OnlineServices.online)
+        {
+            l.top20 = await Leaderboard.instance.GetTopPlayers(l, 20);
+            l.myRanks = await Leaderboard.instance.GetMyRanks(l);
+        }
+    }
+
 
     /// <summary>Saves a level completion, saving best time and new total time spent on it.</summary>
     /// <param name="time">Time spent on this completion.</param>

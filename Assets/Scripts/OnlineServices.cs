@@ -20,6 +20,10 @@ public class OnlineServices : MonoBehaviour
     /// </summary>
     public static bool online;
 
+    async private void Awake() {
+        online = await TryToGoOnline();
+        if (online) Settings.instance.playerLeaderboardName = await OnlineServices.GetPlayerName();
+    }
 
     /// <summary>
     /// Tries to connect to Unity Services and sign in the player anonymously.

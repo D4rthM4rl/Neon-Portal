@@ -10,6 +10,8 @@ public class LevelSelect : MonoBehaviour
 {
     /// <summary>Singleton instance of the LevelSelect.</summary>
     public static LevelSelect instance;
+    /// <summary>List of star tiers for all levels.</summary>
+    [SerializeField] private List<StarTiers> tiers;
     /// <summary>The level select menu GameObject which contains all the level buttons.</summary>
     public GameObject levelSelectMenu;
     /// <summary>The parent GameObject that contains all the level buttons.</summary>
@@ -80,6 +82,10 @@ public class LevelSelect : MonoBehaviour
         {
             loading = true;
             instance = this;
+            foreach (StarTiers t in tiers) // Assign tiers to each level
+            {
+                LevelSelect.instance.levels[t.level.world - 1, t.level.level - 1].stars = t;
+            }
         }
         else
         {
@@ -131,13 +137,13 @@ public class LevelSelect : MonoBehaviour
     {
         while (Settings.instance == null || !Settings.instance.loaded)
         {
-            yield return new WaitForSeconds(0.01f);
+            yield return null;
         }
         LoadLevels();
     }
 
     /// <summary>Loads all levels' data and updates their buttons accordingly.</summary>
-    private async void LoadLevels()
+    private void LoadLevels()
     {
         loading = true;
 
@@ -162,43 +168,38 @@ public class LevelSelect : MonoBehaviour
         }
 
         // Load all level button data in parallel
-        List<Task> loadTasks = new List<Task>();
         foreach (Level level in levels)
         {
-            loadTasks.Add(LoadLevelTimes(level));
+            LoadLevelTimes(level);
         }
 
-        await Task.WhenAll(loadTasks); // Wait for all level data to load
         loading = false;
     }
 
-    public async void ReloadAllLevels()
+    public void ReloadAllLevels()
     {
         // Load all level button data in parallel
         List<Task> loadTasks = new List<Task>();
         foreach (Level level in levels)
         {
-            loadTasks.Add(LoadLevelTimes(level));
+            LoadLevelTimes(level);
         }
-
-        await Task.WhenAll(loadTasks); // Wait for all level data to load
     }
 
     /// <summary>Sets up a button (color and time) for a level.</summary>
     /// <param name="level">Level to get the info/times of.</param>
-    private async Task LoadLevelTimes(Level level)
+    private void LoadLevelTimes(Level level)
     {
         string levelTitle = "W" + level.world + "L" + level.level;
 
         if (!levelButtons.TryGetValue(level, out LevelButton levelButton))
         {
             Debug.LogError($"Level button for {levelTitle} not found.");
-            return;
         }
 
-        await level.GetSavedValues();
-
+        level.GetSavedValues();
         SetButtonColors(levelButton);
+        level.AwaitLeaderboardData(level);
     }
 
     /// <summary>Reload a time on the menu for a level because the best time has changed.</summary>

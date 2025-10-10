@@ -67,7 +67,7 @@ public class Settings : MonoBehaviour
         "damn",
     };
 
-    async void Awake()
+    void Awake()
     {
         instance = this;
         DontDestroyOnLoad(gameObject);
@@ -83,7 +83,7 @@ public class Settings : MonoBehaviour
             platform = PlatformType.Computer;
             Debug.Log("Running on computer");
         }
-        OnlineServices.online = await OnlineServices.TryToGoOnline();
+        
         
         SetSettingsValuesToMatchSaved();
 
@@ -113,16 +113,11 @@ public class Settings : MonoBehaviour
     #region Saving Helpers
 
     /// <summary>Makes the settings values in the menu match what is saved.</summary>
-    async private void SetSettingsValuesToMatchSaved()
+    private void SetSettingsValuesToMatchSaved()
     {
         GetSavedOpt();
         GetSavedPortalColors();
         
-        if (OnlineServices.online) playerLeaderboardName = await OnlineServices.GetPlayerName();
-        else 
-        {
-            // TODO: Disable leaderboard stuff if offline?
-        }
         GetSavedTimerVisibility();
         GetSavedPlayerMovementType();
         GetSavedRotateCameraWithGravity();
