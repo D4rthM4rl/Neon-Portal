@@ -330,6 +330,15 @@ public class LevelSelect : MonoBehaviour
         if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
         else Timer.instance.timerText.enabled = false;
         gameObject.SetActive(false);
+
+        if (Settings.instance.platform == PlatformType.Phone)
+        {
+            MobileControls.instance.Enable();
+        }
+        else
+        {
+            MobileControls.instance.Disable();
+        }
     }
 
     /// <summary>Loads a level to be played.</summary>

@@ -6,6 +6,7 @@ using UnityEngine.Rendering.Universal;
 public class Player : Teleportable
 {
     [HideInInspector] public PortalGun portalGun;
+    public static Player instance;
 
     [HideInInspector] private GameObject cam;
 
@@ -72,6 +73,8 @@ public class Player : Teleportable
     protected override void Awake()
     {
         base.Awake();
+        if (instance != null) Debug.LogError("Player should be null");
+        instance = this;
         col = GetComponent<Collider2D>();
         Time.timeScale = 0f;
         currLeftAccel = minAccel;
@@ -133,15 +136,7 @@ public class Player : Teleportable
             timeHoldingR += Time.deltaTime;
             if (timeHoldingR > .75)
             {
-                timeHoldingR = 0;
-
-                level.SaveReset(Timer.instance.levelTimer);
-                RecordResetEvent();
-
-                numResets++;
-                ResetWorld();
-                ResetPlayer();
-                ResetPortals();
+                Restart();
             }
         }
         else
@@ -157,14 +152,14 @@ public class Player : Teleportable
         if (Settings.instance != null) rotateCameraWithGravity = Settings.instance.rotateCameraWithGravity;
         else rotateCameraWithGravity = false;
         
-        if ((rotateCameraWithGravity || gravityDirection == Vector2.down) && Input.GetButton("Up"))
+        if ((rotateCameraWithGravity || gravityDirection == Vector2.down) && PressingUp())
         {
             jumpQueued = true;
         }
         else if (!rotateCameraWithGravity && 
-            ((Input.GetButton("Left") && gravityDirection == Vector2.right) ||
-            (Input.GetButton("Down") && gravityDirection == Vector2.up) ||
-            (Input.GetButton("Right") && gravityDirection == Vector2.left)))
+            ((PressingLeft() && gravityDirection == Vector2.right) ||
+            (PressingDown() && gravityDirection == Vector2.up) ||
+            (PressingRight() && gravityDirection == Vector2.left)))
         {
             jumpQueued = true;
         }
@@ -188,6 +183,134 @@ public class Player : Teleportable
         }
         UpdateSpriteColors();
         RotateWithGravity();
+    }
+
+    /// <summary>
+    /// Whether the player is pressing left, accounting for platform and gravity switching mobile controls.
+    /// </summary>
+    /// <returns>True if holding left.</returns>
+    private bool PressingLeft()
+    {
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        {
+            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
+            {
+                return MobileControls.instance.HoldingLeft();
+            }
+            else
+            {
+                if (gravityDirection == Vector2.left)
+                {
+                    return MobileControls.instance.HoldingUp();
+                }
+                else if (gravityDirection == Vector2.up)
+                {
+                    return MobileControls.instance.HoldingRight();
+                }
+                else return false;
+            }
+        }
+        else
+        {
+            return Input.GetButton("Left");
+        }
+    }
+    
+    /// <summary>
+    /// Whether the player is pressing up, accounting for platform and gravity switching mobile controls.
+    /// </summary>
+    /// <returns>True if holding up.</returns>
+    private bool PressingUp()
+    {
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        {
+            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
+            {
+                return MobileControls.instance.HoldingUp();
+            }
+            else
+            {
+                if (gravityDirection == Vector2.left)
+                {
+                    return MobileControls.instance.HoldingRight();
+                }
+                else if (gravityDirection == Vector2.right)
+                {
+                    return MobileControls.instance.HoldingLeft();
+                }
+                else return false;
+            }
+        }
+        else
+        {
+            return Input.GetButton("Up");
+        }
+    }
+
+    /// <summary>
+    /// Whether the player is pressing right, accounting for platform and gravity switching mobile controls.
+    /// </summary>
+    /// <returns>True if holding right.</returns>
+    private bool PressingRight()
+    {
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        {
+            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
+            {
+                return MobileControls.instance.HoldingRight();
+            }
+            else
+            {
+                if (gravityDirection == Vector2.left)
+                {
+                    return MobileControls.instance.HoldingUp();
+                }
+                else if (gravityDirection == Vector2.up)
+                {
+                    return MobileControls.instance.HoldingLeft();
+                }
+                else return false;
+            }
+        }
+        else
+        {
+            return Input.GetButton("Right");
+        }
+    }
+
+    /// <summary>
+    /// Whether the player is pressing down, accounting for platform and gravity switching mobile controls.
+    /// </summary>
+    /// <returns>True if holding down.</returns>
+    private bool PressingDown()
+    {
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        {
+            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
+            {
+                return false;
+            }
+            else
+            {
+                if (gravityDirection == Vector2.left)
+                {
+                    return MobileControls.instance.HoldingRight();
+                }
+                else if (gravityDirection == Vector2.up)
+                {
+                    return MobileControls.instance.HoldingUp();
+                }
+                else if (gravityDirection == Vector2.right)
+                {
+                    return MobileControls.instance.HoldingLeft();
+                }
+                else return false;
+            }
+        }
+        else
+        {
+            return Input.GetButton("Down");
+        }
     }
 
     void UpdateSpriteColors()
@@ -239,6 +362,20 @@ public class Player : Teleportable
         float percentTerminal = (velocity.magnitude / terminalVelocity);
         speedLight.intensity = percentTerminal + 1f;
         speedLight.pointLightOuterRadius = 1.2f + percentTerminal;
+    }
+
+    /// <summary>Restarts the level</summary>
+    public void Restart()
+    {
+        timeHoldingR = 0;
+
+        level.SaveReset(Timer.instance.levelTimer);
+        RecordResetEvent();
+
+        numResets++;
+        ResetWorld();
+        ResetPlayer();
+        ResetPortals();
     }
 
     /// <summary>Rotates the player to align with the current gravity direction.</summary>
@@ -316,27 +453,30 @@ public class Player : Teleportable
         bool rotateCameraWithGravity;
         if (Settings.instance != null) rotateCameraWithGravity = Settings.instance.rotateCameraWithGravity;
         else rotateCameraWithGravity = false;
-        if (rotateCameraWithGravity || gravityDirection == Vector2.down) h = Input.GetAxisRaw("Horizontal");
-        else
+
+        if (rotateCameraWithGravity || gravityDirection == Vector2.down)
         {
-            if (gravityDirection == Vector2.left)
-            {
-                if (Input.GetButton("Up")) h = -1;
-                else if (Input.GetButton("Down")) h = 1;
-                else h = 0;
-            }
-            else if (gravityDirection == Vector2.up)
-            {
-                if (Input.GetButton("Right")) h = -1;
-                else if (Input.GetButton("Left")) h = 1;
-                else h = 0;
-            }
-            else if (gravityDirection == Vector2.right)
-            {
-                if (Input.GetButton("Down")) h = -1;
-                else if (Input.GetButton("Up")) h = 1;
-                else h = 0;
-            }
+            if (PressingLeft()) h = -1;
+            else if (PressingRight()) h = 1;
+            else h = 0;
+        }
+        else if (gravityDirection == Vector2.left)
+        {
+            if (PressingUp()) h = -1;
+            else if (PressingDown()) h = 1;
+            else h = 0;
+        }
+        else if (gravityDirection == Vector2.up)
+        {
+            if (PressingRight()) h = -1;
+            else if (PressingLeft()) h = 1;
+            else h = 0;
+        }
+        else if (gravityDirection == Vector2.right)
+        {
+            if (PressingDown()) h = -1;
+            else if (PressingUp()) h = 1;
+            else h = 0;
         }
         Vector2 gravDir = gravityDirection.normalized;
         Vector2 moveAxis = new Vector2(-gravDir.y, gravDir.x); // perpendicular to gravity
@@ -413,8 +553,8 @@ public class Player : Teleportable
 
     void CheckForInputs()
     {
-        if (Input.GetButtonDown("Left") || Input.GetButtonDown("Up") || Input.GetButtonDown("Right") || 
-            Input.GetButtonDown("Down") || Input.GetButtonDown("Fire1") ||
+        if (PressingLeft() || PressingUp() || PressingRight() || 
+            PressingDown() || Input.GetButtonDown("Fire1") ||
              (Input.GetButtonDown("Fire2") && 
              (Settings.instance == null || !Settings.instance.leftClickForBothPortals)))
         {

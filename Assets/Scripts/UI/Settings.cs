@@ -9,6 +9,7 @@ public class Settings : MonoBehaviour
 {
     public static Settings instance;
     public bool rotateCameraWithGravity = false;
+    // public bool rotateMobileControls = true;
     public bool leftClickForBothPortals = true;
     public bool needToTouchGroundToReenterPortal = true;
     public bool showTimer = true;
@@ -39,6 +40,7 @@ public class Settings : MonoBehaviour
     [SerializeField] private Toggle portalSplitToggle;
     [SerializeField] private Toggle needToTouchGroundToggle;
     [SerializeField] private Toggle rotateCameraToggle;
+    [SerializeField] private Toggle rotateMobileControlsToggle;
     [SerializeField] private Toggle onlineToggle;
 
     #endregion
@@ -67,20 +69,9 @@ public class Settings : MonoBehaviour
 
     async void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-            OnlineServices.online = await OnlineServices.TryToGoOnline();
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-        
-        SetSettingsValuesToMatchSaved();
-
-        if (isMobile())
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+        if (!isMobile())
         {
             // If on mobile, set the platform type to Phone
             platform = PlatformType.Phone;
@@ -92,6 +83,10 @@ public class Settings : MonoBehaviour
             platform = PlatformType.Computer;
             Debug.Log("Running on computer");
         }
+        OnlineServices.online = await OnlineServices.TryToGoOnline();
+        
+        SetSettingsValuesToMatchSaved();
+
         // playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
         loaded = true;
     }
@@ -104,13 +99,13 @@ public class Settings : MonoBehaviour
         [System.Runtime.InteropServices.DllImport("__Internal")]
         public static extern bool IsPreferredDesktopPlatform();
     #else
-            public static bool IsMobileBrowser() => false;
+            private static bool IsMobileBrowser() => false;
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
 
     /// <summary>Returns if the game is WebGL and running on a mobile device.</summary>
     /// <returns>True if the game is on WebGL on a mobile device.</returns>
-    public bool isMobile()
+    private bool isMobile()
     {
         return IsMobileBrowser();
     }
