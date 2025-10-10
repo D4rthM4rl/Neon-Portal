@@ -164,7 +164,7 @@ public class PortalGun : MonoBehaviour
         GameObject indicator;
         normal = hit.normal;
         // Check if we hit a valid surface
-        if (hit.transform.CompareTag("Unportalable"))
+        if (hit.collider.CompareTag("Unportalable"))
         {
             // Show the invalid indicator
             indicator = invalidIndicator;
@@ -199,7 +199,7 @@ public class PortalGun : MonoBehaviour
 
             // 2. Check back toward the platform (shoot opposite of normal)
             RaycastHit2D backHit = Physics2D.Raycast(startPoint + right.normalized * 0.5f, -normal, 0.1f, aimLayers);
-            if (!backHit || backHit.transform.CompareTag("Unportalable"))
+            if (!backHit || backHit.collider.CompareTag("Unportalable"))
             {
                 canPlace = false;
                 break;
@@ -221,7 +221,7 @@ public class PortalGun : MonoBehaviour
 
             // 2. Check back toward the platform (shoot opposite of normal)
             RaycastHit2D backHit = Physics2D.Raycast(startPoint - right.normalized * 0.5f, -normal, 0.1f, aimLayers);
-            if (!backHit || backHit.transform.CompareTag("Unportalable"))
+            if (!backHit || backHit.collider.CompareTag("Unportalable"))
             {
                 canPlace = false;
                 break;
