@@ -26,15 +26,7 @@ public class MovingBlock : MonoBehaviour
         positions.Insert(0, transform.position); // Ensure the first position is the current position
         waitingForProximity = waitForProximity;
 
-        GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
-        foreach (GameObject p in playerTags)
-        {
-            if (p.GetComponent<Player>() != null)
-            {
-                player = p;
-                break;
-            }
-        }
+        player = Player.instance.gameObject;
     }
 
     // Update is called once per frame

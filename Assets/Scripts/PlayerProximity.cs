@@ -13,7 +13,7 @@ public class PlayerProximity : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+        player = Player.instance.gameObject;
         if (targetPositions.Count == 0)
         {
             targetPositions.Add(transform.position);

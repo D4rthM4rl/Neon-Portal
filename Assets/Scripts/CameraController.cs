@@ -43,15 +43,7 @@ public class CameraController : MonoBehaviour
     /// <param name="brain">The Cinemachine Brain which controls the camera.</param>
     private IEnumerator GetCamera(CinemachineBrain brain)
     {
-        GameObject[] playerTags = GameObject.FindGameObjectsWithTag("Player");
-        foreach (GameObject p in playerTags)
-        {
-            if (p.GetComponent<Player>() != null)
-            {
-                player = p;
-                break;
-            }
-        }
+        player = Player.instance.gameObject;
 
         if (player == null)
         {

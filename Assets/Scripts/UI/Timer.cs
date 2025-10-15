@@ -126,7 +126,7 @@ public class Timer : MonoBehaviour
         else // If in a level
         {
             Level level = LevelSelect.instance.GetLevelByName(levelName);
-            Player player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+            Player player = Player.instance;
             inactiveEvent = new inactive
             {
                 level = levelName,
