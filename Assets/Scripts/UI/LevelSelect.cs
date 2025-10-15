@@ -328,8 +328,8 @@ public class LevelSelect : MonoBehaviour
         float fadeDuration = Transition.instance.fadeDuration;
         yield return StartCoroutine(Transition.instance.FadeAsync(0f, 1f, fadeDuration/2)); // Fade out
         Transition.instance.LoadLevelFromLevelSelect(level);
-        if (Settings.instance.showTimer) Timer.instance.timerText.enabled = true;
-        else Timer.instance.timerText.enabled = false;
+        if (Settings.instance.showTimer) Timer.instance.Enable();
+        else Timer.instance.Disable();
         gameObject.SetActive(false);
 
         if (Settings.instance.platform == PlatformType.Phone)

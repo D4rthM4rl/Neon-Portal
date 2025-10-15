@@ -41,8 +41,9 @@ public class Transition : MonoBehaviour
 
     public void StartTransition(int world, int level, float time, float prevBest)
     {
-        Timer.instance.timerText.enabled = false;
+        Timer.instance.Enable();
         Time.timeScale = 0f;
+        MobileControls.instance.Disable();
         StartCoroutine(ChooseNext(world, level, time, prevBest));
     }
 
@@ -96,7 +97,8 @@ public class Transition : MonoBehaviour
         StartCoroutine(FadeAllObjectsAsync(0, true)); // Unload all sprites
 
         StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
-        Timer.instance.timerText.enabled = true;
+        Timer.instance.Enable();
+        if (Settings.instance.platform == PlatformType.Phone) MobileControls.instance.Enable();
         StartCoroutine(FadeAllObjectsAsync(0.2f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }

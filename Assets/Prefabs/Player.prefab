@@ -832,7 +832,7 @@ MonoBehaviour:
   rayLength: 0.1
   isGrounded: 1
   cantReenterIndex: -1
-  initialJumpForce: 20
+  initialJumpForce: 18
   extraJumpForce: 9000
   jumpFalloffRate: 20000
   maxJumpDuration: 0.1

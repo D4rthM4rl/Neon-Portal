@@ -75,12 +75,16 @@ public class Settings : MonoBehaviour
         {
             // If on mobile, set the platform type to Phone
             platform = PlatformType.Phone;
+            MainMenu.instance.mobileMainMenuUI.SetActive(true);
+            MainMenu.instance.pcMainMenuUI.SetActive(false);
             Debug.Log("Running on mobile device");
         }
         else
         {
             // If on computer, set the platform type to Computer
             platform = PlatformType.Computer;
+            MainMenu.instance.pcMainMenuUI.SetActive(true);
+            MainMenu.instance.mobileMainMenuUI.SetActive(false);
             Debug.Log("Running on computer");
         }
         

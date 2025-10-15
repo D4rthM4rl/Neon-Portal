@@ -52,62 +52,76 @@ public class PortalGun : MonoBehaviour
 
     void Update()
     {
-        if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused)
+        if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) return;
+
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (Settings.instance.platform == PlatformType.Phone)
         {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 direction = (mousePos - transform.position).normalized;
+            return;
+        }
+        
+        ShootOption shootOption;
+        if (Input.GetButtonDown("Fire1")) shootOption = ShootOption.Portal1;
+        else if (Input.GetButtonDown("Fire2")) shootOption = ShootOption.Portal2;
+        else shootOption = ShootOption.None;
+        AimPortal(mousePos, shootOption);
+    }
 
-            // 1) Raycast toward mouse
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, aimLayers);
+    public void AimPortal(Vector3 aimPos, ShootOption shoot)
+    {
+        Vector2 direction = (aimPos - transform.position).normalized;
 
-            Vector3 endPoint = hit 
-                ? (Vector3)hit.point 
-                : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
+        // 1) Raycast toward mouse
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, aimLayers);
 
-            // 2) Draw the line
-            invalidLineRenderer.SetPosition(0, transform.position);
-            validLineRenderer.SetPosition(0, transform.position);
-            invalidLineRenderer.SetPosition(1, endPoint);
-            validLineRenderer.SetPosition(1, endPoint);
-            if (portalIndex == 0)
-            {
-                Color c1;
-                if (Settings.instance == null) c1 = Color.magenta;
-                else c1 = Settings.instance.portal1Color;
-                invalidLineRenderer.startColor = c1;
-                invalidLineRenderer.endColor = c1;
-                validLineRenderer.startColor = c1;
-                validLineRenderer.endColor = c1;
-            }
-            else if (portalIndex == 1)
-            {
-                Color c2;
-                if (Settings.instance == null) c2 = Color.yellow;
-                else c2 = Settings.instance.portal2Color;
-                invalidLineRenderer.startColor = c2;
-                invalidLineRenderer.endColor = c2;
-                validLineRenderer.startColor = c2;
-                validLineRenderer.endColor = c2;
-            }
-            else
-            {
-                Debug.LogError("Invalid portal index: " + portalIndex);
-            }
+        Vector3 endPoint = hit 
+            ? (Vector3)hit.point 
+            : (Vector3)((Vector2)transform.position + direction.normalized * maxDistance);
 
-            // 3) Handle indicator
-            RemoveIndicator();
-            if (hit)
+        // 2) Draw the line
+        invalidLineRenderer.SetPosition(0, transform.position);
+        validLineRenderer.SetPosition(0, transform.position);
+        invalidLineRenderer.SetPosition(1, endPoint);
+        validLineRenderer.SetPosition(1, endPoint);
+        if (portalIndex == 0)
+        {
+            Color c1;
+            if (Settings.instance == null) c1 = Color.magenta;
+            else c1 = Settings.instance.portal1Color;
+            invalidLineRenderer.startColor = c1;
+            invalidLineRenderer.endColor = c1;
+            validLineRenderer.startColor = c1;
+            validLineRenderer.endColor = c1;
+        }
+        else if (portalIndex == 1)
+        {
+            Color c2;
+            if (Settings.instance == null) c2 = Color.yellow;
+            else c2 = Settings.instance.portal2Color;
+            invalidLineRenderer.startColor = c2;
+            invalidLineRenderer.endColor = c2;
+            validLineRenderer.startColor = c2;
+            validLineRenderer.endColor = c2;
+        }
+        else
+        {
+            Debug.LogError("Invalid portal index: " + portalIndex);
+        }
+
+        // 3) Handle indicator
+        RemoveIndicator();
+        if (hit)
+        {
+            Vector2 normal = Vector2.zero;
+            if (TryPlaceIndicator(hit, out normal))
             {
-                Vector2 normal = Vector2.zero;
-                if (TryPlaceIndicator(hit, out normal))
+                if ((Settings.instance == null || Settings.instance.leftClickForBothPortals)
+                     && shoot == ShootOption.Portal1)
+                    ShootPortal(hit, normal, portalIndex);
+                else if (Settings.instance != null && !Settings.instance.leftClickForBothPortals)
                 {
-                    if ((Settings.instance == null || Settings.instance.leftClickForBothPortals) && Input.GetButtonDown("Fire1"))
-                        ShootPortal(hit, normal, portalIndex);
-                    else if (Settings.instance != null && !Settings.instance.leftClickForBothPortals)
-                    {
-                        if (Input.GetButtonDown("Fire1")) ShootPortal(hit, normal, 0);
-                        if (Input.GetButtonDown("Fire2")) ShootPortal(hit, normal, 1);
-                    }
+                    if (shoot == ShootOption.Portal1) ShootPortal(hit, normal, 0);
+                    if (shoot == ShootOption.Portal2) ShootPortal(hit, normal, 1);
                 }
             }
         }
@@ -133,8 +147,16 @@ public class PortalGun : MonoBehaviour
         placeholder.transform.parent = hit.transform;
         portalController.transform.parent = placeholder.transform;
         portalController.transform.up = hit.normal;
-        portalIndex = (index + 1) % portals.Count;
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        { MobileControls.instance.SwitchPortals(); }
+        else IncrementPortalIndex();
         currentPortalToSpawn = portals[index];
+    }
+
+    public int IncrementPortalIndex() 
+    {
+        portalIndex = (portalIndex + 1) % portals.Count;
+        return portalIndex;
     }
 
     public void ResetPortals()
@@ -151,6 +173,13 @@ public class PortalGun : MonoBehaviour
         currentPortalToSpawn = portals[portalIndex];
         validIndicator.SetActive(false);
         invalidIndicator.SetActive(false);
+    }
+
+    public void SetLinesActive(bool active)
+    {
+        validLineRenderer.enabled = active;
+        invalidLineRenderer.enabled = active;
+        RemoveIndicator();
     }
 
     /// <summary>
@@ -318,4 +347,11 @@ public class PortalGun : MonoBehaviour
             Gizmos.DrawLine((startPoint - right.normalized * 0.5f), (startPoint - right.normalized * 0.5f) - normal * 0.1f);
         }
     }
+}
+
+public enum ShootOption
+{
+    None,
+    Portal1,
+    Portal2,
 }

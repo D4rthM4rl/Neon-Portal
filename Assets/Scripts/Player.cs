@@ -7,6 +7,7 @@ public class Player : Teleportable
 {
     [HideInInspector] public PortalGun portalGun;
     public static Player instance;
+    public bool hasStarted;
 
     [HideInInspector] private GameObject cam;
 
@@ -77,6 +78,8 @@ public class Player : Teleportable
         instance = this;
         col = GetComponent<Collider2D>();
         Time.timeScale = 0f;
+        hasStarted = false;
+        Timer.instance.levelTimer = 0;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
         cam = GameObject.FindGameObjectWithTag("MainCamera");
@@ -113,6 +116,7 @@ public class Player : Teleportable
         else Debug.LogWarning("Timer isn't enabled");
 
         RecordLevelStartEvent();
+        MobileControls.instance.SetColors(Settings.instance.portal1Color, Settings.instance.portal2Color);
     }
 
     // Update is called once per frame
@@ -192,28 +196,9 @@ public class Player : Teleportable
     private bool PressingLeft()
     {
         if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
-        {
-            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
-            {
-                return MobileControls.instance.HoldingLeft();
-            }
-            else
-            {
-                if (gravityDirection == Vector2.left)
-                {
-                    return MobileControls.instance.HoldingUp();
-                }
-                else if (gravityDirection == Vector2.up)
-                {
-                    return MobileControls.instance.HoldingRight();
-                }
-                else return false;
-            }
-        }
+            return MobileControls.instance.HoldingLeft();
         else
-        {
             return Input.GetButton("Left");
-        }
     }
     
     /// <summary>
@@ -223,28 +208,9 @@ public class Player : Teleportable
     private bool PressingUp()
     {
         if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
-        {
-            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
-            {
-                return MobileControls.instance.HoldingUp();
-            }
-            else
-            {
-                if (gravityDirection == Vector2.left)
-                {
-                    return MobileControls.instance.HoldingRight();
-                }
-                else if (gravityDirection == Vector2.right)
-                {
-                    return MobileControls.instance.HoldingLeft();
-                }
-                else return false;
-            }
-        }
+            return MobileControls.instance.HoldingUp();
         else
-        {
             return Input.GetButton("Up");
-        }
     }
 
     /// <summary>
@@ -254,28 +220,9 @@ public class Player : Teleportable
     private bool PressingRight()
     {
         if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
-        {
-            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
-            {
-                return MobileControls.instance.HoldingRight();
-            }
-            else
-            {
-                if (gravityDirection == Vector2.left)
-                {
-                    return MobileControls.instance.HoldingUp();
-                }
-                else if (gravityDirection == Vector2.up)
-                {
-                    return MobileControls.instance.HoldingLeft();
-                }
-                else return false;
-            }
-        }
+            return MobileControls.instance.HoldingRight();
         else
-        {
             return Input.GetButton("Right");
-        }
     }
 
     /// <summary>
@@ -285,32 +232,9 @@ public class Player : Teleportable
     private bool PressingDown()
     {
         if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
-        {
-            if (Settings.instance.rotateCameraWithGravity || gravityDirection == Vector2.down)
-            {
-                return false;
-            }
-            else
-            {
-                if (gravityDirection == Vector2.left)
-                {
-                    return MobileControls.instance.HoldingRight();
-                }
-                else if (gravityDirection == Vector2.up)
-                {
-                    return MobileControls.instance.HoldingUp();
-                }
-                else if (gravityDirection == Vector2.right)
-                {
-                    return MobileControls.instance.HoldingLeft();
-                }
-                else return false;
-            }
-        }
+            return MobileControls.instance.HoldingDown();
         else
-        {
             return Input.GetButton("Down");
-        }
     }
 
     void UpdateSpriteColors()
@@ -422,6 +346,7 @@ public class Player : Teleportable
     public void ResetPlayer()
     {
         Time.timeScale = 0f;
+        hasStarted = false;
         jumpQueued = false;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
@@ -554,11 +479,14 @@ public class Player : Teleportable
     void CheckForInputs()
     {
         if (PressingLeft() || PressingUp() || PressingRight() || 
-            PressingDown() || Input.GetButtonDown("Fire1") ||
-             (Input.GetButtonDown("Fire2") && 
-             (Settings.instance == null || !Settings.instance.leftClickForBothPortals)))
+            PressingDown() || Input.GetButtonDown("Fire1") || (Input.GetButtonDown("Fire2") && 
+            (Settings.instance == null || !Settings.instance.leftClickForBothPortals)))
         {
-            if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
+            if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) 
+            {
+                Time.timeScale = 1f;
+                hasStarted = true;
+            }
             if (Timer.instance != null) Timer.instance.ResetInactivityTimer();
         }
     }

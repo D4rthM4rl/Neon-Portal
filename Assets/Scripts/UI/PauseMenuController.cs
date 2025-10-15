@@ -55,14 +55,8 @@ public class PauseMenuController : MonoBehaviour
         Timer.instance.ResetInactivityTimer();
         Time.timeScale = originalTimeScale;
         if (Settings.instance.platform == PlatformType.Phone) MobileControls.instance.Enable();
-        if (Settings.instance.showTimer == true)
-        {
-            Timer.instance.timerText.enabled = true;
-        }
-        else
-        {
-            Timer.instance.timerText.enabled = false;
-        }
+        if (Settings.instance.showTimer == true) Timer.instance.Enable();
+        else Timer.instance.Disable();
         pauseMenuUI.SetActive(false);
         foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
         {
@@ -77,7 +71,7 @@ public class PauseMenuController : MonoBehaviour
         Timer.instance.ResetInactivityTimer();
         originalTimeScale = Time.timeScale;
         Time.timeScale = 0f;
-        Timer.instance.timerText.enabled = false;
+        Timer.instance.Disable();
         pauseMenuUI.SetActive(true);
         foreach (GameObject text in GameObject.FindGameObjectsWithTag("Not On Pause"))
         {

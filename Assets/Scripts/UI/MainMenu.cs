@@ -11,11 +11,17 @@ public class MainMenu : MonoBehaviour
     /// <summary>The GameObject that contains the title text.</summary>
     [SerializeField] private GameObject title;
     /// <summary>The GameObject parent for the UI for the main menu.</summary>
-    [SerializeField] private GameObject mainMenuUI;
+    public GameObject pcMainMenuUI;
+    /// <summary>The mobile version GameObject parent for the UI for the main menu.</summary>
+    public GameObject mobileMainMenuUI;
     /// <summary>The GameObject for Play/every level completed button.</summary>
     [SerializeField] private Button playButton;
+    /// <summary>The mobile menuGameObject for Play/every level completed button.</summary>
+    [SerializeField] private Button mobilePlayButton;
     /// <summary>The GameObject for Play/every level completed button.</summary>
     [SerializeField] private TextMeshProUGUI playButtonText;
+    /// <summary>The GameObject for Play/every level completed button.</summary>
+    [SerializeField] private TextMeshProUGUI mobilePlayButtonText;
     /// <summary>The GameObject parent for the UI for the level select menu.</summary>
     [SerializeField] private GameObject levelSelectUI;
     /// <summary>The GameObject parent for the UI for the options menu.</summary>
@@ -38,7 +44,7 @@ public class MainMenu : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
+        
         DontDestroyOnLoad(gameObject);
     }
 
@@ -129,7 +135,8 @@ public class MainMenu : MonoBehaviour
     public void OpenMainMenu()
     {
         Timer.instance.ResetInactivityTimer();
-        mainMenuUI.SetActive(true);
+        pcMainMenuUI.SetActive(Settings.instance.platform == PlatformType.Computer);
+        mobileMainMenuUI.SetActive(Settings.instance.platform == PlatformType.Phone);
         StartCoroutine(SetPlayButton());
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(false);
@@ -145,19 +152,27 @@ public class MainMenu : MonoBehaviour
             playButton.interactable = true;
             playButtonText.text = "Play";   
             playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(700, 250);
+
+            mobilePlayButton.interactable = true;
+            mobilePlayButtonText.text = "Play";   
+            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(600, 300);
         }
         else
         {
             playButton.interactable = false;
             playButtonText.text = "All Levels Completed";
             playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(1850, 250);
+            mobilePlayButton.interactable = false;
+            mobilePlayButtonText.text = "All Levels Completed";
+            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(2000, 300);
         }
     }
 
     public void OpenLevelSelect()
     {
         Timer.instance.ResetInactivityTimer();
-        mainMenuUI.SetActive(false);
+        pcMainMenuUI.SetActive(false);
+        mobileMainMenuUI.SetActive(false);
         levelSelectUI.SetActive(true);
         LevelSelect.instance.UnselectLevel();
         optionsUI.SetActive(false);
@@ -172,7 +187,8 @@ public class MainMenu : MonoBehaviour
     public void OpenOptions()
     {
         Timer.instance.ResetInactivityTimer();
-        mainMenuUI.SetActive(false);
+        pcMainMenuUI.SetActive(false);
+        mobileMainMenuUI.SetActive(false);
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(true);
         Settings.instance.MakeSettingsUIMatchSaved();

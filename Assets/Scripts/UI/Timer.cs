@@ -6,7 +6,9 @@ using TMPro;
 public class Timer : MonoBehaviour
 {
     public static Timer instance;
-    public TextMeshProUGUI timerText;
+    public TextMeshProUGUI pcTimerText;
+    public Canvas pcTimerCanvas;
+    public TextMeshProUGUI mobileTimerText;
     public float levelTimer = 0f;
     public float unresetLevelTimer = 0;
     public float inactivityTimer = 0;
@@ -23,7 +25,6 @@ public class Timer : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-            timerText = GetComponentInChildren<TextMeshProUGUI>();
             inactivityTimer = 0;
             sessionTimer = 0;
         }
@@ -44,6 +45,26 @@ public class Timer : MonoBehaviour
         }
     }
 
+    public void Enable()
+    {
+        if (Settings.instance.platform == PlatformType.Phone)
+        {
+            mobileTimerText.enabled = true;
+            pcTimerCanvas.enabled = false;
+        }
+        else
+        {
+            mobileTimerText.enabled = false;
+            pcTimerCanvas.enabled = true;
+        }
+    }
+
+    public void Disable()
+    {
+        mobileTimerText.enabled = false;
+        pcTimerCanvas.enabled = false;
+    }
+
     /// <summary>Reset the inactivity timer because the user did something.</summary>
     public void ResetInactivityTimer()
     {
@@ -59,14 +80,15 @@ public class Timer : MonoBehaviour
         if (gameObject.activeSelf == false) return;
 		levelTimer += Time.deltaTime;
         int minutes = (int)levelTimer / 60;
-        int seconds = (int)levelTimer % 60;
+        float seconds = levelTimer % 60;
+        TextMeshProUGUI timerText = Settings.instance.platform == PlatformType.Phone ? mobileTimerText : pcTimerText;
         if (seconds < 10)
         {
-            timerText.text = "Time: " + minutes + ":0" + seconds;
+            timerText.text = minutes + ":0" + seconds.ToString("F2");
         }
         else
         {
-            timerText.text = "Time: " + minutes + ":" + seconds;
+            timerText.text = minutes + ":" + seconds.ToString("F2");
         }
 	}
 
