@@ -249,6 +249,11 @@ public class MobileControls : MonoBehaviour
         Player.instance.Restart();
     }
 
+    public void RemovePortals()
+    {
+        Player.instance.ResetPortals();
+    }
+
     public void Enable() { gameObject.GetComponent<Canvas>().enabled = true; }
     public void Disable() { gameObject.GetComponent<Canvas>().enabled = false; }
 }

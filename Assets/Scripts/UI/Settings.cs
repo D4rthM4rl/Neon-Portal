@@ -72,7 +72,7 @@ public class Settings : MonoBehaviour
     {
         instance = this;
         DontDestroyOnLoad(gameObject);
-        if (!isMobile())
+        if (isMobile())
         {
             // If on mobile, set the platform type to Phone
             platform = PlatformType.Phone;
