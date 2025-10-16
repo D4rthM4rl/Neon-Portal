@@ -79,7 +79,7 @@ public class Player : Teleportable
         col = GetComponent<Collider2D>();
         Time.timeScale = 0f;
         hasStarted = false;
-        Timer.instance.levelTimer = 0;
+        // Timer.instance.levelTimer = 0;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
         cam = GameObject.FindGameObjectWithTag("MainCamera");
@@ -116,7 +116,8 @@ public class Player : Teleportable
         else Debug.LogWarning("Timer isn't enabled");
 
         RecordLevelStartEvent();
-        MobileControls.instance.SetColors(Settings.instance.portal1Color, Settings.instance.portal2Color);
+        if (MobileControls.instance)
+            MobileControls.instance.SetColors(Settings.instance.portal1Color, Settings.instance.portal2Color);
     }
 
     // Update is called once per frame
