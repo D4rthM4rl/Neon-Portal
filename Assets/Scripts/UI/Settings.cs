@@ -9,7 +9,7 @@ public class Settings : MonoBehaviour
 {
     public static Settings instance;
     public bool rotateCameraWithGravity = false;
-    // public bool rotateMobileControls = true;
+    public bool rotateMobileControls = true;
     public bool leftClickForBothPortals = true;
     public bool needToTouchGroundToReenterPortal = true;
     public bool showTimer = true;
@@ -42,11 +42,12 @@ public class Settings : MonoBehaviour
     [SerializeField] private Toggle rotateCameraToggle;
     [SerializeField] private Toggle rotateMobileControlsToggle;
     [SerializeField] private Toggle onlineToggle;
+    [SerializeField] private TextMeshProUGUI portalSplitText;
+    
 
     #endregion
 
-    [SerializeField]
-    private TextMeshProUGUI playerNameErrorText;
+    [SerializeField] private TextMeshProUGUI playerNameErrorText;
 
     public PlatformType platform = PlatformType.Computer;
     public bool loaded = false;
@@ -77,6 +78,8 @@ public class Settings : MonoBehaviour
             platform = PlatformType.Phone;
             MainMenu.instance.mobileMainMenuUI.SetActive(true);
             MainMenu.instance.pcMainMenuUI.SetActive(false);
+            rotateMobileControlsText.gameObject.SetActive(true);
+            portalSplitText.text = "Manually Switch Portal Creation";
             Debug.Log("Running on mobile device");
         }
         else
@@ -85,6 +88,8 @@ public class Settings : MonoBehaviour
             platform = PlatformType.Computer;
             MainMenu.instance.pcMainMenuUI.SetActive(true);
             MainMenu.instance.mobileMainMenuUI.SetActive(false);
+            rotateMobileControlsToggle.gameObject.SetActive(false);
+            portalSplitText.text = "Use Left Click for Both Portals";
             Debug.Log("Running on computer");
         }
         
@@ -125,6 +130,7 @@ public class Settings : MonoBehaviour
         GetSavedTimerVisibility();
         GetSavedPlayerMovementType();
         GetSavedRotateCameraWithGravity();
+        GetSavedRotateMobileControls();
         GetSavedPortalSplit();
         GetSavedPortalEntering();
     }
@@ -148,6 +154,10 @@ public class Settings : MonoBehaviour
 
         showTimerToggle.isOn = showTimer;
         rotateCameraToggle.isOn = rotateCameraWithGravity;
+        // NOT TRIGGERING WHEN IT SHOULD BE
+        // Debug.Log("Rotate camera: " + rotateCameraWithGravity);
+        if (rotateCameraWithGravity) SetInteractableRotateMobileControls(false);
+        else rotateMobileControlsToggle.isOn = rotateMobileControls;
         onlineToggle.isOn = OnlineServices.online;
         portalSplitToggle.isOn = leftClickForBothPortals;
         needToTouchGroundToggle.isOn = needToTouchGroundToReenterPortal;
@@ -275,6 +285,11 @@ public class Settings : MonoBehaviour
     private void GetSavedRotateCameraWithGravity()
     {
         rotateCameraWithGravity = PlayerPrefs.GetInt("RotateCameraWithGravity", 0) == 1;
+    }
+
+    private void GetSavedRotateMobileControls()
+    {
+        rotateMobileControls = PlayerPrefs.GetInt("RotateMobileCamera", 0) == 1;
     }
 
     private void GetSavedPortalSplit()
@@ -469,7 +484,15 @@ public class Settings : MonoBehaviour
     public void SetRotateCameraWithGravity()
     {
         rotateCameraWithGravity = rotateCameraToggle.isOn;
+        SetInteractableRotateMobileControls(!rotateCameraWithGravity);
         PlayerPrefs.SetInt("RotateCameraWithGravity", rotateCameraWithGravity ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    public void SetRotateMobileControls()
+    {
+        rotateMobileControls = rotateMobileControlsToggle.isOn;
+        PlayerPrefs.SetInt("RotateMobileControls", rotateMobileControls ? 1 : 0);
         PlayerPrefs.Save();
     }
 
@@ -571,6 +594,17 @@ public class Settings : MonoBehaviour
     // }
 
     #endregion
+
+    [SerializeField] private TextMeshProUGUI rotateMobileControlsText;
+    private void SetInteractableRotateMobileControls(bool interactable)
+    {
+        rotateMobileControlsToggle.isOn = false;
+        rotateMobileControlsToggle.interactable = interactable;
+        Color c = rotateMobileControlsText.color;
+        c.a = interactable ? 1 : .25f;
+        rotateMobileControlsText.color = c;
+        SetRotateMobileControls();
+    }
 
     private void SetButtonColor(Color c, Button button)
     {

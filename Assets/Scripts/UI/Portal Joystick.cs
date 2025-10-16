@@ -40,8 +40,9 @@ public class PortalJoystick : OnScreenStick, IPointerDownHandler, IPointerUpHand
         buttonImage.color = unpressedColor;
         isDragging = false;
         if (transform.position.sqrMagnitude > sensitivityMagnitude && Player.instance)
+        {
             MobileControls.instance.ShootPortal(lastValidPos);
-        
+        }
     }
 
     public new void OnPointerDown(PointerEventData data)

@@ -6,9 +6,19 @@ public class MobileControls : MonoBehaviour
 {
     public static MobileControls instance;
 
+    [Header("Rotating Controls")]
+    [SerializeField] private GameObject rotatingButtonParent;
+    [SerializeField] private UpDownButton leftButtonR;
+    [SerializeField] private UpDownButton rightButtonR;
+    [SerializeField] private UpDownButton jumpButtonR;
+    [Header("Non-Rotating Controls")]
+    [SerializeField] private GameObject nonRotatingButtonParent;
     [SerializeField] private UpDownButton leftButton;
     [SerializeField] private UpDownButton rightButton;
-    [SerializeField] private UpDownButton jumpButton;
+    [SerializeField] private UpDownButton upButton;
+    [SerializeField] private UpDownButton downButton;
+
+    [Header("Other Controls")]
     [SerializeField] private Button pauseButton;
     [SerializeField] private Button restartButton;
 
@@ -45,25 +55,25 @@ public class MobileControls : MonoBehaviour
         Player p = Player.instance;
         if (Settings.instance.rotateCameraWithGravity)
         {
-            leftButton.transform.rotation = Quaternion.Euler(0, 0, 90);
-            rightButton.transform.rotation = Quaternion.Euler(0, 0, -90);
-            jumpButton.transform.rotation = Quaternion.identity;
+            // leftButton.transform.rotation = Quaternion.Euler(0, 0, 90);
+            // rightButton.transform.rotation = Quaternion.Euler(0, 0, -90);
+            // jumpButton.transform.rotation = Quaternion.identity;
         }
         else
         {
             gravDir = p.gravityDirection.normalized;
-            RotateFromOriginal(90, leftButton.transform);
-            RotateFromOriginal(-90, rightButton.transform);
-            RotateFromOriginal(0, jumpButton.transform);
+            RotateFromOriginal(90, leftButtonR.transform);
+            RotateFromOriginal(-90, rightButtonR.transform);
+            RotateFromOriginal(0, jumpButtonR.transform);
             if (gravDir.y > 0) // Scuffed solution to going to > < instead of switching the buttons in space
             {
-                leftButton.transform.localScale = new Vector3(1, -1, 1);
-                rightButton.transform.localScale = new Vector3(1, -1, 1);
+                leftButtonR.transform.localScale = new Vector3(1, -1, 1);
+                rightButtonR.transform.localScale = new Vector3(1, -1, 1);
             }
             else
             {
-                leftButton.transform.localScale = new Vector3(1, 1, 1);
-                rightButton.transform.localScale = new Vector3(1, 1, 1);
+                leftButtonR.transform.localScale = new Vector3(1, 1, 1);
+                rightButtonR.transform.localScale = new Vector3(1, 1, 1);
             }
         }
         
@@ -161,60 +171,82 @@ public class MobileControls : MonoBehaviour
         );
     }
 
+    public void EnableCorrectControls()
+    {
+        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls)
+        {
+            rotatingButtonParent.SetActive(false);
+            nonRotatingButtonParent.SetActive(true);
+        }
+        else
+        {
+            rotatingButtonParent.SetActive(true);
+            nonRotatingButtonParent.SetActive(false);
+        }
+    }
+
     public bool HoldingLeft()
     {
-        if (Settings.instance.rotateCameraWithGravity || gravDir == Vector2.down) 
+        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
             return leftButton.buttonPressed;
+
+        if (gravDir == Vector2.down) 
+            return leftButtonR.buttonPressed;
         if (gravDir == Vector2.right)
-            return jumpButton.buttonPressed;
+            return jumpButtonR.buttonPressed;
         if (gravDir == Vector2.up)
-            return leftButton.buttonPressed; // Double switch button
+            return leftButtonR.buttonPressed; // Double switch button
         else return false;
     }
     
     public bool HoldingRight() 
     {
-        if (Settings.instance.rotateCameraWithGravity || gravDir == Vector2.down) 
+        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
             return rightButton.buttonPressed;
+
+        if (gravDir == Vector2.down)
+            return rightButtonR.buttonPressed;
         if (gravDir == Vector2.left)
-            return jumpButton.buttonPressed;
+            return jumpButtonR.buttonPressed;
         if (gravDir == Vector2.up)
-            return rightButton.buttonPressed; // Double switch button
+            return rightButtonR.buttonPressed; // Double switch button
         else return false;
     }
 
     public bool HoldingUp() 
     {
-        if (Settings.instance.rotateCameraWithGravity || gravDir == Vector2.down) 
-            return jumpButton.buttonPressed;
+        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
+            return upButton.buttonPressed;
+
+        if (gravDir == Vector2.down) 
+            return jumpButtonR.buttonPressed;
         if (gravDir == Vector2.left)
-            return leftButton.buttonPressed; // Double switch button
+            return leftButtonR.buttonPressed; // Double switch button
         if (gravDir == Vector2.right)
-            return rightButton.buttonPressed; // Double switch button
+            return rightButtonR.buttonPressed; // Double switch button
         else return false;
     }
 
     public bool HoldingDown() 
     {
-        if (Settings.instance.rotateCameraWithGravity || gravDir == Vector2.down) 
+
+        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
+            return downButton.buttonPressed;
+
+        if (gravDir == Vector2.down) 
             return false;
         if (gravDir == Vector2.left)
-            return rightButton.buttonPressed; // Double switch button
+            return rightButtonR.buttonPressed; // Double switch button
         if (gravDir == Vector2.up)
-            return jumpButton.buttonPressed;
+            return jumpButtonR.buttonPressed;
         if (gravDir == Vector2.right)
-            return leftButton.buttonPressed; // Double switch button
+            return leftButtonR.buttonPressed; // Double switch button
         return false; // Shouldn't reach here
     }
 
     public void Restart()
     {
         Player.instance.Restart();
-    }
-
-    public void RotateWithGravity(Vector2 gravDir)
-    {
-
     }
 
     public void Enable() { gameObject.GetComponent<Canvas>().enabled = true; }
