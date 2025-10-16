@@ -78,7 +78,10 @@ public class MobileControls : MonoBehaviour
         }
 
         p.portalGun.SetLinesActive(true);
-        p.portalGun.AimPortal(portalJoystick.transform.localPosition, ShootOption.None);
+        Vector3 aim = portalJoystick.transform.localPosition;
+        if (Settings.instance.rotateCameraWithGravity)
+            aim = Camera.main.transform.rotation * aim;
+        p.portalGun.AimPortal(aim, ShootOption.None);
         if (slowdownLeft > 0 && !slowdownRegenning) 
         {
             Time.timeScale = .5f;
@@ -96,14 +99,9 @@ public class MobileControls : MonoBehaviour
     /// <param name="aim">Direction in which to aim.</param>
     public void ShootPortal(Vector3 aim)
     {
-        if (Settings.instance.leftClickForBothPortals)
-        {
-            Player.instance.portalGun.AimPortal(aim, ShootOption.Portal1);
-        }
-        else
-        {
-            
-        }
+        if (Settings.instance.rotateCameraWithGravity)
+            aim = Camera.main.transform.rotation * aim;
+        Player.instance.portalGun.AimPortal(aim, ShootOption.Portal1);
     }
 
     public void SetColors(Color portal1Color, Color portal2Color)
@@ -123,7 +121,6 @@ public class MobileControls : MonoBehaviour
     public void SwitchPortals()
     {
         int index = Player.instance.portalGun.IncrementPortalIndex();
-        // Debug.Log("Swtichting to "  +index);
         Color c1;
         Color c11;
         Color c2;

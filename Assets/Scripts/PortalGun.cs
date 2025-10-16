@@ -115,8 +115,8 @@ public class PortalGun : MonoBehaviour
             Vector2 normal = Vector2.zero;
             if (TryPlaceIndicator(hit, out normal))
             {
-                if ((Settings.instance == null || Settings.instance.leftClickForBothPortals)
-                     && shoot == ShootOption.Portal1)
+                if ((Settings.instance == null || Settings.instance.leftClickForBothPortals
+                    || Settings.instance.platform == PlatformType.Phone) && shoot == ShootOption.Portal1)
                     ShootPortal(hit, normal, portalIndex);
                 else if (Settings.instance != null && !Settings.instance.leftClickForBothPortals)
                 {
@@ -147,9 +147,10 @@ public class PortalGun : MonoBehaviour
         placeholder.transform.parent = hit.transform;
         portalController.transform.parent = placeholder.transform;
         portalController.transform.up = hit.normal;
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
-        { MobileControls.instance.SwitchPortals(); }
-        else IncrementPortalIndex();
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone && !Settings.instance.leftClickForBothPortals)
+            MobileControls.instance.SwitchPortals();
+        else if (Settings.instance && Settings.instance.platform != PlatformType.Phone)
+            IncrementPortalIndex();
         currentPortalToSpawn = portals[index];
     }
 
