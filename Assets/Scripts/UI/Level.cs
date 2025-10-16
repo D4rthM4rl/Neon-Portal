@@ -35,7 +35,7 @@ public class Level
     {
         this.world = world;
         this.level = level;
-        this.bestTime = 0;
+        this.bestTime = float.PositiveInfinity;
         this.beaten = false;
         top20 = new List<LeaderboardEntry>();
         myRanks = new List<LeaderboardEntry>();

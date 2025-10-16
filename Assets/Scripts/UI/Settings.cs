@@ -112,11 +112,11 @@ public class Settings : MonoBehaviour
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
 
-    /// <summary>Returns if the game is WebGL and running on a mobile device.</summary>
+    /// <summary>Returns if the game is running on a mobile device.</summary>
     /// <returns>True if the game is on WebGL on a mobile device.</returns>
     private bool isMobile()
     {
-        return IsMobileBrowser();
+        return IsMobileBrowser() || Application.isMobilePlatform;
     }
 
     #region Saving Helpers
@@ -154,8 +154,6 @@ public class Settings : MonoBehaviour
 
         showTimerToggle.isOn = showTimer;
         rotateCameraToggle.isOn = rotateCameraWithGravity;
-        // NOT TRIGGERING WHEN IT SHOULD BE
-        // Debug.Log("Rotate camera: " + rotateCameraWithGravity);
         if (rotateCameraWithGravity) SetInteractableRotateMobileControls(false);
         else rotateMobileControlsToggle.isOn = rotateMobileControls;
         onlineToggle.isOn = OnlineServices.online;

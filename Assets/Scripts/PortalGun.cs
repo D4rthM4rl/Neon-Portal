@@ -52,13 +52,13 @@ public class PortalGun : MonoBehaviour
 
     void Update()
     {
-        if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) return;
+        if (PauseMenuController.instance == null || PauseMenuController.instance.isPaused) return;
 
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Settings.instance.platform == PlatformType.Phone)
         {
             return;
         }
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         
         ShootOption shootOption;
         if (Input.GetButtonDown("Fire1")) shootOption = ShootOption.Portal1;
