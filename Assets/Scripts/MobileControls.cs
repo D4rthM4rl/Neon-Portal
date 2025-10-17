@@ -11,12 +11,13 @@ public class MobileControls : MonoBehaviour
     [SerializeField] private UpDownButton leftButtonR;
     [SerializeField] private UpDownButton rightButtonR;
     [SerializeField] private UpDownButton jumpButtonR;
+    [SerializeField] private Image jumpIcon;
     [Header("Non-Rotating Controls")]
     [SerializeField] private GameObject nonRotatingButtonParent;
-    [SerializeField] private UpDownButton leftButton;
-    [SerializeField] private UpDownButton rightButton;
-    [SerializeField] private UpDownButton upButton;
-    [SerializeField] private UpDownButton downButton;
+    // [SerializeField] private UpDownButton leftButton;
+    // [SerializeField] private UpDownButton rightButton;
+    // [SerializeField] private UpDownButton upButton;
+    // [SerializeField] private UpDownButton downButton;
 
     [Header("Other Controls")]
     [SerializeField] private Button pauseButton;
@@ -55,16 +56,16 @@ public class MobileControls : MonoBehaviour
         Player p = Player.instance;
         if (Settings.instance.rotateCameraWithGravity)
         {
-            // leftButton.transform.rotation = Quaternion.Euler(0, 0, 90);
-            // rightButton.transform.rotation = Quaternion.Euler(0, 0, -90);
-            // jumpButton.transform.rotation = Quaternion.identity;
+            leftButtonR.transform.rotation = Quaternion.Euler(0, 0, 90);
+            rightButtonR.transform.rotation = Quaternion.Euler(0, 0, -90);
+            jumpIcon.transform.rotation = Quaternion.Euler(0, 0, 270);
         }
         else
         {
             gravDir = p.gravityDirection.normalized;
             RotateFromOriginal(90, leftButtonR.transform);
             RotateFromOriginal(-90, rightButtonR.transform);
-            RotateFromOriginal(0, jumpButtonR.transform);
+            RotateFromOriginal(270, jumpIcon.transform);
             if (gravDir.y > 0) // Scuffed solution to going to > < instead of switching the buttons in space
             {
                 leftButtonR.transform.localScale = new Vector3(1, -1, 1);
@@ -173,22 +174,22 @@ public class MobileControls : MonoBehaviour
 
     public void EnableCorrectControls()
     {
-        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls)
-        {
-            rotatingButtonParent.SetActive(false);
-            nonRotatingButtonParent.SetActive(true);
-        }
-        else
-        {
+        // if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls)
+        // {
+        //     rotatingButtonParent.SetActive(false);
+        //     nonRotatingButtonParent.SetActive(true);
+        // }
+        // else
+        // {
             rotatingButtonParent.SetActive(true);
             nonRotatingButtonParent.SetActive(false);
-        }
+        // }
     }
 
     public bool HoldingLeft()
     {
-        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
-            return leftButton.buttonPressed;
+        if (Settings.instance.rotateCameraWithGravity) 
+            return leftButtonR.buttonPressed;
 
         if (gravDir == Vector2.down) 
             return leftButtonR.buttonPressed;
@@ -201,8 +202,8 @@ public class MobileControls : MonoBehaviour
     
     public bool HoldingRight() 
     {
-        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
-            return rightButton.buttonPressed;
+        if (Settings.instance.rotateCameraWithGravity) 
+            return rightButtonR.buttonPressed;
 
         if (gravDir == Vector2.down)
             return rightButtonR.buttonPressed;
@@ -215,8 +216,8 @@ public class MobileControls : MonoBehaviour
 
     public bool HoldingUp() 
     {
-        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
-            return upButton.buttonPressed;
+        if (Settings.instance.rotateCameraWithGravity) 
+            return jumpButtonR.buttonPressed;
 
         if (gravDir == Vector2.down) 
             return jumpButtonR.buttonPressed;
@@ -230,8 +231,8 @@ public class MobileControls : MonoBehaviour
     public bool HoldingDown() 
     {
 
-        if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
-            return downButton.buttonPressed;
+        // if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls) 
+        //     return downButton.buttonPressed;
 
         if (gravDir == Vector2.down) 
             return false;
