@@ -136,13 +136,19 @@ public class Leaderboard : MonoBehaviour
         {
             ui.title.text = "New Personal Best!";
             ui.title.color = Color.magenta;
-            ui.bestTimeText.text = $"Previous Best: {prevBest.ToString("F4")}s";
+            string prevBestString;
+            if (prevBest == float.PositiveInfinity) prevBestString = "Unbeaten";
+            else prevBestString = prevBest.ToString("F4") + "s";
+            ui.bestTimeText.text = $"Previous Best: {prevBestString}";
         }
         else
         {
             ui.title.text = "Personal Best";
             ui.title.color = Color.black;
-            ui.bestTimeText.text = $"Best: {prevBest.ToString("F4")}s";
+            string prevBestString;
+            if (prevBest == float.PositiveInfinity) prevBestString = "Unbeaten";
+            else prevBestString = prevBest.ToString("F4") + "s";
+            ui.bestTimeText.text = $"Best: {prevBestString}";
         }
         ui.timeText.text = $"{time.ToString("F4")}s";
 
@@ -160,7 +166,10 @@ public class Leaderboard : MonoBehaviour
         levelSelectLeaderboard.myRanksButton.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = true;
-        levelSelectLeaderboard.timeText.text = $"Best: {best.ToString("F4")}s";
+        string bestString;
+        if (best == float.PositiveInfinity) bestString = "Unbeaten";
+        else bestString = best.ToString("F4") + "s";
+        levelSelectLeaderboard.timeText.text = $"Best: {bestString}";
         levelSelectLeaderboard.title.text = "Personal Best";
         levelSelectLeaderboard.title.color = Color.black;
         ShowStars(level, best, levelSelectLeaderboard);
