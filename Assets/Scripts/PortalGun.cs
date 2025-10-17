@@ -52,12 +52,10 @@ public class PortalGun : MonoBehaviour
 
     void Update()
     {
-        if (PauseMenuController.instance == null || PauseMenuController.instance.isPaused) return;
+        if (PauseMenuController.instance != null && PauseMenuController.instance.isPaused) return;
 
-        if (Settings.instance.platform == PlatformType.Phone)
-        {
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
             return;
-        }
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         
         ShootOption shootOption;
@@ -149,7 +147,7 @@ public class PortalGun : MonoBehaviour
         portalController.transform.up = hit.normal;
         if (Settings.instance && Settings.instance.platform == PlatformType.Phone && !Settings.instance.leftClickForBothPortals)
             MobileControls.instance.SwitchPortals();
-        else if (Settings.instance && Settings.instance.platform != PlatformType.Phone)
+        else if (!Settings.instance || (Settings.instance && Settings.instance.platform != PlatformType.Phone))
             IncrementPortalIndex();
         currentPortalToSpawn = portals[index];
     }

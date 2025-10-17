@@ -57,7 +57,6 @@ public class Level
             l.totalDeaths = PlayerPrefs.GetInt(title + "Deaths", 0);
             l.totalResets = PlayerPrefs.GetInt(title + "Resets", 0);
         }
-        
     }
 
     public async void AwaitLeaderboardData(Level l)
