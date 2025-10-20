@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags:
   - Ground
   - Unportalable
@@ -21,7 +21,7 @@ TagManager:
   - UI
   - Camera
   - Portal Only
-  - 
+  - BG Camera
   - 
   - 
   - 
@@ -61,3 +61,5 @@ TagManager:
   - name: Indicators
     uniqueID: 918885751
     locked: 0
+  m_RenderingLayers:
+  - Default

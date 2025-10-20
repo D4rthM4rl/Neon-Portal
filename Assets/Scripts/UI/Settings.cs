@@ -81,6 +81,8 @@ public class Settings : MonoBehaviour
             rotateMobileControlsText.gameObject.SetActive(true);
             portalSplitText.text = "Manually Switch Portal Creation";
             Debug.Log("Running on mobile device");
+            QualitySettings.vSyncCount = 0;          // Disable internal VSync
+            Application.targetFrameRate = 60;        // Manually cap to 60 FPS
         }
         else
         {
