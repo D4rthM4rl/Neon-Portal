@@ -33,12 +33,6 @@ public class Leaderboard : MonoBehaviour
 
     [SerializeField] private LeaderboardUI levelSelectLeaderboard;
     [SerializeField] private LeaderboardUI transitionLeaderboard;
-    // private List<LeaderboardRow> lsLeaderboardRows = new List<LeaderboardRow>();
-    // [SerializeField] private GameObject tRowExample;
-    // [SerializeField] private GameObject tRowParent;
-    // [SerializeField] private Button tMyRankButton;
-    // [SerializeField] private Button tTop20Button;
-    // private List<LeaderboardRow> tLeaderboardRows = new List<LeaderboardRow>();
     
 
     void Awake()
@@ -51,7 +45,7 @@ public class Leaderboard : MonoBehaviour
     public void ShowLevelSelectTop20(Level level) 
     { 
         levelSelectLeaderboard.title.text = "Top 20 Leaderboard";
-        levelSelectLeaderboard.headers.SetActive(true);
+        levelSelectLeaderboard.rankingsContainer.SetActive(true);
         levelSelectLeaderboard.myRanksButton.interactable = true;
         levelSelectLeaderboard.top20Button.interactable = false;
         levelSelectLeaderboard.starsButton.interactable = true;
@@ -72,7 +66,7 @@ public class Leaderboard : MonoBehaviour
             ShowLevelSelectTop20(level);
             return;
         }
-        levelSelectLeaderboard.headers.SetActive(true);
+        levelSelectLeaderboard.rankingsContainer.SetActive(true);
         levelSelectLeaderboard.title.text = "My Rank in Leaderboard";
         levelSelectLeaderboard.myRanksButton.interactable = false;
         levelSelectLeaderboard.top20Button.interactable = true;
@@ -90,7 +84,7 @@ public class Leaderboard : MonoBehaviour
     public void ShowTransitionLeaderboardTop20(Level level) 
     { 
         transitionLeaderboard.title.text = "Top 20 Leaderboard";
-        transitionLeaderboard.headers.SetActive(true);
+        transitionLeaderboard.rankingsContainer.SetActive(true);
         transitionLeaderboard.myRanksButton.interactable = true;
         transitionLeaderboard.top20Button.interactable = false;
         transitionLeaderboard.starsButton.interactable = true;
@@ -107,7 +101,7 @@ public class Leaderboard : MonoBehaviour
     public void ShowTransitionLeaderboardMyRanks(Level level) 
     {
         transitionLeaderboard.title.text = "My Rank in Leaderboard";
-        transitionLeaderboard.headers.SetActive(true);
+        transitionLeaderboard.rankingsContainer.SetActive(true);
         transitionLeaderboard.myRanksButton.interactable = false;
         transitionLeaderboard.top20Button.interactable = true;
         transitionLeaderboard.starsButton.interactable = true;
@@ -254,7 +248,7 @@ public class Leaderboard : MonoBehaviour
         ui.refresh.onClick.RemoveAllListeners();
         ui.refresh.onClick.AddListener(() => ShowStars(level, bestTime, ui, prevStars));
         ui.starUI.container.SetActive(true);
-        ui.headers.SetActive(false);
+        ui.rankingsContainer.SetActive(false);
         ui.scrollView.SetActive(false);
         
         int newStars = StarTiers.GetStarTier(level, bestTime);
@@ -461,8 +455,8 @@ public class LeaderboardUI
     /// <summary>Best time on this level (before current completion if transition leaderboard).</summary>
     public TextMeshProUGUI bestTimeText;
     
-    /// <summary>Rank, username, time headers and the line beneath.</summary>
-    public GameObject headers;
+    /// <summary>Non-star menu on the leaderboard.</summary>
+    public GameObject rankingsContainer;
 
     [HideInInspector] public List<LeaderboardRow> leaderboardRows = new List<LeaderboardRow>();
 }
