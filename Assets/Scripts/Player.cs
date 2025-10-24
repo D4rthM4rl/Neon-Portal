@@ -9,7 +9,7 @@ public class Player : Teleportable
     public static Player instance;
     public bool hasStarted;
 
-    [HideInInspector] private GameObject cam;
+    [HideInInspector] private Camera cam;
 
     [SerializeField] private GameObject ground;
 
@@ -82,7 +82,7 @@ public class Player : Teleportable
         // Timer.instance.levelTimer = 0;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
-        cam = GameObject.FindGameObjectWithTag("MainCamera");
+        cam = Camera.main;
         cam.transform.position = transform.position;
 
         speedLight = GetComponent<Light2D>();
@@ -184,7 +184,7 @@ public class Player : Teleportable
             // Reset the player position if they fall off the screen
             ResetWorld();
             ResetPortals();
-            ResetPlayer();
+            StartCoroutine(ResetPlayer());
         }
         UpdateSpriteColors();
         RotateWithGravity();
@@ -299,7 +299,7 @@ public class Player : Teleportable
 
         numResets++;
         ResetWorld();
-        ResetPlayer();
+        StartCoroutine(ResetPlayer());
         ResetPortals();
     }
 
@@ -344,9 +344,8 @@ public class Player : Teleportable
     }
 
     /// <summary>Sends player back to start.</summary>
-    public void ResetPlayer()
+    public IEnumerator ResetPlayer()
     {
-        Time.timeScale = 0f;
         hasStarted = false;
         jumpQueued = false;
         currLeftAccel = minAccel;
@@ -356,7 +355,13 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
-        cam.transform.position = transform.position;
+        // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = 0;
+        // yield return null;
+        // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = .5f;
+        Time.timeScale = .005f;
+        if (Timer.instance != null) Timer.instance.levelTimer = 0;
+        yield return new WaitForSecondsRealtime(.01f);
+        Time.timeScale = 0;
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
     }
 
