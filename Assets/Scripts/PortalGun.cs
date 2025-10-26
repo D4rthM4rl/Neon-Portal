@@ -123,6 +123,11 @@ public class PortalGun : MonoBehaviour
                 }
             }
         }
+        else
+        {
+            invalidLineRenderer.enabled = true;
+            validLineRenderer.enabled = false;
+        }
     }
 
     public void ShootPortal(RaycastHit2D hit, Vector2 normal, int index)

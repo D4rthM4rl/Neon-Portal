@@ -88,7 +88,7 @@ public class MobileControls : MonoBehaviour
             return;
         }
 
-        p.portalGun.SetLinesActive(true);
+        // p.portalGun.SetLinesActive(true);
         Vector3 aim = portalJoystick.transform.localPosition;
         if (Settings.instance.rotateCameraWithGravity)
             aim = Camera.main.transform.rotation * aim;
