@@ -83,12 +83,11 @@ public class MobileControls : MonoBehaviour
         {
             p.portalGun.SetLinesActive(false);
             slowdownRegenning = slowdownLeft < slowdownTime;
-            slowdownLeft = Mathf.Min(slowdownLeft + Time.deltaTime, slowdownTime);
+            slowdownLeft = Mathf.Min(slowdownLeft + Time.unscaledDeltaTime, slowdownTime);
             if (Player.instance.hasStarted && !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
             return;
         }
 
-        // p.portalGun.SetLinesActive(true);
         Vector3 aim = portalJoystick.transform.localPosition;
         if (Settings.instance.rotateCameraWithGravity)
             aim = Camera.main.transform.rotation * aim;
@@ -102,7 +101,7 @@ public class MobileControls : MonoBehaviour
         {
             if (Player.instance.hasStarted && !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
             slowdownRegenning = true;
-            slowdownLeft = Mathf.Min(slowdownLeft + Time.deltaTime, slowdownTime);
+            slowdownLeft = Mathf.Min(slowdownLeft + Time.unscaledDeltaTime, slowdownTime);
         }
     }
 
@@ -247,6 +246,7 @@ public class MobileControls : MonoBehaviour
 
     public void Restart()
     {
+        slowdownLeft = slowdownTime;
         Player.instance.Restart();
     }
 
