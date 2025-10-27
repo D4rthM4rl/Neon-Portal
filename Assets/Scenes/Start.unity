@@ -9994,9 +9994,9 @@ MonoBehaviour:
       totalTime: 0
       totalDeaths: 0
       totalResets: 0
-    greenTime: 10
-    blueTime: 20
-    purpleTime: 30
+    greenTime: 30
+    blueTime: 40
+    purpleTime: 50
   - level:
       world: 4
       level: 6
