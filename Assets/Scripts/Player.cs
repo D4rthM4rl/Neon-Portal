@@ -301,9 +301,9 @@ public class Player : Teleportable
         RecordResetEvent();
 
         numResets++;
+        ResetPortals();
         ResetWorld();
         StartCoroutine(ResetPlayer());
-        ResetPortals();
     }
 
     /// <summary>Rotates the player to align with the current gravity direction.</summary>
@@ -363,9 +363,9 @@ public class Player : Teleportable
         // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = 0;
         // yield return null;
         // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = .5f;
-        Time.timeScale = .005f;
+        Time.timeScale = .1f;
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
-        yield return new WaitForSecondsRealtime(.01f);
+        yield return new WaitForSecondsRealtime(.5f);
         Time.timeScale = 0;
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
     }

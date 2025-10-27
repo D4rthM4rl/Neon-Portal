@@ -9,9 +9,7 @@ public class Death : MonoBehaviour
             // Assuming the player has a method to handle death
             Player playerController = other.gameObject.GetComponent<Player>();
             if (playerController != null) {
-                StartCoroutine(playerController.ResetPlayer());
-                playerController.ResetWorld();
-                playerController.ResetPortals();
+                playerController.Restart();
             }
         }
     }
