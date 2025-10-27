@@ -18,10 +18,6 @@ public class CameraController : MonoBehaviour
     /// </summary>
     public float cameraRotateSpeed = 360f;
 
-    void Awake()
-    {
-        
-    }
     void Start()
     {
         CinemachineBrain brain = GetComponent<CinemachineBrain>();
@@ -50,23 +46,25 @@ public class CameraController : MonoBehaviour
         // Wait until the active virtual camera is a CinemachineVirtualCamera
         while (brain.ActiveVirtualCamera == null)
         {
-            yield return new WaitForSecondsRealtime(0.1f);
-            Debug.Log("Should've waited");
+            yield return null;
         }
 
         virtualCamera = brain.ActiveVirtualCamera;
         
-        virtualCamera.Follow = player.transform;
+        if (!virtualCamera.Follow) virtualCamera.Follow = player.transform;
 
 
-        // float targetAspect = 16f / 9f; // your original design aspect
-        // float windowAspect = (float)Screen.width / (float)Screen.height;
-        // float scaleHeight = windowAspect / targetAspect;
-        // CameraState state = virtualCamera.State;
+        float targetAspect = 16f / 9f; // your original design aspect
+        float windowAspect = (float)Screen.width / (float)Screen.height;
+        float scaleHeight = windowAspect / targetAspect;
+        CameraState state = virtualCamera.State;
+        CinemachineVirtualCamera realVC = virtualCamera.VirtualCameraGameObject.GetComponent<CinemachineVirtualCamera>();
         
 
-        // if (scaleHeight < 1.0f)
-        //     state.Lens.OrthographicSize /= scaleHeight;
+        if (scaleHeight > 1.0f)
+        {
+            realVC.m_Lens.OrthographicSize /= scaleHeight;
+        }
     }
 
     void Update()

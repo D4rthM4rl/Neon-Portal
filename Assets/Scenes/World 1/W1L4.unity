@@ -252,7 +252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BoundingShape2D: {fileID: 690966557}
-  m_Damping: 0.5
+  m_Damping: 0
   m_MaxWindowSize: 0
   m_Padding: 0
 --- !u!114 &70381363
@@ -989,12 +989,10 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 1, y: 19.814396}
-      - {x: 4.556922, y: 23}
-      - {x: -17.934317, y: 23}
-      - {x: -17.922693, y: -6.1572776}
-      - {x: 28.306625, y: -6.166628}
-      - {x: 28.216354, y: 16.234474}
+    - - {x: 30.008976, y: 25}
+      - {x: -17.925846, y: 25}
+      - {x: -18, y: -2}
+      - {x: 30, y: -2}
   m_UseDelaunayMesh: 0
 --- !u!4 &690966558
 Transform:
@@ -1662,11 +1660,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.1650434
+      value: 6.0079317
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.5085196
+      value: 9.082459
       objectReference: {fileID: 0}
     - target: {fileID: 6479152263148114187, guid: 3c7f0fc8dbd924ab7b5513e5d9deabd0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1744,7 +1742,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -440, y: -8.284}
+  m_AnchoredPosition: {x: -220, y: -8.284}
   m_SizeDelta: {x: 297.631, y: 252.37}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1808387413
@@ -2185,11 +2183,11 @@ RectTransform:
   - {fileID: 1808387412}
   m_Father: {fileID: 57136071}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1500, y: 1000}
-  m_SizeDelta: {x: 1500, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -60}
+  m_SizeDelta: {x: 1003.3184, y: 80.102}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2103865233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2212,8 +2210,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Hold                 to restart the level
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1d31f79e439f64a06b03c26ae8443190, type: 2}
+  m_sharedMaterial: {fileID: 7499568636415851904, guid: 1d31f79e439f64a06b03c26ae8443190, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
