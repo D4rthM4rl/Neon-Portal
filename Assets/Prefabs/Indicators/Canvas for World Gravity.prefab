@@ -18,7 +18,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &546554521183317559
 RectTransform:
   m_ObjectHideFlags: 0
@@ -201,6 +201,10 @@ PrefabInstance:
     - target: {fileID: 8329865145191719013, guid: 058ab4058a2064228aeb5604a8fbc0db, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8392601418736977956, guid: 058ab4058a2064228aeb5604a8fbc0db, type: 3}
+      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
+      value: 1801810542
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

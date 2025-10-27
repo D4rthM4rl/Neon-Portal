@@ -335,7 +335,7 @@ public class LevelSelect : MonoBehaviour
         if (Settings.instance.platform == PlatformType.Phone)
         {
             MobileControls.instance.Enable();
-            MobileControls.instance.EnableCorrectControls();
+            // MobileControls.instance.EnableCorrectControls();
         }
         else
         {

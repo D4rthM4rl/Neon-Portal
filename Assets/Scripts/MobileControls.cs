@@ -82,26 +82,29 @@ public class MobileControls : MonoBehaviour
         if (!portalJoystick.isDragging || portalJoystick.transform.localPosition.sqrMagnitude < portalJoystick.sensitivityMagnitude)
         {
             p.portalGun.SetLinesActive(false);
+            if (!Player.instance.hasStarted || PauseMenuController.instance.isPaused) return;
             slowdownRegenning = slowdownLeft < slowdownTime;
-            slowdownLeft = Mathf.Min(slowdownLeft + Time.unscaledDeltaTime, slowdownTime);
-            if (Player.instance.hasStarted && !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
+            slowdownLeft = Mathf.Min(slowdownLeft + 2.5f * Time.unscaledDeltaTime, slowdownTime);
+            Time.timeScale = 1f;
             return;
         }
 
         Vector3 aim = portalJoystick.transform.localPosition;
         if (Settings.instance.rotateCameraWithGravity)
             aim = Camera.main.transform.rotation * aim;
+        
         p.portalGun.AimPortal(aim, ShootOption.None);
         if (slowdownLeft > 0 && !slowdownRegenning) 
         {
-            Time.timeScale = .5f;
+            if (!Player.instance.hasStarted) return;
+            Time.timeScale = .333f;
             slowdownLeft = Mathf.Max(slowdownLeft - Time.unscaledDeltaTime, 0);
         }
         else
         {
             if (Player.instance.hasStarted && !PauseMenuController.instance.isPaused) Time.timeScale = 1f;
             slowdownRegenning = true;
-            slowdownLeft = Mathf.Min(slowdownLeft + Time.unscaledDeltaTime, slowdownTime);
+            slowdownLeft = Mathf.Min(slowdownLeft + 2.5f * Time.unscaledDeltaTime, slowdownTime);
         }
     }
 
@@ -173,16 +176,8 @@ public class MobileControls : MonoBehaviour
 
     public void EnableCorrectControls()
     {
-        // if (Settings.instance.rotateCameraWithGravity || !Settings.instance.rotateMobileControls)
-        // {
-        //     rotatingButtonParent.SetActive(false);
-        //     nonRotatingButtonParent.SetActive(true);
-        // }
-        // else
-        // {
-            rotatingButtonParent.SetActive(true);
-            nonRotatingButtonParent.SetActive(false);
-        // }
+        rotatingButtonParent.SetActive(true);
+        nonRotatingButtonParent.SetActive(false);
     }
 
     public bool HoldingLeft()
@@ -246,9 +241,10 @@ public class MobileControls : MonoBehaviour
 
     public void Restart()
     {
-        slowdownLeft = slowdownTime;
         Player.instance.Restart();
     }
+
+    public void ResetPortalTime() {slowdownLeft = slowdownTime;}
 
     public void RemovePortals()
     {

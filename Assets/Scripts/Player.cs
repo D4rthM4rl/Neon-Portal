@@ -351,6 +351,7 @@ public class Player : Teleportable
     {
         hasStarted = false;
         jumpQueued = false;
+        portalGun.hasSpawnedPortal = false;
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
         rb.linearVelocity = Vector2.zero;
@@ -358,6 +359,7 @@ public class Player : Teleportable
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
+        if (MobileControls.instance) MobileControls.instance.ResetPortalTime();
         // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = 0;
         // yield return null;
         // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = .5f;
@@ -487,9 +489,8 @@ public class Player : Teleportable
 
     void CheckForInputs()
     {
-        if (PressingLeft() || PressingUp() || PressingRight() || 
-            PressingDown() || Input.GetButtonDown("Fire1") || (Input.GetButtonDown("Fire2") && 
-            (Settings.instance == null || !Settings.instance.leftClickForBothPortals)))
+        if ((PressingLeft() || PressingUp() || PressingRight() || PressingDown()) || 
+            (portalGun != null && portalGun.hasSpawnedPortal))
         {
             if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) 
             {

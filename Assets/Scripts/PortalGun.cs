@@ -34,6 +34,8 @@ public class PortalGun : MonoBehaviour
     public static PortalController[] portalsInScene;
     private int portalIndex = 0;
 
+    public bool hasSpawnedPortal = false;
+
     void Awake()
     {
         if (validIndicator == null) validIndicator = Instantiate(validIndicatorPrefab);
@@ -150,11 +152,12 @@ public class PortalGun : MonoBehaviour
         placeholder.transform.parent = hit.transform;
         portalController.transform.parent = placeholder.transform;
         portalController.transform.up = hit.normal;
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone && !Settings.instance.leftClickForBothPortals)
+        if (Settings.instance && Settings.instance.platform == PlatformType.Phone && Settings.instance.leftClickForBothPortals)
             MobileControls.instance.SwitchPortals();
         else if (!Settings.instance || (Settings.instance && Settings.instance.platform != PlatformType.Phone))
             IncrementPortalIndex();
         currentPortalToSpawn = portals[index];
+        hasSpawnedPortal = true;
     }
 
     public int IncrementPortalIndex() 
