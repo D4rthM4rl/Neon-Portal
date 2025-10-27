@@ -490,7 +490,7 @@ public class Player : Teleportable
     void CheckForInputs()
     {
         if ((PressingLeft() || PressingUp() || PressingRight() || PressingDown()) || 
-            (portalGun != null && portalGun.hasSpawnedPortal))
+            (portalGun != null && (portalGun.hasSpawnedPortal && !hasStarted)))
         {
             if (PauseMenuController.instance == null || !PauseMenuController.instance.isPaused) 
             {

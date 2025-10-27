@@ -99,6 +99,7 @@ public class MobileControls : MonoBehaviour
             if (!Player.instance.hasStarted) return;
             Time.timeScale = .333f;
             slowdownLeft = Mathf.Max(slowdownLeft - Time.unscaledDeltaTime, 0);
+            Debug.Log(Time.timeScale);
         }
         else
         {
