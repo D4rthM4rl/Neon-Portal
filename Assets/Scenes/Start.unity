@@ -289,7 +289,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -650, y: 40}
+  m_AnchoredPosition: {x: -650, y: 45}
   m_SizeDelta: {x: 600, y: 100}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &12227172
@@ -9774,9 +9774,9 @@ MonoBehaviour:
       totalTime: 0
       totalDeaths: 0
       totalResets: 0
-    greenTime: 2
-    blueTime: 3
-    purpleTime: 5
+    greenTime: 1.5
+    blueTime: 2
+    purpleTime: 3
   - level:
       world: 1
       level: 2
@@ -9864,9 +9864,9 @@ MonoBehaviour:
       totalTime: 0
       totalDeaths: 0
       totalResets: 0
-    greenTime: 15
-    blueTime: 22.5
-    purpleTime: 30
+    greenTime: 20
+    blueTime: 30
+    purpleTime: 40
   - level:
       world: 2
       level: 5
@@ -9874,9 +9874,9 @@ MonoBehaviour:
       totalTime: 0
       totalDeaths: 0
       totalResets: 0
-    greenTime: 15
-    blueTime: 25
-    purpleTime: 35
+    greenTime: 20
+    blueTime: 30
+    purpleTime: 40
   - level:
       world: 2
       level: 6
@@ -9964,7 +9964,7 @@ MonoBehaviour:
       totalTime: 0
       totalDeaths: 0
       totalResets: 0
-    greenTime: 20
+    greenTime: 20.5
     blueTime: 23
     purpleTime: 26
   - level:
