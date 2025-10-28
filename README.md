@@ -1,3 +1,8 @@
+---
+layout: default
+title: README
+---
+
 ## Goal
 Beat each level as fast as you can by standing in front of the green triangle
 
