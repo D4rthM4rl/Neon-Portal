@@ -27,8 +27,7 @@ Unity Gaming Services Leaderboards
 These services collect and process data in accordance with [Unity’s privacy policies](https://unity.com/legal/privacy-policy).
 ## Your Choices
 You can change or reset your leaderboard username at any time in the options menu.
-If you wish to delete your leaderboard data of analytics, you may contact me at:
-professionalmarley@gmail.com
+If you wish to delete your leaderboard data of analytics, you may contact me at: professionalmarley@gmail.com.
 Or if you wish to opt out of analytics, you may do so on the options page of Neon Portal.
 ## Children’s Privacy
 Neon Portal does not knowingly collect personal information from children.
