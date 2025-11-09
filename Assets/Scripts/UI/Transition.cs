@@ -253,6 +253,7 @@ public class Transition : MonoBehaviour
     public void GoToMainMenu()
     {
         StartCoroutine(FadeAsync(0, 1, fadeDuration/2));
+        if (Timer.instance) Timer.instance.Disable();
         inBetweenMenu.SetActive(false);
         Time.timeScale = 1f;
         MainMenu.instance.gameObject.SetActive(true);
