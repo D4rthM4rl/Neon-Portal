@@ -56,7 +56,7 @@ public class PortalGun : MonoBehaviour
     {
         if (PauseMenuController.instance != null && PauseMenuController.instance.isPaused) return;
 
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        if (Settings.instance && Settings.UsesTouchControls)
             return;
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         
@@ -116,7 +116,7 @@ public class PortalGun : MonoBehaviour
             if (TryPlaceIndicator(hit, out normal))
             {
                 if ((Settings.instance == null || Settings.instance.leftClickForBothPortals
-                    || Settings.instance.platform == PlatformType.Phone) && shoot == ShootOption.Portal1)
+                    || Settings.UsesTouchControls) && shoot == ShootOption.Portal1)
                     ShootPortal(hit, normal, portalIndex);
                 else if (Settings.instance != null && !Settings.instance.leftClickForBothPortals)
                 {
@@ -152,9 +152,9 @@ public class PortalGun : MonoBehaviour
         placeholder.transform.parent = hit.transform;
         portalController.transform.parent = placeholder.transform;
         portalController.transform.up = hit.normal;
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone && Settings.instance.leftClickForBothPortals)
+        if (Settings.instance && Settings.UsesTouchControls && Settings.instance.leftClickForBothPortals)
             MobileControls.instance.SwitchPortals();
-        else if (!Settings.instance || (Settings.instance && Settings.instance.platform != PlatformType.Phone))
+        else if (!Settings.instance || (Settings.instance && !Settings.UsesTouchControls))
             IncrementPortalIndex();
         currentPortalToSpawn = portals[index];
         hasSpawnedPortal = true;

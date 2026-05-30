@@ -16,12 +16,13 @@ public class Background : MonoBehaviour
         Canvas canvas = GetComponentInParent<Canvas>();
         canvas.worldCamera = cam;
 
-        float height = canvas.GetComponent<RectTransform>().sizeDelta.y;
-        float width = canvas.GetComponent<RectTransform>().sizeDelta.x;
-        float scale = canvas.GetComponent<CanvasScaler>().referenceResolution.x / width;
-        height *= scale;
-        width *= scale;
+        CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+        Vector2 referenceResolution = scaler != null
+            ? scaler.referenceResolution
+            : ResponsiveUI.DesignReferenceResolution;
 
+        float width = referenceResolution.x;
+        float height = referenceResolution.y;
         float diagonal = Mathf.Sqrt(width * width + height * height);
 
         rectTransform.sizeDelta = new Vector2(diagonal, diagonal);

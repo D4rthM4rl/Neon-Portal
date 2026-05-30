@@ -54,7 +54,7 @@ public class PauseMenuController : MonoBehaviour
     {
         Timer.instance.ResetInactivityTimer();
         Time.timeScale = originalTimeScale;
-        if (Settings.instance.platform == PlatformType.Phone) MobileControls.instance.Enable();
+        if (Settings.UsesTouchControls) MobileControls.instance.Enable();
         if (Settings.instance.showTimer == true) Timer.instance.Enable();
         else Timer.instance.Disable();
         pauseMenuUI.SetActive(false);

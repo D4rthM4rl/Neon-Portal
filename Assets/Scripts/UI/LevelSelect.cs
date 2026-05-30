@@ -332,7 +332,7 @@ public class LevelSelect : MonoBehaviour
         else Timer.instance.Disable();
         gameObject.SetActive(false);
 
-        if (Settings.instance.platform == PlatformType.Phone)
+        if (Settings.UsesTouchControls)
         {
             MobileControls.instance.Enable();
             // MobileControls.instance.EnableCorrectControls();

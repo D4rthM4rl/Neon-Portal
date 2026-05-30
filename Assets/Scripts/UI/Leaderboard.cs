@@ -168,7 +168,7 @@ public class Leaderboard : MonoBehaviour
     /// <param name="level">Level to show the leaderboard for.</param>
     /// <param name="ui">Which leaderboard to show.</param>
     /// <param name="entries">Which entries to show on the leaderboard.</param>
-    public void ShowLeaderboard(Level level, LeaderboardUI ui, List<LeaderboardEntry> entries)
+    public void ShowLeaderboard(Level level, LeaderboardUI ui, List<LeaderboardEntry> entries, string loadedTitle = null)
     {
         ui.container.SetActive(true);
         ui.scrollView.SetActive(true);
@@ -187,11 +187,9 @@ public class Leaderboard : MonoBehaviour
             ui.title.transform.localPosition = Vector3.up * 32;
             return;
         }
-        else 
-        {
-            ui.title.transform.localPosition = Vector3.up * 50;
-        }
-        
+
+        ui.title.text = loadedTitle ?? "Leaderboard";
+        ui.title.transform.localPosition = Vector3.up * 50;
         EnterLeaderboardData(entries, ui);
     }
 
@@ -209,7 +207,7 @@ public class Leaderboard : MonoBehaviour
 
         ui.title.text = "Top 20 Leaderboard" + Environment.NewLine + Environment.NewLine + "Loading...";
         level.top20 = await GetTopPlayers(level, 20);
-        ShowLeaderboard(level, ui, level.top20);
+        ShowLeaderboard(level, ui, level.top20, "Top 20 Leaderboard");
     }
 
     private async void LoadAndShowMyRanks(Level level, LeaderboardUI ui)
@@ -226,7 +224,7 @@ public class Leaderboard : MonoBehaviour
 
         ui.title.text = "My Rank in Leaderboard" + Environment.NewLine + Environment.NewLine + "Loading...";
         level.myRanks = await GetMyRanks(level);
-        ShowLeaderboard(level, ui, level.myRanks);
+        ShowLeaderboard(level, ui, level.myRanks, "My Rank in Leaderboard");
     }
 
     private void PrepareLeaderboardView(LeaderboardUI ui)

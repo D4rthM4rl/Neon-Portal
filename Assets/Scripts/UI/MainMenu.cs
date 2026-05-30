@@ -135,8 +135,9 @@ public class MainMenu : MonoBehaviour
     public void OpenMainMenu()
     {
         Timer.instance.ResetInactivityTimer();
-        pcMainMenuUI.SetActive(Settings.instance.platform == PlatformType.Computer);
-        mobileMainMenuUI.SetActive(Settings.instance.platform == PlatformType.Phone);
+        bool useMobileMenu = Settings.instance.platform == PlatformType.Phone;
+        pcMainMenuUI.SetActive(!useMobileMenu);
+        mobileMainMenuUI.SetActive(useMobileMenu);
         StartCoroutine(SetPlayButton());
         levelSelectUI.SetActive(false);
         optionsUI.SetActive(false);
@@ -147,24 +148,26 @@ public class MainMenu : MonoBehaviour
         while (!LevelSelect.instance || LevelSelect.instance.loading) yield return null;
         Level nextLevel = LevelSelect.instance.GetNextUnbeatenLevel();
 
+        float layoutScale = ResponsiveUI.LayoutScale;
+
         if (nextLevel != null)
         {
             playButton.interactable = true;
             playButtonText.text = "Play";   
-            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(700, 250);
+            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(700f * layoutScale, 250f * layoutScale);
 
             mobilePlayButton.interactable = true;
             mobilePlayButtonText.text = "Play";   
-            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(600, 300);
+            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(600f * layoutScale, 300f * layoutScale);
         }
         else
         {
             playButton.interactable = false;
             playButtonText.text = "All Levels Completed";
-            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(1850, 250);
+            playButton.GetComponent<RectTransform>().sizeDelta = new Vector2(1850f * layoutScale, 250f * layoutScale);
             mobilePlayButton.interactable = false;
             mobilePlayButtonText.text = "All Levels Completed";
-            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(2000, 300);
+            mobilePlayButton.GetComponent<RectTransform>().sizeDelta = new Vector2(2000f * layoutScale, 300f * layoutScale);
         }
     }
 

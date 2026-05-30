@@ -81,7 +81,9 @@ public class Timer : MonoBehaviour
 		levelTimer += Time.deltaTime;
         int minutes = (int)levelTimer / 60;
         float seconds = levelTimer % 60;
-        TextMeshProUGUI timerText = Settings.instance.platform == PlatformType.Phone ? mobileTimerText : pcTimerText;
+        TextMeshProUGUI timerText = Settings.instance.platform == PlatformType.Phone
+            ? mobileTimerText
+            : pcTimerText;
         if (seconds < 10)
         {
             timerText.text = minutes + ":0" + seconds.ToString("F2");

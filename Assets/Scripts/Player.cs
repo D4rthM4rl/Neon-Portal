@@ -199,7 +199,7 @@ public class Player : Teleportable
     /// <returns>True if holding left.</returns>
     private bool PressingLeft()
     {
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        if (Settings.instance && Settings.UsesTouchControls)
             return MobileControls.instance.HoldingLeft();
         else
             return Input.GetButton("Left");
@@ -211,7 +211,7 @@ public class Player : Teleportable
     /// <returns>True if holding up.</returns>
     private bool PressingUp()
     {
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        if (Settings.instance && Settings.UsesTouchControls)
             return MobileControls.instance.HoldingUp();
         else
             return Input.GetButton("Up");
@@ -223,7 +223,7 @@ public class Player : Teleportable
     /// <returns>True if holding right.</returns>
     private bool PressingRight()
     {
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        if (Settings.instance && Settings.UsesTouchControls)
             return MobileControls.instance.HoldingRight();
         else
             return Input.GetButton("Right");
@@ -235,7 +235,7 @@ public class Player : Teleportable
     /// <returns>True if holding down.</returns>
     private bool PressingDown()
     {
-        if (Settings.instance && Settings.instance.platform == PlatformType.Phone)
+        if (Settings.instance && Settings.UsesTouchControls)
             return MobileControls.instance.HoldingDown();
         else
             return Input.GetButton("Down");

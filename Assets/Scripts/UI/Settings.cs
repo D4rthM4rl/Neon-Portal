@@ -52,6 +52,9 @@ public class Settings : MonoBehaviour
     public PlatformType platform = PlatformType.Computer;
     public bool loaded = false;
 
+    public static bool UsesTouchControls =>
+        instance != null && instance.platform != PlatformType.Computer;
+
     /// <summary>A list of bad words that are not allowed in the player name</summary>
     private List<string> badWords = new List<string>
     {
@@ -74,19 +77,18 @@ public class Settings : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         if (isMobile())
         {
-            // If on mobile, set the platform type to Phone
-            platform = PlatformType.Phone;
-            MainMenu.instance.mobileMainMenuUI.SetActive(true);
-            MainMenu.instance.pcMainMenuUI.SetActive(false);
+            platform = DetectTouchPlatformType();
+            bool useMobileMenu = platform == PlatformType.Phone;
+            MainMenu.instance.mobileMainMenuUI.SetActive(useMobileMenu);
+            MainMenu.instance.pcMainMenuUI.SetActive(!useMobileMenu);
             rotateMobileControlsText.gameObject.SetActive(true);
             portalSplitText.text = "Automatically Switch Portal Creation";
-            Debug.Log("Running on mobile device");
-            QualitySettings.vSyncCount = 0;          // Disable internal VSync
-            Application.targetFrameRate = 60;        // Manually cap to 60 FPS
+            Debug.Log("Running on touch device: " + platform);
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
         }
         else
         {
-            // If on computer, set the platform type to Computer
             platform = PlatformType.Computer;
             MainMenu.instance.pcMainMenuUI.SetActive(true);
             MainMenu.instance.mobileMainMenuUI.SetActive(false);
@@ -94,8 +96,11 @@ public class Settings : MonoBehaviour
             portalSplitText.text = "Use Left Click for Both Portals";
             Debug.Log("Running on computer");
         }
-        
-        
+
+        ResponsiveUI.Apply(platform);
+        if (GetComponent<ResponsiveUIScreenWatcher>() == null)
+            gameObject.AddComponent<ResponsiveUIScreenWatcher>();
+
         SetSettingsValuesToMatchSaved();
 
         // playerNameInput.GetComponent<TMP_InputField>().text = playerLeaderboardName;
@@ -106,11 +111,15 @@ public class Settings : MonoBehaviour
 
         [System.Runtime.InteropServices.DllImport("__Internal")]
         public static extern bool IsMobileBrowser();
+
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        public static extern bool IsTabletBrowser();
       
         [System.Runtime.InteropServices.DllImport("__Internal")]
         public static extern bool IsPreferredDesktopPlatform();
     #else
             private static bool IsMobileBrowser() => false;
+            private static bool IsTabletBrowser() => false;
             public static bool IsPreferredDesktopPlatform() => true;
     #endif
 
@@ -119,6 +128,27 @@ public class Settings : MonoBehaviour
     private bool isMobile()
     {
         return IsMobileBrowser() || Application.isMobilePlatform;
+    }
+
+    private PlatformType DetectTouchPlatformType()
+    {
+        if (IsTabletDevice())
+            return PlatformType.Tablet;
+
+        return PlatformType.Phone;
+    }
+
+    private bool IsTabletDevice()
+    {
+#if !UNITY_EDITOR && UNITY_WEBGL
+        if (IsTabletBrowser())
+            return true;
+#endif
+        float minDimension = Mathf.Min(Screen.width, Screen.height);
+        float maxDimension = Mathf.Max(Screen.width, Screen.height);
+        float aspect = maxDimension / Mathf.Max(minDimension, 1f);
+
+        return minDimension >= 600f || (minDimension >= 520f && aspect <= 1.45f);
     }
 
     #region Saving Helpers
@@ -631,11 +661,13 @@ public enum PlayerMovementType
 
 /// <summary>
 /// What platform the user is on. <br/>
-/// Phone: any mobile device including iPad. <br/>
-/// Computer: any kind of laptop/desktop.
+/// Phone: small touch screens. <br/>
+/// Computer: any kind of laptop/desktop. <br/>
+/// Tablet: iPad and other large touch screens.
 /// </summary>
 public enum PlatformType
 {
     Phone,
-    Computer
+    Computer,
+    Tablet
 }

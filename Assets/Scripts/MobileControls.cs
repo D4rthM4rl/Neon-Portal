@@ -51,7 +51,7 @@ public class MobileControls : MonoBehaviour
 
     private void Update()
     {
-        if (Settings.instance.platform != PlatformType.Phone || !Player.instance) return;
+        if (!Settings.UsesTouchControls || !Player.instance) return;
 
         Player p = Player.instance;
         if (Settings.instance.rotateCameraWithGravity)

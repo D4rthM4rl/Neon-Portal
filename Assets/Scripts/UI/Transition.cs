@@ -98,7 +98,7 @@ public class Transition : MonoBehaviour
 
         StartCoroutine(FadeAsync(1f, 0f, 0)); // Fade in
         Timer.instance.Enable();
-        if (Settings.instance.platform == PlatformType.Phone) MobileControls.instance.Enable();
+        if (Settings.UsesTouchControls) MobileControls.instance.Enable();
         StartCoroutine(FadeAllObjectsAsync(0.2f, false)); // Fade in all objects
         // nextLevelText.enabled = false; // Hide level text after a short delay
     }
