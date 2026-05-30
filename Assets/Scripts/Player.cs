@@ -62,6 +62,9 @@ public class Player : Teleportable
 
     /// <summary>How long I've been holding R to reset.</summary>
     private float timeHoldingR = 0;
+    /// <summary>True while the player is respawning and should not trigger another death.</summary>
+    private bool isResetting = false;
+    private Coroutine resetPlayerCoroutine;
     /// <summary>The gradient that it goes through when resetting.</summary>
     [SerializeField] private Gradient resetGradient;
 
@@ -174,8 +177,9 @@ public class Player : Teleportable
             jumpTimeCounter = maxJumpDuration;
         }
 
-        if (Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 5)
+        if (!isResetting && Vector3.Distance(cameraBounds.ClosestPoint(transform.position), transform.position) > 5)
         {
+            isResetting = true;
             numDeaths++;
 
             if (Timer.instance) 
@@ -187,7 +191,7 @@ public class Player : Teleportable
             // Reset the player position if they fall off the screen
             ResetWorld();
             ResetPortals();
-            StartCoroutine(ResetPlayer());
+            BeginResetPlayer();
         }
         UpdateSpriteColors();
         RotateWithGravity();
@@ -301,9 +305,17 @@ public class Player : Teleportable
         RecordResetEvent();
 
         numResets++;
+        isResetting = true;
         ResetPortals();
         ResetWorld();
-        StartCoroutine(ResetPlayer());
+        BeginResetPlayer();
+    }
+
+    private void BeginResetPlayer()
+    {
+        if (resetPlayerCoroutine != null)
+            StopCoroutine(resetPlayerCoroutine);
+        resetPlayerCoroutine = StartCoroutine(ResetPlayer());
     }
 
     /// <summary>Rotates the player to align with the current gravity direction.</summary>
@@ -355,19 +367,26 @@ public class Player : Teleportable
         currLeftAccel = minAccel;
         currRightAccel = minAccel;
         rb.linearVelocity = Vector2.zero;
-        transform.position = Vector3.up;
+        transform.position = respawnPosition;
         rb.angularVelocity = 0;
         transform.rotation = Quaternion.identity;
         gravityDirection = defaultGravityDirection;
         if (MobileControls.instance) MobileControls.instance.ResetPortalTime();
-        // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = 0;
-        // yield return null;
-        // cam.GetComponent<CameraController>().virtualCamera.VirtualCameraGameObject.GetComponent<Cinemachine.CinemachineConfiner2D>().m_Damping = .5f;
-        Time.timeScale = .1f;
+
+        Time.timeScale = 0f;
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
-        yield return new WaitForSecondsRealtime(.5f);
-        Time.timeScale = 0;
+
+        CameraController cameraController = CameraController.instance;
+        if (cameraController == null && cam != null)
+            cameraController = cam.GetComponent<CameraController>();
+        if (cameraController != null)
+            cameraController.BeginReturnToPlayer(0.5f);
+
+        yield return new WaitForSecondsRealtime(0.5f);
+
         if (Timer.instance != null) Timer.instance.levelTimer = 0;
+        isResetting = false;
+        resetPlayerCoroutine = null;
     }
 
     /// <summary>Resets the portals in the scene.</summary>
