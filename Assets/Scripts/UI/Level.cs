@@ -61,17 +61,15 @@ public class Level
 
     public async void AwaitLeaderboardData(Level l)
     {
-        int numTries = 0;
-        while (numTries < 10 && !OnlineServices.online)
-        {
-            await Task.Delay(10);
-            numTries++;
-        }
-        if (OnlineServices.online)
-        {
-            l.top20 = await Leaderboard.instance.GetTopPlayers(l, 20);
-            l.myRanks = await Leaderboard.instance.GetMyRanks(l);
-        }
+        if (!Settings.instance.participateInLeaderboard)
+            return;
+
+        await OnlineServices.WaitForInitializationAsync();
+        if (!OnlineServices.online)
+            return;
+
+        l.top20 = await Leaderboard.instance.GetTopPlayers(l, 20);
+        l.myRanks = await Leaderboard.instance.GetMyRanks(l);
     }
 
 

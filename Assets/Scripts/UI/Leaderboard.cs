@@ -53,19 +53,14 @@ public class Leaderboard : MonoBehaviour
         levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = true;
         levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.refresh.onClick.RemoveAllListeners();
-        levelSelectLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, levelSelectLeaderboard, level.top20));
-        ShowLeaderboard(level, levelSelectLeaderboard, level.top20);
+        levelSelectLeaderboard.refresh.onClick.AddListener(() => LoadAndShowTop20(level, levelSelectLeaderboard));
+        LoadAndShowTop20(level, levelSelectLeaderboard);
     }
 
     /// <summary>Makes the leaderboard show up on the level select menu.</summary>
     /// <param name="level">What level to show the leaderboard for.</param>
     public void ShowLevelSelectMyRanks(Level level)
     { 
-        if (level.myRanks == null)
-        {
-            ShowLevelSelectTop20(level);
-            return;
-        }
         levelSelectLeaderboard.rankingsContainer.SetActive(true);
         levelSelectLeaderboard.title.text = "My Rank in Leaderboard";
         levelSelectLeaderboard.myRanksButton.interactable = false;
@@ -75,8 +70,8 @@ public class Leaderboard : MonoBehaviour
         levelSelectLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
         levelSelectLeaderboard.refresh.onClick.RemoveAllListeners();
-        levelSelectLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, levelSelectLeaderboard, level.myRanks));
-        ShowLeaderboard(level, levelSelectLeaderboard, level.myRanks);
+        levelSelectLeaderboard.refresh.onClick.AddListener(() => LoadAndShowMyRanks(level, levelSelectLeaderboard));
+        LoadAndShowMyRanks(level, levelSelectLeaderboard);
     }
 
     /// <summary>Makes the leaderboard show up on the transition menu.</summary>
@@ -92,8 +87,8 @@ public class Leaderboard : MonoBehaviour
         transitionLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = true;
         transitionLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
         transitionLeaderboard.refresh.onClick.RemoveAllListeners();
-        transitionLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, transitionLeaderboard, level.top20));
-        ShowLeaderboard(level, transitionLeaderboard, level.top20);
+        transitionLeaderboard.refresh.onClick.AddListener(() => LoadAndShowTop20(level, transitionLeaderboard));
+        LoadAndShowTop20(level, transitionLeaderboard);
     }
 
     /// <summary>Makes the leaderboard show up on the transition menu.</summary>
@@ -109,8 +104,8 @@ public class Leaderboard : MonoBehaviour
         transitionLeaderboard.top20Button.transform.parent.GetComponent<Image>().enabled = false;
         transitionLeaderboard.starsButton.transform.parent.GetComponent<Image>().enabled = false;
         transitionLeaderboard.refresh.onClick.RemoveAllListeners();
-        transitionLeaderboard.refresh.onClick.AddListener(() => ShowLeaderboard(level, transitionLeaderboard, level.myRanks));
-        ShowLeaderboard(level, transitionLeaderboard, level.myRanks);
+        transitionLeaderboard.refresh.onClick.AddListener(() => LoadAndShowMyRanks(level, transitionLeaderboard));
+        LoadAndShowMyRanks(level, transitionLeaderboard);
     }
 
     /// <summary>Shows the stars menu on the transition leaderboard.</summary>
@@ -198,6 +193,48 @@ public class Leaderboard : MonoBehaviour
         }
         
         EnterLeaderboardData(entries, ui);
+    }
+
+    private async void LoadAndShowTop20(Level level, LeaderboardUI ui)
+    {
+        PrepareLeaderboardView(ui);
+        ui.title.text = "Top 20 Leaderboard";
+        ui.title.transform.localPosition = Vector3.up * 50;
+
+        if (!Settings.instance.participateInLeaderboard)
+        {
+            ShowLeaderboard(level, ui, null);
+            return;
+        }
+
+        ui.title.text = "Top 20 Leaderboard" + Environment.NewLine + Environment.NewLine + "Loading...";
+        level.top20 = await GetTopPlayers(level, 20);
+        ShowLeaderboard(level, ui, level.top20);
+    }
+
+    private async void LoadAndShowMyRanks(Level level, LeaderboardUI ui)
+    {
+        PrepareLeaderboardView(ui);
+        ui.title.text = "My Rank in Leaderboard";
+        ui.title.transform.localPosition = Vector3.up * 50;
+
+        if (!Settings.instance.participateInLeaderboard)
+        {
+            ShowLeaderboard(level, ui, null);
+            return;
+        }
+
+        ui.title.text = "My Rank in Leaderboard" + Environment.NewLine + Environment.NewLine + "Loading...";
+        level.myRanks = await GetMyRanks(level);
+        ShowLeaderboard(level, ui, level.myRanks);
+    }
+
+    private void PrepareLeaderboardView(LeaderboardUI ui)
+    {
+        ui.container.SetActive(true);
+        ui.scrollView.SetActive(true);
+        ui.starUI.container.SetActive(false);
+        ui.rankingsContainer.SetActive(true);
     }
 
     /// <summary>
@@ -329,30 +366,41 @@ public class Leaderboard : MonoBehaviour
     /// <returns>List of the top (fastest) n Leaderboard entries.</returns>
     public async Task<List<LeaderboardEntry>> GetTopPlayers(Level level, int howMany = 10)
     {
-        if (!Settings.instance.participateInLeaderboard || !OnlineServices.online)
+        if (!Settings.instance.participateInLeaderboard)
         {
-            Debug.LogWarning("Leaderboard is not enabled or not online.");
+            Debug.LogWarning("Leaderboard is not enabled.");
             return null;
         }
         Debug.Assert(level != null, "Level cannot be null");
         Debug.Assert(howMany > 0, "howMany must be greater than 0");
 
         string levelTitle = "W" + level.world + "L" + level.level;
-        try
+        for (int attempt = 0; attempt < 3; attempt++)
         {
-            int offset = 0;
-            string response = await OnlineServices.GetScores(levelTitle,
-                new Unity.Services.Leaderboards.GetScoresOptions
-                {
-                    Offset = offset, Limit = howMany
-                });
-            if (response == "[]" || response == null)
+            if (attempt > 0)
+                await Task.Delay(500 * attempt);
+
+            await OnlineServices.WaitForInitializationAsync();
+            if (!OnlineServices.online)
             {
-                Debug.Log("No scores found for this level.");
+                Debug.LogWarning("Leaderboard is not online.");
                 return null;
             }
-            else
+
+            try
             {
+                int offset = 0;
+                string response = await OnlineServices.GetScores(levelTitle,
+                    new Unity.Services.Leaderboards.GetScoresOptions
+                    {
+                        Offset = offset, Limit = howMany
+                    });
+                if (response == "[]" || response == null)
+                {
+                    Debug.Log("No scores found for this level.");
+                    return null;
+                }
+
                 List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
                 string name = "";
                 string score = "";
@@ -374,12 +422,14 @@ public class Leaderboard : MonoBehaviour
                 }
                 return leaderboardEntries;
             }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("Failed to retrieve leaderboard (attempt " + (attempt + 1) + "): " + e.Message);
+            }
         }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Failed to retrieve leaderboard: " + e.Message);
-            return null;
-        }
+
+        Debug.LogError("Failed to retrieve leaderboard after retries.");
+        return null;
     }
 
     /// <summary>Gets 5 entries on each side of the player.</summary>
@@ -387,25 +437,35 @@ public class Leaderboard : MonoBehaviour
     /// <returns>List of entries around and including the player.</returns>
     public async Task<List<LeaderboardEntry>> GetMyRanks(Level level)
     {
-        if (!Settings.instance.participateInLeaderboard || !OnlineServices.online)
+        if (!Settings.instance.participateInLeaderboard)
         {
-            Debug.LogWarning("Leaderboard is not enabled or not online.");
+            Debug.LogWarning("Leaderboard is not enabled.");
             return null;
         }
         Debug.Assert(level != null, "Level cannot be null");
         string levelTitle = "W" + level.world + "L" + level.level;
 
-        try
+        for (int attempt = 0; attempt < 3; attempt++)
         {
-            // int offset = 0;
-            string response = await OnlineServices.GetPlayerRangeAsync(levelTitle);
-            if (response == "[]" || response == null)
+            if (attempt > 0)
+                await Task.Delay(500 * attempt);
+
+            await OnlineServices.WaitForInitializationAsync();
+            if (!OnlineServices.online)
             {
-                Debug.Log("No scores found for this level.");
+                Debug.LogWarning("Leaderboard is not online.");
                 return null;
             }
-            else
+
+            try
             {
+                string response = await OnlineServices.GetPlayerRangeAsync(levelTitle);
+                if (response == "[]" || response == null)
+                {
+                    Debug.Log("No scores found for this level.");
+                    return null;
+                }
+
                 List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
                 string name = "";
                 string score = "";
@@ -427,12 +487,14 @@ public class Leaderboard : MonoBehaviour
                 }
                 return leaderboardEntries;
             }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("Failed to retrieve my ranks (attempt " + (attempt + 1) + "): " + e.Message);
+            }
         }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Failed to retrieve leaderboard: " + e.Message);
-            return null;
-        }
+
+        Debug.LogError("Failed to retrieve my ranks after retries.");
+        return null;
     }
 }
 

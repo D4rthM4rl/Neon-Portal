@@ -20,9 +20,43 @@ public class OnlineServices : MonoBehaviour
     /// </summary>
     public static bool online;
 
+    private static Task<bool> initializationTask;
+
     async private void Awake() {
-        online = await TryToGoOnline();
+        initializationTask = TryToGoOnline();
+        online = await initializationTask;
         if (online) Settings.instance.playerLeaderboardName = await OnlineServices.GetPlayerName();
+    }
+
+    /// <summary>
+    /// Waits for Unity Services initialization to finish. Safe to call before Awake completes.
+    /// </summary>
+    public static Task<bool> WaitForInitializationAsync()
+    {
+        return initializationTask ?? Task.FromResult(online);
+    }
+
+    private static bool IsConnectivityFailure(System.Exception e)
+    {
+        string message = e.Message;
+        return message.Contains("Network Error")
+            || message.Contains("Unable to connect")
+            || message.Contains("401")
+            || message.Contains("403")
+            || message.Contains("Not authorized");
+    }
+
+    private static void HandleServiceFailure(System.Exception e, string context)
+    {
+        if (IsConnectivityFailure(e))
+        {
+            Debug.LogWarning(context + ": " + e.Message + " Going offline.");
+            online = false;
+        }
+        else
+        {
+            Debug.LogWarning(context + ": " + e.Message);
+        }
     }
 
     /// <summary>
@@ -88,9 +122,7 @@ public class OnlineServices : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("Failed to retrieve leaderboard: " + e.Message + " Going offline.");
-            Settings.instance.ErrorOnline();
-            online = false;
+            HandleServiceFailure(e, "Failed to retrieve leaderboard");
             return null;
         }
     }
@@ -128,8 +160,7 @@ public class OnlineServices : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("Failed to retrieve scores: " + e.Message + " Going offline.");
-            online = false;
+            HandleServiceFailure(e, "Failed to retrieve scores");
             return null;
         }
     }
@@ -153,8 +184,7 @@ public class OnlineServices : MonoBehaviour
             Debug.Log("Level: " + leaderboardID);
             if (e.Message.Contains("Leaderboard entry could not be found"))
             return "Unbeaten online";
-            Debug.LogWarning("Failed to retrieve scores around player: " + e.Message + " Going offline." + e.Data);
-            online = false;
+            HandleServiceFailure(e, "Failed to retrieve scores around player");
             return null;
         }
     }
