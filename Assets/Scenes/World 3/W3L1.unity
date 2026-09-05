@@ -1391,7 +1391,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4869247173865679712, guid: 1eb92ab63fcb44b698e0c48b858a41f9, type: 3}
       propertyPath: m_Name
-      value: Background
+      value: Rotatable Background
       objectReference: {fileID: 0}
     - target: {fileID: 7563834303035541741, guid: 1eb92ab63fcb44b698e0c48b858a41f9, type: 3}
       propertyPath: m_Camera

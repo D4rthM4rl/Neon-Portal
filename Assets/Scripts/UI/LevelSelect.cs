@@ -356,7 +356,7 @@ public class LevelSelect : MonoBehaviour
     public Level GetLevelByName(string name)
     {
         int lIndex = name.IndexOf('L');
-        Debug.Assert(lIndex >= 0, "Couldn't find L in level name");
+        Debug.Assert(lIndex >= 0, $"Couldn't find L in level name ({name})");
         int worldNum = int.Parse(name.Substring(1, lIndex - 1));
         int levelNum = int.Parse(name.Substring(lIndex + 1, name.Length - 1 - lIndex));
         return levels[worldNum - 1, levelNum - 1];

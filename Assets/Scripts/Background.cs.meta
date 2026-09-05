@@ -1,2 +1,18 @@
 fileFormatVersion: 2
 guid: 2950a4b41e09f44dd8cd6384a215ed65
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - backgroundRoot: {instanceID: 0}
+  - skyImage: {instanceID: 0}
+  - buildingsImage: {instanceID: 0}
+  - windowsImage: {instanceID: 0}
+  - skySprite: {fileID: 21300000, guid: 8dae2e29df99848fb83a7f1dacfba4cd, type: 3}
+  - buildingsSprite: {fileID: 21300000, guid: 8dae2e29df99848fb83a7f1dacfba4cd, type: 3}
+  - windowsSprite: {fileID: 21300000, guid: 951b4b0e5c39240378b3efcf62ff7f66, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
