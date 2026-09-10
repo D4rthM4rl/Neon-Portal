@@ -1,0 +1,701 @@
+diff --git a/Assets/Scripts/Neon.meta b/Assets/Scripts/Neon.meta
+new file mode 100644
+index 0000000..bad8fb1
+--- /dev/null
++++ b/Assets/Scripts/Neon.meta
+@@ -0,0 +1,8 @@
++fileFormatVersion: 2
++guid: 23e2758e60fd4a70ac44c0e8db67bcc5
++folderAsset: yes
++DefaultImporter:
++  externalObjects: {}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
+diff --git a/Assets/Scripts/Neon/Editor.meta b/Assets/Scripts/Neon/Editor.meta
+new file mode 100644
+index 0000000..b07809a
+--- /dev/null
++++ b/Assets/Scripts/Neon/Editor.meta
+@@ -0,0 +1,8 @@
++fileFormatVersion: 2
++guid: 996a548d111d4edd8a7829c4d6c5afc3
++folderAsset: yes
++DefaultImporter:
++  externalObjects: {}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
+diff --git a/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs b/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs
+new file mode 100644
+index 0000000..9c60b3e
+--- /dev/null
++++ b/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs
+@@ -0,0 +1,43 @@
++using UnityEditor;
++using UnityEngine;
++
++namespace Neon.EditorTools
++{
++    /// <summary>
++    /// Convenience menu items for working with the neon outline system in the editor.
++    /// </summary>
++    public static class NeonBlockEditorTools
++    {
++        [MenuItem("Tools/Neon/Add Neon Block To Selection %#n")]
++        private static void AddNeonBlockToSelection()
++        {
++            var manager = NeonOutlineManager.FindOrCreate();
++            Undo.RegisterCreatedObjectUndo(manager.gameObject, "Create Neon Manager");
++
++            foreach (var go in Selection.gameObjects)
++            {
++                if (go.GetComponent<SpriteRenderer>() == null)
++                    continue;
++
++                var block = go.GetComponent<NeonBlock>();
++                if (block == null)
++                {
++                    block = Undo.AddComponent<NeonBlock>(go);
++                    EditorUtility.SetDirty(block);
++                }
++            }
++
++            manager.Rebuild();
++        }
++
++        [MenuItem("Tools/Neon/Add Neon Block To Selection %#n", true)]
++        private static bool AddNeonBlockToSelectionValidate() => Selection.gameObjects.Length > 0;
++
++        [MenuItem("Tools/Neon/Rebuild Outlines")]
++        private static void RebuildOutlines()
++        {
++            var manager = NeonOutlineManager.FindOrCreate();
++            manager.Rebuild();
++        }
++    }
++}
+diff --git a/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs.meta b/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs.meta
+new file mode 100644
+index 0000000..d13c8bb
+--- /dev/null
++++ b/Assets/Scripts/Neon/Editor/NeonBlockEditorTools.cs.meta
+@@ -0,0 +1,11 @@
++fileFormatVersion: 2
++guid: 1fc084cf493441b1ba04aa527c9a5872
++MonoImporter:
++  externalObjects: {}
++  serializedVersion: 2
++  defaultReferences: []
++  executionOrder: 0
++  icon: {instanceID: 0}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
+diff --git a/Assets/Scripts/Neon/NeonBlock.cs b/Assets/Scripts/Neon/NeonBlock.cs
+new file mode 100644
+index 0000000..28e76e8
+--- /dev/null
++++ b/Assets/Scripts/Neon/NeonBlock.cs
+@@ -0,0 +1,144 @@
++using System.Collections.Generic;
++using UnityEngine;
++
++namespace Neon
++{
++    /// <summary>
++    /// Attach to any block / platform (a GameObject with a square SpriteRenderer and a
++    /// BoxCollider2D or an axis-aligned PolygonCollider2D used as a platform collider).
++    ///
++    /// The block declares:
++    ///   - <see cref="insideColor"/>  : the fill colour of the block's sprite.
++    ///   - <see cref="outlineColor"/> : the colour of the neon line traced around the surface.
++    ///
++    /// Blocks may be stretched through x / y scaling. A block therefore covers one or more
++    /// unit cells on a shared grid. The <see cref="NeonOutlineManager"/> reads those cells to
++    /// build a single continuous neon outline around each connected group. Two blocks whose
++    /// <see cref="outlineColor"/> match and that are adjacent are treated as one big block:
++    /// their shared internal edges are never drawn, so only the perimeter of the merged shape
++    /// is outlined.
++    /// </summary>
++    [DisallowMultipleComponent]
++    [ExecuteAlways]
++    public class NeonBlock : MonoBehaviour
++    {
++        [Tooltip("Fill colour applied to the block's SpriteRenderer.")]
++        [SerializeField] private Color insideColor = new Color(1f, 0.486f, 1f, 1f);
++
++        [Tooltip("Colour of the neon line traced around the exposed surface of this block.")]
++        [SerializeField] private Color outlineColor = new Color(1f, 0.486f, 1f, 1f);
++
++        [Tooltip("Size (in world units) of one grid cell. Blocks should align to this grid. " +
++                 "Usually 1 to match a 1x1 sprite. Must match the value on the manager.")]
++        [SerializeField] private float cellSize = 1f;
++
++        [Tooltip("Optional explicit link to the manager. If left empty one is found / created in the scene.")]
++        [SerializeField] private NeonOutlineManager manager;
++
++        public Color InsideColor => insideColor;
++        public Color OutlineColor => outlineColor;
++        public float CellSize => cellSize;
++
++        private SpriteRenderer spriteRenderer;
++
++        private void OnEnable()
++        {
++            spriteRenderer = GetComponent<SpriteRenderer>();
++            ApplyInsideColor();
++            Register();
++        }
++
++        private void OnDisable()
++        {
++            if (manager != null)
++                manager.Unregister(this);
++        }
++
++#if UNITY_EDITOR
++        private void OnValidate()
++        {
++            if (cellSize <= 0f) cellSize = 1f;
++            spriteRenderer = GetComponent<SpriteRenderer>();
++            ApplyInsideColor();
++            // Defer so the whole selection / undo settles before rebuilding.
++            UnityEditor.EditorApplication.delayCall += DeferredRebuild;
++        }
++
++        private void DeferredRebuild()
++        {
++            if (this == null) return;
++            if (manager == null) manager = NeonOutlineManager.FindOrCreate();
++            if (manager != null)
++            {
++                manager.Register(this);
++                manager.RequestRebuild();
++            }
++        }
++#endif
++
++        private void Register()
++        {
++            if (manager == null)
++                manager = NeonOutlineManager.FindOrCreate();
++            if (manager != null)
++            {
++                manager.Register(this);
++                manager.RequestRebuild();
++            }
++        }
++
++        private void ApplyInsideColor()
++        {
++            if (spriteRenderer != null)
++                spriteRenderer.color = insideColor;
++        }
++
++        /// <summary>
++        /// World-space, axis-aligned bounds of this block's collider footprint.
++        /// </summary>
++        public bool TryGetWorldBounds(out Bounds bounds)
++        {
++            Collider2D col = GetComponent<Collider2D>();
++            if (col != null)
++            {
++                bounds = col.bounds;
++                return true;
++            }
++
++            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
++            if (spriteRenderer != null)
++            {
++                bounds = spriteRenderer.bounds;
++                return true;
++            }
++
++            bounds = default;
++            return false;
++        }
++
++        /// <summary>
++        /// Rasterises this block onto the shared grid, returning every integer cell it covers.
++        /// A block stretched to (3,1) scale on a unit grid returns three horizontally adjacent
++        /// cells, allowing the manager to treat stretched blocks as a run of unit cells.
++        /// </summary>
++        public void CollectCells(float grid, List<Vector2Int> into)
++        {
++            if (!TryGetWorldBounds(out Bounds b)) return;
++
++            // Convert to cell coordinates. We use the min corner as the cell anchor and round
++            // to be robust against tiny float error from scaling / collider bounds.
++            int minX = Mathf.RoundToInt(b.min.x / grid);
++            int minY = Mathf.RoundToInt(b.min.y / grid);
++            int maxX = Mathf.RoundToInt(b.max.x / grid);
++            int maxY = Mathf.RoundToInt(b.max.y / grid);
++
++            // At least one cell.
++            if (maxX <= minX) maxX = minX + 1;
++            if (maxY <= minY) maxY = minY + 1;
++
++            for (int x = minX; x < maxX; x++)
++                for (int y = minY; y < maxY; y++)
++                    into.Add(new Vector2Int(x, y));
++        }
++    }
++}
+diff --git a/Assets/Scripts/Neon/NeonBlock.cs.meta b/Assets/Scripts/Neon/NeonBlock.cs.meta
+new file mode 100644
+index 0000000..132e820
+--- /dev/null
++++ b/Assets/Scripts/Neon/NeonBlock.cs.meta
+@@ -0,0 +1,11 @@
++fileFormatVersion: 2
++guid: f5885e27b4ad458fa948ace022904506
++MonoImporter:
++  externalObjects: {}
++  serializedVersion: 2
++  defaultReferences: []
++  executionOrder: 0
++  icon: {instanceID: 0}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
+diff --git a/Assets/Scripts/Neon/NeonOutlineManager.cs b/Assets/Scripts/Neon/NeonOutlineManager.cs
+new file mode 100644
+index 0000000..0c2fd7e
+--- /dev/null
++++ b/Assets/Scripts/Neon/NeonOutlineManager.cs
+@@ -0,0 +1,356 @@
++using System.Collections.Generic;
++using UnityEngine;
++
++namespace Neon
++{
++    /// <summary>
++    /// Builds and renders a single continuous neon outline around groups of adjacent
++    /// <see cref="NeonBlock"/>s.
++    ///
++    /// Algorithm overview:
++    ///   1. Every registered block rasterises its collider footprint onto a shared integer grid.
++    ///      A stretched block simply fills a run of cells. Each filled cell remembers the
++    ///      outline colour of the block that filled it.
++    ///   2. For every filled cell we look at its four neighbours. A cell edge is part of the
++    ///      neon outline only if the neighbouring cell is NOT filled with the SAME outline
++    ///      colour. This is what makes same-colour adjacent blocks act as one big block:
++    ///      their shared internal edges have a same-colour neighbour and are skipped, leaving
++    ///      only the perimeter of the merged shape. (For the T example the middle of the top
++    ///      block's bottom edge and the whole of the bottom block's top edge are shared, so
++    ///      only the silhouette of the T is drawn with no lines inside.)
++    ///   3. Boundary edges are stitched into closed loops per colour and collinear runs are
++    ///      merged, producing continuous lines. A corner vertex is kept only when the two edges
++    ///      meeting there are both part of the outline (i.e. the direction actually turns);
++    ///      collinear pass-through points are removed.
++    ///   4. Each loop is drawn with a LineRenderer using the group's outline colour.
++    /// </summary>
++    [ExecuteAlways]
++    public class NeonOutlineManager : MonoBehaviour
++    {
++        [Tooltip("Size (world units) of one grid cell. Must match the NeonBlock cell size.")]
++        [SerializeField] private float cellSize = 1f;
++
++        [Tooltip("Width of the neon line in world units.")]
++        [SerializeField] private float lineWidth = 0.08f;
++
++        [Tooltip("Material used for the neon LineRenderers. If empty a default additive-ish " +
++                 "sprite material is used so the line colour comes through.")]
++        [SerializeField] private Material lineMaterial;
++
++        [Tooltip("Sorting layer for the neon lines.")]
++        [SerializeField] private string sortingLayer = "Platforms";
++
++        [Tooltip("Sorting order for the neon lines (drawn above the block fill).")]
++        [SerializeField] private int sortingOrder = 10;
++
++        [Tooltip("Z position offset for the generated line objects.")]
++        [SerializeField] private float zOffset = -0.1f;
++
++        private readonly HashSet<NeonBlock> blocks = new HashSet<NeonBlock>();
++        private readonly List<GameObject> lineObjects = new List<GameObject>();
++        private bool rebuildQueued;
++
++        public float CellSize => cellSize;
++
++        public void Register(NeonBlock block)
++        {
++            if (block != null) blocks.Add(block);
++        }
++
++        public void Unregister(NeonBlock block)
++        {
++            if (block != null && blocks.Remove(block))
++                RequestRebuild();
++        }
++
++        public void RequestRebuild()
++        {
++            if (rebuildQueued) return;
++            rebuildQueued = true;
++#if UNITY_EDITOR
++            if (!Application.isPlaying)
++            {
++                UnityEditor.EditorApplication.delayCall += () =>
++                {
++                    rebuildQueued = false;
++                    if (this != null) Rebuild();
++                };
++                return;
++            }
++#endif
++        }
++
++        private void OnEnable()
++        {
++            RequestRebuild();
++        }
++
++        private void Update()
++        {
++            if (rebuildQueued && Application.isPlaying)
++            {
++                rebuildQueued = false;
++                Rebuild();
++            }
++        }
++
++        /// <summary>Rasterise all blocks, trace merged perimeters and (re)draw them.</summary>
++        public void Rebuild()
++        {
++            ClearLines();
++            if (blocks.Count == 0) return;
++
++            float grid = cellSize;
++
++            // Group cells by outline colour. Same-colour cells merge; different colours are
++            // independent layers that can outline over one another.
++            var byColor = new Dictionary<Color, HashSet<Vector2Int>>(new ColorComparer());
++            var scratch = new List<Vector2Int>();
++
++            foreach (var block in blocks)
++            {
++                if (block == null) continue;
++                scratch.Clear();
++                block.CollectCells(grid, scratch);
++                if (scratch.Count == 0) continue;
++
++                Color key = block.OutlineColor;
++                if (!byColor.TryGetValue(key, out var set))
++                {
++                    set = new HashSet<Vector2Int>();
++                    byColor[key] = set;
++                }
++                foreach (var c in scratch) set.Add(c);
++            }
++
++            foreach (var kv in byColor)
++                BuildColorGroup(kv.Key, kv.Value, grid);
++        }
++
++        // Edge directions used to walk a cell perimeter counter-clockwise.
++        // For a filled cell, an edge is drawn only when the outward neighbour in that
++        // direction is empty (for this colour set).
++        private static readonly Vector2Int[] NeighborDir =
++        {
++            new Vector2Int(1, 0),   // right  -> right edge
++            new Vector2Int(0, 1),   // up     -> top edge
++            new Vector2Int(-1, 0),  // left   -> left edge
++            new Vector2Int(0, -1),  // down   -> bottom edge
++        };
++
++        private void BuildColorGroup(Color color, HashSet<Vector2Int> cells, float grid)
++        {
++            // Collect boundary edges as directed segments so loops wind consistently (CCW,
++            // interior on the left). Corner points are integer lattice points (cell corners).
++            //
++            // A start corner can be shared by two different boundary edges where the shape
++            // pinches (two cells touching only at a diagonal), so edges are stored in a
++            // multimap: start corner -> list of end corners.
++            var edges = new Dictionary<Vector2Int, List<Vector2Int>>();
++
++            foreach (var cell in cells)
++            {
++                Vector2Int bl = new Vector2Int(cell.x, cell.y);
++                Vector2Int br = new Vector2Int(cell.x + 1, cell.y);
++                Vector2Int tr = new Vector2Int(cell.x + 1, cell.y + 1);
++                Vector2Int tl = new Vector2Int(cell.x, cell.y + 1);
++
++                // An edge is drawn only when the neighbouring cell is empty for this colour
++                // set. Same-colour neighbours share the cell so the edge is skipped, which is
++                // what merges adjacent same-colour blocks into one big outlined shape.
++                if (!cells.Contains(cell + new Vector2Int(0, -1))) AddEdge(edges, br, bl); // bottom: right->left
++                if (!cells.Contains(cell + new Vector2Int(0, 1)))  AddEdge(edges, tl, tr); // top: left->right
++                if (!cells.Contains(cell + new Vector2Int(-1, 0))) AddEdge(edges, bl, tl); // left: bottom->top
++                if (!cells.Contains(cell + new Vector2Int(1, 0)))  AddEdge(edges, tr, br); // right: top->bottom
++            }
++
++            var loops = ExtractLoops(edges);
++
++            foreach (var loop in loops)
++            {
++                var simplified = SimplifyCollinear(loop);
++                DrawLoop(simplified, color, grid);
++            }
++        }
++
++        private static void AddEdge(Dictionary<Vector2Int, List<Vector2Int>> edges, Vector2Int from, Vector2Int to)
++        {
++            if (!edges.TryGetValue(from, out var list))
++            {
++                list = new List<Vector2Int>(1);
++                edges[from] = list;
++            }
++            list.Add(to);
++        }
++
++        private static List<List<Vector2Int>> ExtractLoops(Dictionary<Vector2Int, List<Vector2Int>> edges)
++        {
++            var loops = new List<List<Vector2Int>>();
++
++            int RemainingCount()
++            {
++                int c = 0;
++                foreach (var kv in edges) c += kv.Value.Count;
++                return c;
++            }
++
++            int total = RemainingCount();
++            int outerGuard = total + 4;
++
++            while (RemainingCount() > 0 && outerGuard-- > 0)
++            {
++                // Find any start corner that still has an outgoing edge.
++                Vector2Int start = default;
++                bool found = false;
++                foreach (var kv in edges)
++                {
++                    if (kv.Value.Count > 0) { start = kv.Key; found = true; break; }
++                }
++                if (!found) break;
++
++                var loop = new List<Vector2Int> { start };
++                Vector2Int cur = start;
++
++                int guard = total + 4;
++                while (guard-- > 0)
++                {
++                    if (!edges.TryGetValue(cur, out var nexts) || nexts.Count == 0)
++                        break;
++
++                    // Consume one outgoing edge from the current corner.
++                    Vector2Int next = nexts[nexts.Count - 1];
++                    nexts.RemoveAt(nexts.Count - 1);
++
++                    if (next == start) break;
++                    loop.Add(next);
++                    cur = next;
++                }
++
++                if (loop.Count >= 4)
++                    loops.Add(loop);
++            }
++
++            return loops;
++        }
++
++        /// <summary>
++        /// Removes points that lie on a straight run so only genuine corners remain. A corner
++        /// is kept exactly when the incoming and outgoing edges point in different directions,
++        /// i.e. both sides of the corner carry the neon line.
++        /// </summary>
++        private static List<Vector2Int> SimplifyCollinear(List<Vector2Int> loop)
++        {
++            int n = loop.Count;
++            if (n < 3) return loop;
++
++            var result = new List<Vector2Int>(n);
++            for (int i = 0; i < n; i++)
++            {
++                Vector2Int prev = loop[(i - 1 + n) % n];
++                Vector2Int cur = loop[i];
++                Vector2Int next = loop[(i + 1) % n];
++
++                Vector2Int inDir = cur - prev;
++                Vector2Int outDir = next - cur;
++
++                // Keep only when the direction changes (a real corner where both edges exist).
++                if (inDir != outDir)
++                    result.Add(cur);
++            }
++            return result;
++        }
++
++        private void DrawLoop(List<Vector2Int> corners, Color color, float grid)
++        {
++            if (corners.Count < 2) return;
++
++            var go = new GameObject("NeonOutline");
++            go.transform.SetParent(transform, false);
++            go.hideFlags = HideFlags.DontSave;
++
++            var lr = go.AddComponent<LineRenderer>();
++            lr.useWorldSpace = true;
++            lr.loop = true;
++            lr.numCornerVertices = 0;
++            lr.numCapVertices = 0;
++            lr.alignment = LineAlignment.TransformZ;
++            lr.textureMode = LineTextureMode.Stretch;
++            lr.widthMultiplier = lineWidth;
++            lr.material = lineMaterial != null ? lineMaterial : DefaultLineMaterial();
++
++            lr.startColor = color;
++            lr.endColor = color;
++
++            lr.sortingLayerName = sortingLayer;
++            lr.sortingOrder = sortingOrder;
++
++            lr.positionCount = corners.Count;
++            for (int i = 0; i < corners.Count; i++)
++            {
++                Vector3 p = new Vector3(corners[i].x * grid, corners[i].y * grid, zOffset);
++                lr.SetPosition(i, p);
++            }
++
++            lineObjects.Add(go);
++        }
++
++        private static Material cachedDefault;
++        private static Material DefaultLineMaterial()
++        {
++            if (cachedDefault != null) return cachedDefault;
++            var shader = Shader.Find("Sprites/Default");
++            if (shader == null) shader = Shader.Find("Unlit/Color");
++            cachedDefault = new Material(shader) { name = "NeonLine (Runtime)" };
++            return cachedDefault;
++        }
++
++        private void ClearLines()
++        {
++            foreach (var go in lineObjects)
++            {
++                if (go == null) continue;
++                if (Application.isPlaying) Destroy(go);
++                else DestroyImmediate(go);
++            }
++            lineObjects.Clear();
++
++            // Also clear any stragglers (e.g. after a domain reload) parented under us.
++            var stragglers = new List<Transform>();
++            foreach (Transform child in transform)
++                if (child.name == "NeonOutline")
++                    stragglers.Add(child);
++            foreach (var t in stragglers)
++            {
++                if (Application.isPlaying) Destroy(t.gameObject);
++                else DestroyImmediate(t.gameObject);
++            }
++        }
++
++        public static NeonOutlineManager FindOrCreate()
++        {
++#if UNITY_2023_1_OR_NEWER
++            var existing = Object.FindFirstObjectByType<NeonOutlineManager>();
++#else
++            var existing = Object.FindObjectOfType<NeonOutlineManager>();
++#endif
++            if (existing != null) return existing;
++
++            var go = new GameObject("Neon Outline Manager");
++            return go.AddComponent<NeonOutlineManager>();
++        }
++
++        /// <summary>Compares colours with a tolerance so tiny float differences still merge.</summary>
++        private class ColorComparer : IEqualityComparer<Color>
++        {
++            private const float Q = 256f;
++            private static int Quant(float v) => Mathf.RoundToInt(Mathf.Clamp01(v) * Q);
++
++            public bool Equals(Color a, Color b) =>
++                Quant(a.r) == Quant(b.r) && Quant(a.g) == Quant(b.g) &&
++                Quant(a.b) == Quant(b.b) && Quant(a.a) == Quant(b.a);
++
++            public int GetHashCode(Color c) =>
++                (Quant(c.r) * 397 ^ Quant(c.g)) * 397 ^ Quant(c.b) * 397 ^ Quant(c.a);
++        }
++    }
++}
+diff --git a/Assets/Scripts/Neon/NeonOutlineManager.cs.meta b/Assets/Scripts/Neon/NeonOutlineManager.cs.meta
+new file mode 100644
+index 0000000..9d567dc
+--- /dev/null
++++ b/Assets/Scripts/Neon/NeonOutlineManager.cs.meta
+@@ -0,0 +1,11 @@
++fileFormatVersion: 2
++guid: e37dc1d994cb493280642611d4e84895
++MonoImporter:
++  externalObjects: {}
++  serializedVersion: 2
++  defaultReferences: []
++  executionOrder: 0
++  icon: {instanceID: 0}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
+diff --git a/Assets/Scripts/Neon/README.md b/Assets/Scripts/Neon/README.md
+new file mode 100644
+index 0000000..7db35f8
+--- /dev/null
++++ b/Assets/Scripts/Neon/README.md
+@@ -0,0 +1,42 @@
++# Neon Block Outline System
++
++Draws a single continuous neon line around groups of adjacent blocks / platforms and lets you
++assign both the **inside (fill) colour** and the **outline (neon) colour** of each block.
++
++## Components
++
++- **`NeonBlock`** — add to any block or platform that has a square `SpriteRenderer` and a
++  `BoxCollider2D` (or an axis-aligned `PolygonCollider2D` used as a platform collider).
++  - `Inside Color` — applied to the block's `SpriteRenderer`.
++  - `Outline Color` — colour of the neon line traced around the block's exposed surface.
++  - `Cell Size` — world size of one grid cell (usually `1` to match a 1x1 sprite). Blocks must
++    line up to this grid. A block stretched via x/y scaling simply covers a run of cells.
++- **`NeonOutlineManager`** — one per scene (auto-created). Rasterises every block onto a shared
++  grid, merges adjacent same-outline-colour blocks, traces the perimeters and draws them with
++  `LineRenderer`s. Configure `Line Width`, `Line Material`, sorting layer/order and `Z Offset`.
++
++## How merging works
++
++Each block fills one or more unit cells (stretched blocks fill several). A cell edge becomes a
++neon segment **only if the neighbouring cell is not filled with the same outline colour**.
++
++- **Same outline colour + adjacent** → the shared edge has a same-colour neighbour, so it is not
++  drawn. The blocks act as one big block with a single outline and no interior lines. For a
++  T made of two blocks, only the silhouette of the T is drawn.
++- **Different outline colour + adjacent** → each block keeps its own full outline (the shared
++  edge is drawn once per colour).
++
++Corners are kept only where the outline actually turns, i.e. where the two edges around the
++corner are both part of the neon line; collinear pass-through points are removed so lines stay
++continuous.
++
++## Usage
++
++1. Select one or more block GameObjects in a scene.
++2. Run **Tools ▸ Neon ▸ Add Neon Block To Selection** (`Ctrl/Cmd+Shift+N`).
++3. Set the Inside / Outline colours per block in the Inspector.
++4. Outlines rebuild automatically on change. Use **Tools ▸ Neon ▸ Rebuild Outlines** to force a
++   rebuild (e.g. after moving blocks).
++
++At runtime the manager rebuilds when blocks register/unregister; call
++`NeonOutlineManager.RequestRebuild()` after moving blocks (e.g. moving platforms) to refresh.
+diff --git a/Assets/Scripts/Neon/README.md.meta b/Assets/Scripts/Neon/README.md.meta
+new file mode 100644
+index 0000000..5d44ee4
+--- /dev/null
++++ b/Assets/Scripts/Neon/README.md.meta
+@@ -0,0 +1,7 @@
++fileFormatVersion: 2
++guid: 9cff71a601d34983b6ce5c6a5acf81e6
++TextScriptImporter:
++  externalObjects: {}
++  userData: 
++  assetBundleName: 
++  assetBundleVariant: 
