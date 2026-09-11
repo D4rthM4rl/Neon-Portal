@@ -41,10 +41,22 @@ namespace Neon
 
         private SpriteRenderer spriteRenderer;
 
+#if UNITY_EDITOR
+        // Prefab Assets (viewed in the Project window, thumbnail generation, etc.) aren't part
+        // of any loaded scene. Their component callbacks still fire, but the manager they'd
+        // register with must create/parent scene GameObjects, which throws when attempted
+        // against a Prefab Asset. Scene instances and prefabs open in Prefab Mode (which has
+        // its own valid scene) are unaffected by this check.
+        private bool IsPrefabAsset => UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject);
+#endif
+
         private void OnEnable()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             ApplyInsideColor();
+#if UNITY_EDITOR
+            if (IsPrefabAsset) return;
+#endif
             Register();
         }
 
@@ -60,6 +72,7 @@ namespace Neon
             if (cellSize <= 0f) cellSize = 1f;
             spriteRenderer = GetComponent<SpriteRenderer>();
             ApplyInsideColor();
+            if (IsPrefabAsset) return;
             // Defer so the whole selection / undo settles before rebuilding.
             UnityEditor.EditorApplication.delayCall += DeferredRebuild;
         }
@@ -67,6 +80,7 @@ namespace Neon
         private void DeferredRebuild()
         {
             if (this == null) return;
+            if (IsPrefabAsset) return;
             if (manager == null) manager = NeonOutlineManager.FindOrCreate();
             if (manager != null)
             {

@@ -22,13 +22,15 @@ namespace Neon
     ///      merged, producing continuous lines. A corner vertex is kept only when the two edges
     ///      meeting there are both part of the outline (i.e. the direction actually turns);
     ///      collinear pass-through points are removed.
-    ///   4. Each loop is drawn with a LineRenderer using the group's outline colour.
+    ///   4. Each loop is drawn with a LineRenderer using the group's outline colour, parented
+    ///      to whichever block(s) contributed its edges so it rides along automatically when
+    ///      that block moves (see <see cref="ChooseParent"/>).
     /// </summary>
     [ExecuteAlways]
     public class NeonOutlineManager : MonoBehaviour
     {
         [Tooltip("Size (world units) of one grid cell. Must match the NeonBlock cell size.")]
-        [SerializeField] private float cellSize = 1f;
+        private float cellSize = .1f;
 
         [Tooltip("Width of the neon line in world units.")]
         [SerializeField] private float lineWidth = 0.08f;
@@ -97,14 +99,26 @@ namespace Neon
         /// <summary>Rasterise all blocks, trace merged perimeters and (re)draw them.</summary>
         public void Rebuild()
         {
+#if UNITY_EDITOR
+            // Prefab Assets (viewed in the Project window, thumbnail generation, etc.) aren't
+            // part of any loaded scene. Component callbacks still fire on them, but creating or
+            // reparenting GameObjects inside a Prefab Asset throws ("residing in a Prefab
+            // Asset..."), so skip entirely here. Scene instances, and prefabs open in Prefab
+            // Mode (which has its own valid scene), are unaffected by this check.
+            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject))
+                return;
+#endif
             ClearLines();
             if (blocks.Count == 0) return;
 
             float grid = cellSize;
 
             // Group cells by outline colour. Same-colour cells merge; different colours are
-            // independent layers that can outline over one another.
+            // independent layers that can outline over one another. We also remember which
+            // block first claimed each cell, so a finished loop can be traced back to the
+            // block(s) that produced it and parented accordingly.
             var byColor = new Dictionary<Color, HashSet<Vector2Int>>(new ColorComparer());
+            var ownersByColor = new Dictionary<Color, Dictionary<Vector2Int, NeonBlock>>(new ColorComparer());
             var scratch = new List<Vector2Int>();
 
             foreach (var block in blocks)
@@ -120,11 +134,21 @@ namespace Neon
                     set = new HashSet<Vector2Int>();
                     byColor[key] = set;
                 }
-                foreach (var c in scratch) set.Add(c);
+                if (!ownersByColor.TryGetValue(key, out var ownerMap))
+                {
+                    ownerMap = new Dictionary<Vector2Int, NeonBlock>();
+                    ownersByColor[key] = ownerMap;
+                }
+
+                foreach (var c in scratch)
+                {
+                    set.Add(c);
+                    if (!ownerMap.ContainsKey(c)) ownerMap[c] = block; // first claim wins
+                }
             }
 
             foreach (var kv in byColor)
-                BuildColorGroup(kv.Key, kv.Value, grid);
+                BuildColorGroup(kv.Key, kv.Value, ownersByColor[kv.Key], grid);
         }
 
         // Edge directions used to walk a cell perimeter counter-clockwise.
@@ -138,15 +162,19 @@ namespace Neon
             new Vector2Int(0, -1),  // down   -> bottom edge
         };
 
-        private void BuildColorGroup(Color color, HashSet<Vector2Int> cells, float grid)
+        private void BuildColorGroup(Color color, HashSet<Vector2Int> cells,
+            Dictionary<Vector2Int, NeonBlock> owners, float grid)
         {
             // Collect boundary edges as directed segments so loops wind consistently (CCW,
             // interior on the left). Corner points are integer lattice points (cell corners).
             //
             // A start corner can be shared by two different boundary edges where the shape
             // pinches (two cells touching only at a diagonal), so edges are stored in a
-            // multimap: start corner -> list of end corners.
+            // multimap: start corner -> list of end corners. edgeOwner remembers which block's
+            // cell produced each directed edge, so once a loop is traced we know which
+            // block(s) it belongs to.
             var edges = new Dictionary<Vector2Int, List<Vector2Int>>();
+            var edgeOwner = new Dictionary<(Vector2Int, Vector2Int), NeonBlock>();
 
             foreach (var cell in cells)
             {
@@ -155,21 +183,43 @@ namespace Neon
                 Vector2Int tr = new Vector2Int(cell.x + 1, cell.y + 1);
                 Vector2Int tl = new Vector2Int(cell.x, cell.y + 1);
 
+                owners.TryGetValue(cell, out NeonBlock owner);
+
                 // An edge is drawn only when the neighbouring cell is empty for this colour
                 // set. Same-colour neighbours share the cell so the edge is skipped, which is
                 // what merges adjacent same-colour blocks into one big outlined shape.
-                if (!cells.Contains(cell + new Vector2Int(0, -1))) AddEdge(edges, br, bl); // bottom: right->left
-                if (!cells.Contains(cell + new Vector2Int(0, 1)))  AddEdge(edges, tl, tr); // top: left->right
-                if (!cells.Contains(cell + new Vector2Int(-1, 0))) AddEdge(edges, bl, tl); // left: bottom->top
-                if (!cells.Contains(cell + new Vector2Int(1, 0)))  AddEdge(edges, tr, br); // right: top->bottom
+                if (!cells.Contains(cell + new Vector2Int(0, -1)))
+                {
+                    AddEdge(edges, br, bl); // bottom: right->left
+                    edgeOwner[(br, bl)] = owner;
+                }
+                if (!cells.Contains(cell + new Vector2Int(0, 1)))
+                {
+                    AddEdge(edges, tl, tr); // top: left->right
+                    edgeOwner[(tl, tr)] = owner;
+                }
+                if (!cells.Contains(cell + new Vector2Int(-1, 0)))
+                {
+                    AddEdge(edges, bl, tl); // left: bottom->top
+                    edgeOwner[(bl, tl)] = owner;
+                }
+                if (!cells.Contains(cell + new Vector2Int(1, 0)))
+                {
+                    AddEdge(edges, tr, br); // right: top->bottom
+                    edgeOwner[(tr, br)] = owner;
+                }
             }
 
             var loops = ExtractLoops(edges);
 
             foreach (var loop in loops)
             {
+                // Determine ownership from the RAW loop, before collinear points are removed -
+                // every consecutive pair in the raw loop corresponds to exactly one edge we
+                // added above, so this is where the edge->block lookup is still valid.
+                var owningBlocks = CollectLoopOwners(loop, edgeOwner);
                 var simplified = SimplifyCollinear(loop);
-                DrawLoop(simplified, color, grid);
+                DrawLoop(simplified, color, grid, owningBlocks);
             }
         }
 
@@ -181,6 +231,21 @@ namespace Neon
                 edges[from] = list;
             }
             list.Add(to);
+        }
+
+        private static HashSet<NeonBlock> CollectLoopOwners(List<Vector2Int> rawLoop,
+            Dictionary<(Vector2Int, Vector2Int), NeonBlock> edgeOwner)
+        {
+            var result = new HashSet<NeonBlock>();
+            int n = rawLoop.Count;
+            for (int i = 0; i < n; i++)
+            {
+                Vector2Int from = rawLoop[i];
+                Vector2Int to = rawLoop[(i + 1) % n];
+                if (edgeOwner.TryGetValue((from, to), out var block) && block != null)
+                    result.Add(block);
+            }
+            return result;
         }
 
         private static List<List<Vector2Int>> ExtractLoops(Dictionary<Vector2Int, List<Vector2Int>> edges)
@@ -260,16 +325,59 @@ namespace Neon
             return result;
         }
 
-        private void DrawLoop(List<Vector2Int> corners, Color color, float grid)
+        /// <summary>
+        /// Decides which transform a loop's LineRenderer should be parented to so it rides
+        /// along with the block(s) that produced it:
+        ///   - One contributing block -> parent directly to that block. Moving/rotating the
+        ///     block moves the outline with it, no rebuild required.
+        ///   - Several contributing blocks (a merged same-colour group) that all share the
+        ///     same parent transform -> parent to that shared transform. Moving the shared
+        ///     parent moves the whole assembled shape as a rigid unit, which is the only case
+        ///     where the merge stays geometrically valid without a rebuild.
+        ///   - Several contributing blocks with no shared parent -> returns null. There's no
+        ///     single transform that can carry the merged shape correctly, so the caller falls
+        ///     back to a static, manager-parented line (call RequestRebuild() if any of those
+        ///     blocks move).
+        /// </summary>
+        private static Transform ChooseParent(HashSet<NeonBlock> owningBlocks)
+        {
+            if (owningBlocks == null || owningBlocks.Count == 0) return null;
+
+            if (owningBlocks.Count == 1)
+            {
+                foreach (var b in owningBlocks)
+                    return b != null ? b.transform : null;
+            }
+
+            Transform commonParent = null;
+            bool first = true;
+            foreach (var b in owningBlocks)
+            {
+                if (b == null) return null;
+                if (first) { commonParent = b.transform.parent; first = false; }
+                else if (commonParent != b.transform.parent) return null;
+            }
+            return commonParent;
+        }
+
+        private void DrawLoop(List<Vector2Int> corners, Color color, float grid, HashSet<NeonBlock> owningBlocks)
         {
             if (corners.Count < 2) return;
 
+            Transform parent = ChooseParent(owningBlocks);
+#if UNITY_EDITOR
+            // Belt-and-suspenders: even though Rebuild() already bails when the manager itself
+            // is a Prefab Asset, a chosen block parent could in principle be one too (e.g. a
+            // nested prefab reference). Parenting into a Prefab Asset throws, so fall back to
+            // the static manager-parented line instead of crashing.
+            if (parent != null && UnityEditor.PrefabUtility.IsPartOfPrefabAsset(parent.gameObject))
+                parent = null;
+#endif
+
             var go = new GameObject("NeonOutline");
-            go.transform.SetParent(transform, false);
             go.hideFlags = HideFlags.DontSave;
 
             var lr = go.AddComponent<LineRenderer>();
-            lr.useWorldSpace = true;
             lr.loop = true;
             lr.numCornerVertices = 0;
             lr.numCapVertices = 0;
@@ -285,10 +393,44 @@ namespace Neon
             lr.sortingOrder = sortingOrder;
 
             lr.positionCount = corners.Count;
-            for (int i = 0; i < corners.Count; i++)
+
+            if (parent != null)
             {
-                Vector3 p = new Vector3(corners[i].x * grid, corners[i].y * grid, zOffset);
-                lr.SetPosition(i, p);
+                // Parent first. Stretched blocks carry non-uniform scale (e.g. x3 to span
+                // three cells) - a LineRenderer inherits that scale for its width as well as
+                // its length, so a naive child would render thick/thin unevenly along the
+                // shape instead of a constant-width neon line. Counteract it on the line's OWN
+                // transform so, from the LineRenderer's point of view, it always sits under an
+                // effective scale of (1,1,1) - only the parent's position/rotation come
+                // through, which is all we want it to inherit.
+                go.transform.SetParent(parent, false);
+                Vector3 parentScale = parent.lossyScale;
+                go.transform.localScale = new Vector3(
+                    Mathf.Approximately(parentScale.x, 0f) ? 1f : 1f / parentScale.x,
+                    Mathf.Approximately(parentScale.y, 0f) ? 1f : 1f / parentScale.y,
+                    Mathf.Approximately(parentScale.z, 0f) ? 1f : 1f / parentScale.z);
+
+                // Convert into the LINE's own local space (not the parent's) now that its
+                // transform includes the compensating scale - that keeps the round trip to
+                // world space correct regardless of what that compensation is.
+                lr.useWorldSpace = false;
+                for (int i = 0; i < corners.Count; i++)
+                {
+                    Vector3 world = new Vector3(corners[i].x * grid, corners[i].y * grid, zOffset);
+                    lr.SetPosition(i, go.transform.InverseTransformPoint(world));
+                }
+            }
+            else
+            {
+                // No single transform can own this shape (disconnected merge) - fall back to
+                // the old static, world-space behaviour parented under the manager.
+                go.transform.SetParent(transform, false);
+                lr.useWorldSpace = true;
+                for (int i = 0; i < corners.Count; i++)
+                {
+                    Vector3 p = new Vector3(corners[i].x * grid, corners[i].y * grid, zOffset);
+                    lr.SetPosition(i, p);
+                }
             }
 
             lineObjects.Add(go);
@@ -314,16 +456,25 @@ namespace Neon
             }
             lineObjects.Clear();
 
-            // Also clear any stragglers (e.g. after a domain reload) parented under us.
-            var stragglers = new List<Transform>();
-            foreach (Transform child in transform)
-                if (child.name == "NeonOutline")
-                    stragglers.Add(child);
-            foreach (var t in stragglers)
+            // Also clear any stragglers (e.g. after a domain reload). They may now be parented
+            // under any block as well as under us, so sweep the whole block set too.
+            void SweepStragglers(Transform root)
             {
-                if (Application.isPlaying) Destroy(t.gameObject);
-                else DestroyImmediate(t.gameObject);
+                if (root == null) return;
+                var stragglers = new List<Transform>();
+                foreach (Transform child in root)
+                    if (child.name == "NeonOutline")
+                        stragglers.Add(child);
+                foreach (var t in stragglers)
+                {
+                    if (Application.isPlaying) Destroy(t.gameObject);
+                    else DestroyImmediate(t.gameObject);
+                }
             }
+
+            SweepStragglers(transform);
+            foreach (var block in blocks)
+                if (block != null) SweepStragglers(block.transform);
         }
 
         public static NeonOutlineManager FindOrCreate()
