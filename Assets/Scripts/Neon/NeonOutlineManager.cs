@@ -33,7 +33,7 @@ namespace Neon
         private float cellSize = .1f;
 
         [Tooltip("Width of the neon line in world units.")]
-        [SerializeField] private float lineWidth = 0.1f;
+        private float lineWidth = 0.3f;
 
         [Tooltip("Material used for the neon LineRenderers. If empty a default additive-ish " +
                  "sprite material is used so the line colour comes through.")]
