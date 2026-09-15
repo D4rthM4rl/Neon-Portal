@@ -79,7 +79,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -103,7 +103,7 @@ SpriteRenderer:
   m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.08130861, g: 0.039738327, b: 0.4433962, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -170,7 +170,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5885e27b4ad458fa948ace022904506, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Neon.NeonBlock
-  insideColor: {r: 0, g: 0, b: 0, a: 1}
-  outlineColor: {r: 0, g: 1, b: 0.14186502, a: 1}
-  cellSize: 0.1
-  manager: {fileID: 0}
+  outlineColor: {r: 0.3066038, g: 0.68663806, b: 1, a: 1}

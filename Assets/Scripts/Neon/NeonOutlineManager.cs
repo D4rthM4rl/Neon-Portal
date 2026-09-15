@@ -33,14 +33,14 @@ namespace Neon
         private float cellSize = .1f;
 
         [Tooltip("Width of the neon line in world units.")]
-        [SerializeField] private float lineWidth = 0.08f;
+        [SerializeField] private float lineWidth = 0.1f;
 
         [Tooltip("Material used for the neon LineRenderers. If empty a default additive-ish " +
                  "sprite material is used so the line colour comes through.")]
         [SerializeField] private Material lineMaterial;
 
         [Tooltip("Sorting layer for the neon lines.")]
-        [SerializeField] private string sortingLayer = "Platforms";
+        [SerializeField] private string sortingLayer = "Glow";
 
         [Tooltip("Sorting order for the neon lines (drawn above the block fill).")]
         [SerializeField] private int sortingOrder = 10;
@@ -115,13 +115,14 @@ namespace Neon
 
             // Group cells by outline colour. Same-colour cells merge; different colours are
             // independent layers that can outline over one another. We also remember which
-            // block first claimed each cell, so a finished loop can be traced back to the
-            // block(s) that produced it and parented accordingly.
-            var byColor = new Dictionary<Color, HashSet<Vector2Int>>(new ColorComparer());
-            var ownersByColor = new Dictionary<Color, Dictionary<Vector2Int, NeonBlock>>(new ColorComparer());
-            var scratch = new List<Vector2Int>();
+            // blocks claimed each cell, so a finished loop can be traced back to the block(s)
+            // that produced it and parented accordingly.
+            Dictionary<Color, HashSet<Vector2Int>> byColor = new Dictionary<Color, HashSet<Vector2Int>>(new ColorComparer());
+            Dictionary<Color, Dictionary<Vector2Int, HashSet<NeonBlock>>> ownersByColor =
+                new Dictionary<Color, Dictionary<Vector2Int, HashSet<NeonBlock>>>(new ColorComparer());
+            List<Vector2Int> scratch = new List<Vector2Int>();
 
-            foreach (var block in blocks)
+            foreach (NeonBlock block in blocks)
             {
                 if (block == null) continue;
                 scratch.Clear();
@@ -129,25 +130,30 @@ namespace Neon
                 if (scratch.Count == 0) continue;
 
                 Color key = block.OutlineColor;
-                if (!byColor.TryGetValue(key, out var set))
+                if (!byColor.TryGetValue(key, out HashSet<Vector2Int> set))
                 {
                     set = new HashSet<Vector2Int>();
                     byColor[key] = set;
                 }
-                if (!ownersByColor.TryGetValue(key, out var ownerMap))
+                if (!ownersByColor.TryGetValue(key, out Dictionary<Vector2Int, HashSet<NeonBlock>> ownerMap))
                 {
-                    ownerMap = new Dictionary<Vector2Int, NeonBlock>();
+                    ownerMap = new Dictionary<Vector2Int, HashSet<NeonBlock>>();
                     ownersByColor[key] = ownerMap;
                 }
 
-                foreach (var c in scratch)
+                foreach (Vector2Int c in scratch)
                 {
                     set.Add(c);
-                    if (!ownerMap.ContainsKey(c)) ownerMap[c] = block; // first claim wins
+                    if (!ownerMap.TryGetValue(c, out HashSet<NeonBlock> cellOwners))
+                    {
+                        cellOwners = new HashSet<NeonBlock>();
+                        ownerMap[c] = cellOwners;
+                    }
+                    cellOwners.Add(block);
                 }
             }
 
-            foreach (var kv in byColor)
+            foreach (KeyValuePair<Color, HashSet<Vector2Int>> kv in byColor)
                 BuildColorGroup(kv.Key, kv.Value, ownersByColor[kv.Key], grid);
         }
 
@@ -163,7 +169,7 @@ namespace Neon
         };
 
         private void BuildColorGroup(Color color, HashSet<Vector2Int> cells,
-            Dictionary<Vector2Int, NeonBlock> owners, float grid)
+            Dictionary<Vector2Int, HashSet<NeonBlock>> owners, float grid)
         {
             // Collect boundary edges as directed segments so loops wind consistently (CCW,
             // interior on the left). Corner points are integer lattice points (cell corners).
@@ -173,17 +179,18 @@ namespace Neon
             // multimap: start corner -> list of end corners. edgeOwner remembers which block's
             // cell produced each directed edge, so once a loop is traced we know which
             // block(s) it belongs to.
-            var edges = new Dictionary<Vector2Int, List<Vector2Int>>();
-            var edgeOwner = new Dictionary<(Vector2Int, Vector2Int), NeonBlock>();
+            Dictionary<Vector2Int, List<Vector2Int>> edges = new Dictionary<Vector2Int, List<Vector2Int>>();
+            Dictionary<(Vector2Int, Vector2Int), HashSet<NeonBlock>> edgeOwners =
+                new Dictionary<(Vector2Int, Vector2Int), HashSet<NeonBlock>>();
 
-            foreach (var cell in cells)
+            foreach (Vector2Int cell in cells)
             {
                 Vector2Int bl = new Vector2Int(cell.x, cell.y);
                 Vector2Int br = new Vector2Int(cell.x + 1, cell.y);
                 Vector2Int tr = new Vector2Int(cell.x + 1, cell.y + 1);
                 Vector2Int tl = new Vector2Int(cell.x, cell.y + 1);
 
-                owners.TryGetValue(cell, out NeonBlock owner);
+                owners.TryGetValue(cell, out HashSet<NeonBlock> cellOwners);
 
                 // An edge is drawn only when the neighbouring cell is empty for this colour
                 // set. Same-colour neighbours share the cell so the edge is skipped, which is
@@ -191,41 +198,42 @@ namespace Neon
                 if (!cells.Contains(cell + new Vector2Int(0, -1)))
                 {
                     AddEdge(edges, br, bl); // bottom: right->left
-                    edgeOwner[(br, bl)] = owner;
+                    edgeOwners[(br, bl)] = cellOwners;
                 }
+
                 if (!cells.Contains(cell + new Vector2Int(0, 1)))
                 {
                     AddEdge(edges, tl, tr); // top: left->right
-                    edgeOwner[(tl, tr)] = owner;
+                    edgeOwners[(tl, tr)] = cellOwners;
                 }
                 if (!cells.Contains(cell + new Vector2Int(-1, 0)))
                 {
                     AddEdge(edges, bl, tl); // left: bottom->top
-                    edgeOwner[(bl, tl)] = owner;
+                    edgeOwners[(bl, tl)] = cellOwners;
                 }
                 if (!cells.Contains(cell + new Vector2Int(1, 0)))
                 {
                     AddEdge(edges, tr, br); // right: top->bottom
-                    edgeOwner[(tr, br)] = owner;
+                    edgeOwners[(tr, br)] = cellOwners;
                 }
             }
 
-            var loops = ExtractLoops(edges);
+            List<List<Vector2Int>> loops = ExtractLoops(edges);
 
-            foreach (var loop in loops)
+            foreach (List<Vector2Int> loop in loops)
             {
                 // Determine ownership from the RAW loop, before collinear points are removed -
                 // every consecutive pair in the raw loop corresponds to exactly one edge we
                 // added above, so this is where the edge->block lookup is still valid.
-                var owningBlocks = CollectLoopOwners(loop, edgeOwner);
-                var simplified = SimplifyCollinear(loop);
+                HashSet<NeonBlock> owningBlocks = CollectLoopOwners(loop, edgeOwners, owners);
+                List<Vector2Int> simplified = SimplifyCollinear(loop);
                 DrawLoop(simplified, color, grid, owningBlocks);
             }
         }
 
         private static void AddEdge(Dictionary<Vector2Int, List<Vector2Int>> edges, Vector2Int from, Vector2Int to)
         {
-            if (!edges.TryGetValue(from, out var list))
+            if (!edges.TryGetValue(from, out List<Vector2Int> list))
             {
                 list = new List<Vector2Int>(1);
                 edges[from] = list;
@@ -234,28 +242,47 @@ namespace Neon
         }
 
         private static HashSet<NeonBlock> CollectLoopOwners(List<Vector2Int> rawLoop,
-            Dictionary<(Vector2Int, Vector2Int), NeonBlock> edgeOwner)
+            Dictionary<(Vector2Int, Vector2Int), HashSet<NeonBlock>> edgeOwners,
+            Dictionary<Vector2Int, HashSet<NeonBlock>> owners)
         {
-            var result = new HashSet<NeonBlock>();
+            HashSet<NeonBlock> result = new HashSet<NeonBlock>();
             int n = rawLoop.Count;
             for (int i = 0; i < n; i++)
             {
                 Vector2Int from = rawLoop[i];
                 Vector2Int to = rawLoop[(i + 1) % n];
-                if (edgeOwner.TryGetValue((from, to), out var block) && block != null)
-                    result.Add(block);
+                if (edgeOwners.TryGetValue((from, to), out HashSet<NeonBlock> edgeBlockOwners))
+                {
+                    result.UnionWith(edgeBlockOwners);
+                    continue;
+                }
+
+                // Recover the cell on the inside of the directed boundary edge if the
+                // extracted loop no longer matches the edge dictionary key exactly.
+                Vector2Int cell;
+                if (from.y == to.y)
+                    cell = from.x > to.x
+                        ? new Vector2Int(from.x - 1, from.y)
+                        : new Vector2Int(from.x, from.y - 1);
+                else
+                    cell = from.x < to.x
+                        ? new Vector2Int(from.x, from.y)
+                        : new Vector2Int(from.x - 1, from.y - 1);
+
+                if (owners.TryGetValue(cell, out HashSet<NeonBlock> cellOwners))
+                    result.UnionWith(cellOwners);
             }
             return result;
         }
 
         private static List<List<Vector2Int>> ExtractLoops(Dictionary<Vector2Int, List<Vector2Int>> edges)
         {
-            var loops = new List<List<Vector2Int>>();
+            List<List<Vector2Int>> loops = new List<List<Vector2Int>>();
 
             int RemainingCount()
             {
                 int c = 0;
-                foreach (var kv in edges) c += kv.Value.Count;
+                foreach (KeyValuePair<Vector2Int, List<Vector2Int>> kv in edges) c += kv.Value.Count;
                 return c;
             }
 
@@ -267,19 +294,19 @@ namespace Neon
                 // Find any start corner that still has an outgoing edge.
                 Vector2Int start = default;
                 bool found = false;
-                foreach (var kv in edges)
+                foreach (KeyValuePair<Vector2Int, List<Vector2Int>> kv in edges)
                 {
                     if (kv.Value.Count > 0) { start = kv.Key; found = true; break; }
                 }
                 if (!found) break;
 
-                var loop = new List<Vector2Int> { start };
+                List<Vector2Int> loop = new List<Vector2Int> { start };
                 Vector2Int cur = start;
 
                 int guard = total + 4;
                 while (guard-- > 0)
                 {
-                    if (!edges.TryGetValue(cur, out var nexts) || nexts.Count == 0)
+                    if (!edges.TryGetValue(cur, out List<Vector2Int> nexts) || nexts.Count == 0)
                         break;
 
                     // Consume one outgoing edge from the current corner.
@@ -308,7 +335,7 @@ namespace Neon
             int n = loop.Count;
             if (n < 3) return loop;
 
-            var result = new List<Vector2Int>(n);
+            List<Vector2Int> result = new List<Vector2Int>(n);
             for (int i = 0; i < n; i++)
             {
                 Vector2Int prev = loop[(i - 1 + n) % n];
@@ -330,14 +357,21 @@ namespace Neon
         /// along with the block(s) that produced it:
         ///   - One contributing block -> parent directly to that block. Moving/rotating the
         ///     block moves the outline with it, no rebuild required.
-        ///   - Several contributing blocks (a merged same-colour group) that all share the
-        ///     same parent transform -> parent to that shared transform. Moving the shared
-        ///     parent moves the whole assembled shape as a rigid unit, which is the only case
-        ///     where the merge stays geometrically valid without a rebuild.
-        ///   - Several contributing blocks with no shared parent -> returns null. There's no
-        ///     single transform that can carry the merged shape correctly, so the caller falls
-        ///     back to a static, manager-parented line (call RequestRebuild() if any of those
-        ///     blocks move).
+        ///   - Several contributing blocks (a merged same-colour group) that share a common
+        ///     ancestor transform somewhere up their hierarchies -> parent to the NEAREST such
+        ///     ancestor. Moving that ancestor moves the whole assembled shape as a rigid unit,
+        ///     which is the only case where the merge stays geometrically valid without a
+        ///     rebuild. This is found via lowest-common-ancestor search rather than requiring
+        ///     the blocks to share the same IMMEDIATE parent - a moving group is often organised
+        ///     with each block under its own sub-container (for sorting, per-block effects,
+        ///     etc.), all of which still sit under one shared root that actually moves. Requiring
+        ///     exact same-parent equality would miss that shared root and wrongly fall back to
+        ///     the static case below, which looks fine while the group is stationary but leaves
+        ///     the outline behind the moment the group moves.
+        ///   - Several contributing blocks with no common ancestor at all -> returns null.
+        ///     There's no single transform that can carry the merged shape correctly, so the
+        ///     caller falls back to a static, manager-parented line (call RequestRebuild() if
+        ///     any of those blocks move).
         /// </summary>
         private static Transform ChooseParent(HashSet<NeonBlock> owningBlocks)
         {
@@ -345,19 +379,44 @@ namespace Neon
 
             if (owningBlocks.Count == 1)
             {
-                foreach (var b in owningBlocks)
+                foreach (NeonBlock b in owningBlocks)
                     return b != null ? b.transform : null;
             }
 
-            Transform commonParent = null;
+            Transform commonAncestor = null;
             bool first = true;
-            foreach (var b in owningBlocks)
+            foreach (NeonBlock b in owningBlocks)
             {
                 if (b == null) return null;
-                if (first) { commonParent = b.transform.parent; first = false; }
-                else if (commonParent != b.transform.parent) return null;
+                if (first)
+                {
+                    commonAncestor = b.transform;
+                    first = false;
+                }
+                else
+                {
+                    commonAncestor = FindLowestCommonAncestor(commonAncestor, b.transform);
+                    if (commonAncestor == null) return null;
+                }
             }
-            return commonParent;
+            return commonAncestor;
+        }
+
+        /// <summary>
+        /// Walks both transforms' ancestor chains (each transform counts as its own ancestor)
+        /// and returns the nearest transform present in both chains, or null if they share none.
+        /// </summary>
+        private static Transform FindLowestCommonAncestor(Transform a, Transform b)
+        {
+            HashSet<Transform> ancestorsOfA = new HashSet<Transform>();
+            for (Transform t = a; t != null; t = t.parent)
+                ancestorsOfA.Add(t);
+
+            for (Transform t = b; t != null; t = t.parent)
+                if (ancestorsOfA.Contains(t))
+                    return t;
+
+            return null;
         }
 
         private void DrawLoop(List<Vector2Int> corners, Color color, float grid, HashSet<NeonBlock> owningBlocks)
@@ -374,10 +433,10 @@ namespace Neon
                 parent = null;
 #endif
 
-            var go = new GameObject("NeonOutline");
+            GameObject go = new GameObject("NeonOutline");
             go.hideFlags = HideFlags.DontSave;
 
-            var lr = go.AddComponent<LineRenderer>();
+            LineRenderer lr = go.AddComponent<LineRenderer>();
             lr.loop = true;
             lr.numCornerVertices = 0;
             lr.numCapVertices = 0;
@@ -440,15 +499,15 @@ namespace Neon
         private static Material DefaultLineMaterial()
         {
             if (cachedDefault != null) return cachedDefault;
-            var shader = Shader.Find("Sprites/Default");
-            if (shader == null) shader = Shader.Find("Unlit/Color");
+            Shader shader = Shader.Find("Neon/GlowLine");
+            if (shader == null) shader = Shader.Find("Sprites/Default"); // fallback
             cachedDefault = new Material(shader) { name = "NeonLine (Runtime)" };
             return cachedDefault;
         }
 
         private void ClearLines()
         {
-            foreach (var go in lineObjects)
+            foreach (GameObject go in lineObjects)
             {
                 if (go == null) continue;
                 if (Application.isPlaying) Destroy(go);
@@ -456,37 +515,39 @@ namespace Neon
             }
             lineObjects.Clear();
 
-            // Also clear any stragglers (e.g. after a domain reload). They may now be parented
-            // under any block as well as under us, so sweep the whole block set too.
+            // Also clear stragglers from earlier rebuilds. Lines can be parented to a shared
+            // ancestor, so searching only direct children leaves stale outlines behind.
             void SweepStragglers(Transform root)
             {
                 if (root == null) return;
-                var stragglers = new List<Transform>();
-                foreach (Transform child in root)
-                    if (child.name == "NeonOutline")
-                        stragglers.Add(child);
-                foreach (var t in stragglers)
+                for (int i = root.childCount - 1; i >= 0; i--)
                 {
-                    if (Application.isPlaying) Destroy(t.gameObject);
-                    else DestroyImmediate(t.gameObject);
+                    Transform child = root.GetChild(i);
+                    if (child.name == "NeonOutline")
+                    {
+                        if (Application.isPlaying) Destroy(child.gameObject);
+                        else DestroyImmediate(child.gameObject);
+                    }
+                    else
+                    {
+                        SweepStragglers(child);
+                    }
                 }
             }
 
-            SweepStragglers(transform);
-            foreach (var block in blocks)
-                if (block != null) SweepStragglers(block.transform);
+            SweepStragglers(transform.root);
         }
 
         public static NeonOutlineManager FindOrCreate()
         {
 #if UNITY_2023_1_OR_NEWER
-            var existing = Object.FindFirstObjectByType<NeonOutlineManager>();
+            NeonOutlineManager existing = Object.FindFirstObjectByType<NeonOutlineManager>();
 #else
-            var existing = Object.FindObjectOfType<NeonOutlineManager>();
+            NeonOutlineManager existing = Object.FindObjectOfType<NeonOutlineManager>();
 #endif
             if (existing != null) return existing;
 
-            var go = new GameObject("Neon Outline Manager");
+            GameObject go = new GameObject("Neon Outline Manager");
             return go.AddComponent<NeonOutlineManager>();
         }
 

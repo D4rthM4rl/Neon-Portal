@@ -61,5 +61,8 @@ TagManager:
   - name: Indicators
     uniqueID: 918885751
     locked: 0
+  - name: Glow
+    uniqueID: 1762000583
+    locked: 0
   m_RenderingLayers:
   - Default

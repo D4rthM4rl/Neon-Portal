@@ -8,7 +8,6 @@ namespace Neon
     /// BoxCollider2D or an axis-aligned PolygonCollider2D used as a platform collider).
     ///
     /// The block declares:
-    ///   - <see cref="insideColor"/>  : the fill colour of the block's sprite.
     ///   - <see cref="outlineColor"/> : the colour of the neon line traced around the surface.
     ///
     /// Blocks may be stretched through x / y scaling. A block therefore covers one or more
@@ -22,22 +21,12 @@ namespace Neon
     [ExecuteAlways]
     public class NeonBlock : MonoBehaviour
     {
-        [Tooltip("Fill colour applied to the block's SpriteRenderer.")]
-        [SerializeField] private Color insideColor = new Color(1f, 0.486f, 1f, 1f);
-
         [Tooltip("Colour of the neon line traced around the exposed surface of this block.")]
         [SerializeField] private Color outlineColor = new Color(1f, 0.486f, 1f, 1f);
 
-        [Tooltip("Size (in world units) of one grid cell. Blocks should align to this grid. " +
-                 "Usually 1 to match a 1x1 sprite. Must match the value on the manager.")]
-        [SerializeField] private float cellSize = 1f;
+        private NeonOutlineManager manager;
 
-        [Tooltip("Optional explicit link to the manager. If left empty one is found / created in the scene.")]
-        [SerializeField] private NeonOutlineManager manager;
-
-        public Color InsideColor => insideColor;
         public Color OutlineColor => outlineColor;
-        public float CellSize => cellSize;
 
         private SpriteRenderer spriteRenderer;
 
@@ -53,10 +42,9 @@ namespace Neon
         private void OnEnable()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
-            ApplyInsideColor();
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
             if (IsPrefabAsset) return;
-#endif
+        #endif
             Register();
         }
 
@@ -69,9 +57,7 @@ namespace Neon
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (cellSize <= 0f) cellSize = 1f;
             spriteRenderer = GetComponent<SpriteRenderer>();
-            ApplyInsideColor();
             if (IsPrefabAsset) return;
             // Defer so the whole selection / undo settles before rebuilding.
             UnityEditor.EditorApplication.delayCall += DeferredRebuild;
@@ -99,12 +85,6 @@ namespace Neon
                 manager.Register(this);
                 manager.RequestRebuild();
             }
-        }
-
-        private void ApplyInsideColor()
-        {
-            if (spriteRenderer != null)
-                spriteRenderer.color = insideColor;
         }
 
         /// <summary>

@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5885e27b4ad458fa948ace022904506, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Neon.NeonBlock
-  insideColor: {r: 1, g: 1, b: 1, a: 1}
-  outlineColor: {r: 1, g: 0.486, b: 1, a: 1}
+  insideColor: {r: 0, g: 0, b: 0, a: 1}
+  outlineColor: {r: 1, g: 0.9048698, b: 0.5518868, a: 1}
   cellSize: 0.1
   manager: {fileID: 0}
