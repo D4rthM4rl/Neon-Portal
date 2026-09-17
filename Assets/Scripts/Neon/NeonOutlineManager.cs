@@ -22,9 +22,15 @@ namespace Neon
     ///      merged, producing continuous lines. A corner vertex is kept only when the two edges
     ///      meeting there are both part of the outline (i.e. the direction actually turns);
     ///      collinear pass-through points are removed.
-    ///   4. Each loop is drawn with a LineRenderer using the group's outline colour, parented
-    ///      to whichever block(s) contributed its edges so it rides along automatically when
-    ///      that block moves (see <see cref="ChooseParent"/>).
+    ///   4. Each loop is split into runs of consecutive edges that belong to the same owning
+    ///      block (or, for the rare case of several blocks occupying one cell, the same common
+    ///      ancestor). Each run becomes its own LineRenderer, parented directly to that owner,
+    ///      so every segment rides along with the specific block(s) that produced it. A loop
+    ///      whose edges all belong to a single owner stays a single closed LineRenderer; a
+    ///      loop that spans several owners (an adjacent same-colour merge) becomes several
+    ///      open polylines that meet at shared corner points, so the combined shape still
+    ///      reads as one continuous neon line even though each piece moves independently with
+    ///      its own block (see <see cref="ChooseParent"/>).
     /// </summary>
     [ExecuteAlways]
     public class NeonOutlineManager : MonoBehaviour
@@ -221,14 +227,79 @@ namespace Neon
             List<List<Vector2Int>> loops = ExtractLoops(edges);
 
             foreach (List<Vector2Int> loop in loops)
+                BuildAndDrawLoop(loop, edgeOwners, owners, color, grid);
+        }
+
+        /// <summary>
+        /// Resolves the owning transform of every edge in a raw loop, splits the loop into
+        /// runs of consecutive edges that share the same owner, and draws each run as its own
+        /// LineRenderer parented to that owner. A loop owned by a single transform throughout
+        /// stays one closed line; a loop that spans several owners becomes several open
+        /// polylines that share their transition corners, so the combined shape still looks
+        /// like one continuous outline even though each piece is individually attached.
+        /// </summary>
+        private void BuildAndDrawLoop(List<Vector2Int> loop,
+            Dictionary<(Vector2Int, Vector2Int), HashSet<NeonBlock>> edgeOwners,
+            Dictionary<Vector2Int, HashSet<NeonBlock>> owners,
+            Color color, float grid)
+        {
+            int n = loop.Count;
+            if (n < 2) return;
+
+            // Ownership from the RAW loop, before collinear points are removed - every
+            // consecutive pair in the raw loop corresponds to exactly one edge we added in
+            // BuildColorGroup, so this is where the edge->block lookup is still valid.
+            Transform[] edgeParents = new Transform[n];
+            for (int i = 0; i < n; i++)
             {
-                // Determine ownership from the RAW loop, before collinear points are removed -
-                // every consecutive pair in the raw loop corresponds to exactly one edge we
-                // added above, so this is where the edge->block lookup is still valid.
-                HashSet<NeonBlock> owningBlocks = CollectLoopOwners(loop, edgeOwners, owners);
-                List<Vector2Int> simplified = SimplifyCollinear(loop);
-                DrawLoop(simplified, color, grid, owningBlocks);
+                Vector2Int from = loop[i];
+                Vector2Int to = loop[(i + 1) % n];
+                HashSet<NeonBlock> edgeBlockOwners = GetEdgeOwners(from, to, edgeOwners, owners);
+                edgeParents[i] = ChooseParent(edgeBlockOwners);
             }
+
+            bool uniform = true;
+            for (int i = 1; i < n; i++)
+            {
+                if (edgeParents[i] != edgeParents[0]) { uniform = false; break; }
+            }
+
+            if (uniform)
+            {
+                // Every edge belongs to the same owner (the common case: one un-merged
+                // block) - keep the whole thing as a single closed line, exactly as before.
+                List<Vector2Int> simplified = SimplifyCollinear(loop);
+                DrawSegment(simplified, color, grid, edgeParents[0], true);
+                return;
+            }
+
+            // The loop spans more than one owner (an adjacent same-colour merge). Walk it
+            // once, starting from a point where ownership actually changes so a run never
+            // gets split across the wraparound point, and cut a new run each time the owner
+            // changes.
+            int startIdx = 0;
+            for (int i = 0; i < n; i++)
+            {
+                int prev = (i - 1 + n) % n;
+                if (edgeParents[i] != edgeParents[prev]) { startIdx = i; break; }
+            }
+
+            Transform currentParent = edgeParents[startIdx];
+            List<Vector2Int> currentPoints = new List<Vector2Int> { loop[startIdx] };
+
+            for (int k = 0; k < n; k++)
+            {
+                int i = (startIdx + k) % n;
+                Transform p = edgeParents[i];
+                if (p != currentParent)
+                {
+                    DrawSegment(SimplifyOpenRun(currentPoints), color, grid, currentParent, false);
+                    currentParent = p;
+                    currentPoints = new List<Vector2Int> { loop[i] };
+                }
+                currentPoints.Add(loop[(i + 1) % n]);
+            }
+            DrawSegment(SimplifyOpenRun(currentPoints), color, grid, currentParent, false);
         }
 
         private static void AddEdge(Dictionary<Vector2Int, List<Vector2Int>> edges, Vector2Int from, Vector2Int to)
@@ -241,38 +312,27 @@ namespace Neon
             list.Add(to);
         }
 
-        private static HashSet<NeonBlock> CollectLoopOwners(List<Vector2Int> rawLoop,
+        private static HashSet<NeonBlock> GetEdgeOwners(Vector2Int from, Vector2Int to,
             Dictionary<(Vector2Int, Vector2Int), HashSet<NeonBlock>> edgeOwners,
             Dictionary<Vector2Int, HashSet<NeonBlock>> owners)
         {
-            HashSet<NeonBlock> result = new HashSet<NeonBlock>();
-            int n = rawLoop.Count;
-            for (int i = 0; i < n; i++)
-            {
-                Vector2Int from = rawLoop[i];
-                Vector2Int to = rawLoop[(i + 1) % n];
-                if (edgeOwners.TryGetValue((from, to), out HashSet<NeonBlock> edgeBlockOwners))
-                {
-                    result.UnionWith(edgeBlockOwners);
-                    continue;
-                }
+            if (edgeOwners.TryGetValue((from, to), out HashSet<NeonBlock> direct))
+                return direct;
 
-                // Recover the cell on the inside of the directed boundary edge if the
-                // extracted loop no longer matches the edge dictionary key exactly.
-                Vector2Int cell;
-                if (from.y == to.y)
-                    cell = from.x > to.x
-                        ? new Vector2Int(from.x - 1, from.y)
-                        : new Vector2Int(from.x, from.y - 1);
-                else
-                    cell = from.x < to.x
-                        ? new Vector2Int(from.x, from.y)
-                        : new Vector2Int(from.x - 1, from.y - 1);
+            // Recover the cell on the inside of the directed boundary edge if the
+            // extracted loop no longer matches the edge dictionary key exactly.
+            Vector2Int cell;
+            if (from.y == to.y)
+                cell = from.x > to.x
+                    ? new Vector2Int(from.x - 1, from.y)
+                    : new Vector2Int(from.x, from.y - 1);
+            else
+                cell = from.x < to.x
+                    ? new Vector2Int(from.x, from.y)
+                    : new Vector2Int(from.x - 1, from.y - 1);
 
-                if (owners.TryGetValue(cell, out HashSet<NeonBlock> cellOwners))
-                    result.UnionWith(cellOwners);
-            }
-            return result;
+            owners.TryGetValue(cell, out HashSet<NeonBlock> cellOwners);
+            return cellOwners;
         }
 
         private static List<List<Vector2Int>> ExtractLoops(Dictionary<Vector2Int, List<Vector2Int>> edges)
@@ -326,9 +386,9 @@ namespace Neon
         }
 
         /// <summary>
-        /// Removes points that lie on a straight run so only genuine corners remain. A corner
-        /// is kept exactly when the incoming and outgoing edges point in different directions,
-        /// i.e. both sides of the corner carry the neon line.
+        /// Removes points that lie on a straight run so only genuine corners remain, for a
+        /// CLOSED loop. A corner is kept exactly when the incoming and outgoing edges point
+        /// in different directions, i.e. both sides of the corner carry the neon line.
         /// </summary>
         private static List<Vector2Int> SimplifyCollinear(List<Vector2Int> loop)
         {
@@ -353,25 +413,42 @@ namespace Neon
         }
 
         /// <summary>
-        /// Decides which transform a loop's LineRenderer should be parented to so it rides
-        /// along with the block(s) that produced it:
-        ///   - One contributing block -> parent directly to that block. Moving/rotating the
-        ///     block moves the outline with it, no rebuild required.
-        ///   - Several contributing blocks (a merged same-colour group) that share a common
-        ///     ancestor transform somewhere up their hierarchies -> parent to the NEAREST such
-        ///     ancestor. Moving that ancestor moves the whole assembled shape as a rigid unit,
-        ///     which is the only case where the merge stays geometrically valid without a
-        ///     rebuild. This is found via lowest-common-ancestor search rather than requiring
-        ///     the blocks to share the same IMMEDIATE parent - a moving group is often organised
-        ///     with each block under its own sub-container (for sorting, per-block effects,
-        ///     etc.), all of which still sit under one shared root that actually moves. Requiring
-        ///     exact same-parent equality would miss that shared root and wrongly fall back to
-        ///     the static case below, which looks fine while the group is stationary but leaves
-        ///     the outline behind the moment the group moves.
-        ///   - Several contributing blocks with no common ancestor at all -> returns null.
-        ///     There's no single transform that can carry the merged shape correctly, so the
-        ///     caller falls back to a static, manager-parented line (call RequestRebuild() if
-        ///     any of those blocks move).
+        /// Removes collinear points from an OPEN run while always keeping its first and last
+        /// point - those are the transition corners shared with the neighbouring run, so they
+        /// must stay even if the direction happens not to change there.
+        /// </summary>
+        private static List<Vector2Int> SimplifyOpenRun(List<Vector2Int> pts)
+        {
+            int n = pts.Count;
+            if (n < 3) return pts;
+
+            List<Vector2Int> result = new List<Vector2Int>(n) { pts[0] };
+            for (int i = 1; i < n - 1; i++)
+            {
+                Vector2Int inDir = pts[i] - pts[i - 1];
+                Vector2Int outDir = pts[i + 1] - pts[i];
+                if (inDir != outDir)
+                    result.Add(pts[i]);
+            }
+            result.Add(pts[n - 1]);
+            return result;
+        }
+
+        /// <summary>
+        /// Resolves the transform that a single boundary edge should be attached to, based on
+        /// the block(s) that own the cell behind that edge:
+        ///   - One owning block (the overwhelming common case, including every edge along an
+        ///     adjacent same-colour merge) -> that block's own transform. BuildAndDrawLoop
+        ///     groups consecutive edges that resolve to the same transform into one
+        ///     LineRenderer, so a merged shape ends up as several small lines, each riding
+        ///     along with its own block with no rebuild required when that block moves.
+        ///   - Several owning blocks for the same cell (two blocks overlapping the same
+        ///     footprint) that share a common ancestor transform somewhere up their
+        ///     hierarchies -> the NEAREST such ancestor, found via lowest-common-ancestor
+        ///     search rather than requiring an identical immediate parent.
+        ///   - Several owning blocks with no common ancestor at all -> null. The caller falls
+        ///     back to a static, manager-parented segment for just that edge (call
+        ///     RequestRebuild() if any of those blocks move).
         /// </summary>
         private static Transform ChooseParent(HashSet<NeonBlock> owningBlocks)
         {
@@ -419,16 +496,15 @@ namespace Neon
             return null;
         }
 
-        private void DrawLoop(List<Vector2Int> corners, Color color, float grid, HashSet<NeonBlock> owningBlocks)
+        private void DrawSegment(List<Vector2Int> corners, Color color, float grid, Transform parent, bool isClosed)
         {
             if (corners.Count < 2) return;
 
-            Transform parent = ChooseParent(owningBlocks);
 #if UNITY_EDITOR
             // Belt-and-suspenders: even though Rebuild() already bails when the manager itself
-            // is a Prefab Asset, a chosen block parent could in principle be one too (e.g. a
-            // nested prefab reference). Parenting into a Prefab Asset throws, so fall back to
-            // the static manager-parented line instead of crashing.
+            // is a Prefab Asset, a chosen owner could in principle be one too (e.g. a nested
+            // prefab reference). Parenting into a Prefab Asset throws, so fall back to the
+            // static manager-parented line instead of crashing.
             if (parent != null && UnityEditor.PrefabUtility.IsPartOfPrefabAsset(parent.gameObject))
                 parent = null;
 #endif
@@ -437,7 +513,7 @@ namespace Neon
             go.hideFlags = HideFlags.DontSave;
 
             LineRenderer lr = go.AddComponent<LineRenderer>();
-            lr.loop = true;
+            lr.loop = isClosed;
             lr.numCornerVertices = 0;
             lr.numCapVertices = 0;
             lr.alignment = LineAlignment.TransformZ;
@@ -481,8 +557,9 @@ namespace Neon
             }
             else
             {
-                // No single transform can own this shape (disconnected merge) - fall back to
-                // the old static, world-space behaviour parented under the manager.
+                // No owner for this segment (an edge whose cell had no recorded block, or a
+                // multi-block cell with no common ancestor) - fall back to the old static,
+                // world-space behaviour parented under the manager.
                 go.transform.SetParent(transform, false);
                 lr.useWorldSpace = true;
                 for (int i = 0; i < corners.Count; i++)
@@ -540,11 +617,11 @@ namespace Neon
 
         public static NeonOutlineManager FindOrCreate()
         {
-#if UNITY_2023_1_OR_NEWER
+            #if UNITY_2023_1_OR_NEWER
             NeonOutlineManager existing = Object.FindFirstObjectByType<NeonOutlineManager>();
-#else
+            #else
             NeonOutlineManager existing = Object.FindObjectOfType<NeonOutlineManager>();
-#endif
+            #endif
             if (existing != null) return existing;
 
             GameObject go = new GameObject("Neon Outline Manager");
