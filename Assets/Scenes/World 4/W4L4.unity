@@ -30580,7 +30580,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e37dc1d994cb493280642611d4e84895, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Neon.NeonOutlineManager
-  lineWidth: 0.1
   lineMaterial: {fileID: 0}
   sortingLayer: Glow
   sortingOrder: 10
@@ -31462,7 +31461,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 13.719
+      value: 21.02574
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalScale.y
@@ -31470,7 +31469,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -41.859
+      value: -45.5121
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalPosition.y
@@ -32096,7 +32095,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 35
+      value: 49.16539
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalScale.y
@@ -32104,11 +32103,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -82.24
+      value: -75.1584
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -8.799999
+      value: -4
       objectReference: {fileID: 0}
     - target: {fileID: 1512251140490132247, guid: 119c3015337fc45d9bec8179346c265b, type: 3}
       propertyPath: m_LocalPosition.z
